@@ -1,0 +1,49 @@
+{
+  "id": "/",
+  "name": "صَرْح | SARH — منصة ربط الأهالي بالمراكز التعليمية",
+  "short_name": "صَرْح",
+  "description": "منصة فلسطينية تربط الأهالي برواضي الطفولة المبكرة ومراكز التحضير والتوجيهي: حجز مقاعد، متابعة يومية، حضور غير متصل، وروبوت ذكاء اصطناعي للمعلمين.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#081325",
+  "theme_color": "#00A99D",
+  "categories": ["education", "utilities"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "لوحة ولي الأمر",
+      "short_name": "الأهالي",
+      "url": "/parent/dashboard",
+      "icons": [{ "src": "/icons/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "سجل الحضور اليومي",
+      "short_name": "الحضور",
+      "url": "/institution/daily-log",
+      "icons": [{ "src": "/icons/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml" }]
+    }
+  ]
+}

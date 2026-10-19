@@ -1,0 +1,281 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   SARH (صَرْح) — Global theme tokens
+   Light/Dark driven by the `.dark` class toggled through next-themes.
+   ============================================================ */
+
+@keyframes sarh-view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
+ * LIGHT IS THE PRODUCT DEFAULT (2026 desk identity).
+ *
+ * The palette is a bright desk under soft morning daylight: warm ivory paper
+ * surfaces, beige inner boxes, dark-navy type. Dark mode still exists and is
+ * fully styled, but it is now an explicit opt-in through the header toggle —
+ * `AppProviders` pins `defaultTheme="light"` so no OS preference can flip a
+ * first-time visitor into it.
+ */
+:root {
+  /*
+   * Brand typography.
+   *
+   * These two variables are the single source of truth for every font-family
+   * in the app: `tailwind.config.js` builds `font-arabic` / `font-sans` from
+   * them and `globals.css` uses them for `body`. They were referenced but
+   * never defined, which made every `font-family: var(--font-readex), …`
+   * declaration invalid at computed-value time — and an invalid-at-computed-
+   * value declaration is *not* an ignored declaration, it resets the property
+   * to `unset`. The whole platform therefore rendered in the browser's default
+   * serif instead of Readex Pro, the font the root layout already downloads.
+   * Defining them here restores the intended faces with no extra request.
+   */
+  --font-readex: "Readex Pro";
+  --font-jakarta: "Plus Jakarta Sans";
+
+  --sarh-bg: #faf7f2; /* bgLight — warm ivory desk surface */
+  --sarh-fg: #0f2c59; /* navy — primary text */
+  --sarh-card: #ffffff; /* cardLight */
+  --sarh-card-fg: #0f2c59;
+  --sarh-border: #ede5da; /* borderLight — warm hairline */
+  --sarh-muted: #f4f0e9; /* soft beige fill */
+  --sarh-muted-fg: #6b7a90;
+  --sarh-teal: #00a99d;
+  --sarh-gold: #f2994a;
+  /* Hero environment: the daylight gradient painted behind the desk scene. */
+  --sarh-desk-glow: radial-gradient(
+    115% 85% at 88% 6%,
+    #ffffff 0%,
+    rgba(255, 255, 255, 0) 55%
+  ),
+    radial-gradient(90% 70% at 4% 96%, #fdf3e7 0%, rgba(253, 243, 231, 0) 62%);
+}
+
+.dark {
+  --sarh-bg: #081325; /* bgDark */
+  --sarh-fg: #e8eef7; /* light text over navy/dark surfaces */
+  --sarh-card: #0f1e36; /* cardDark */
+  --sarh-card-fg: #e8eef7;
+  --sarh-border: #1e293b; /* borderDark */
+  --sarh-muted: #14243f;
+  --sarh-muted-fg: #9aabc4;
+  --sarh-teal: #00a99d;
+  --sarh-gold: #f2994a;
+}
+
+@layer base {
+  html {
+    /*
+     * Deliberately NOT `smooth`: Lenis (see SmoothScrollProvider) animates the
+     * scroll position itself, and a native smooth behaviour would animate the
+     * same writes a second time — the two loops fight and the page overshoots
+     * its target. Anchor jumps are handed to Lenis instead, and stay instant for
+     * anyone with `prefers-reduced-motion`.
+     */
+    scroll-behavior: auto;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    color: var(--sarh-fg);
+    background-color: var(--sarh-bg);
+    font-family: var(--font-readex), Tajawal, sans-serif;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* RTL-first: native logical properties handle both directions. */
+  [dir="ltr"] body {
+    font-family: var(--font-jakarta), system-ui, sans-serif;
+  }
+
+  /*
+   * The idle/ambient animations below are decorative, so they must disappear
+   * for anyone who asked the OS to reduce motion — a floating dashboard that
+   * never settles is exactly the kind of motion that setting exists to stop.
+   * GSAP-driven entrances do the same thing through `gsap.matchMedia()`.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-float-soft,
+    .animate-float-drift,
+    .animate-pulse-ring,
+    .animate-ai-glow,
+    .animate-shimmer {
+      animation: none !important;
+    }
+  }
+
+  ::selection {
+    background: rgba(0, 169, 157, 0.28);
+  }
+}
+
+@layer components {
+  /* Glassmorphism overlay per Design.md */
+  .sarh-glass {
+    background: color-mix(in srgb, var(--sarh-card) 72%, transparent);
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    border: 1px solid var(--sarh-border);
+  }
+
+  .sarh-card {
+    background-color: var(--sarh-card);
+    color: var(--sarh-card-fg);
+    border: 1px solid var(--sarh-border);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px -2px rgba(15, 44, 89, 0.08);
+  }
+
+  .sarh-btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-sarh-teal px-5 py-2.5 font-semibold text-white transition-colors hover:bg-[#00938A] focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .sarh-btn-accent {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-sarh-gold px-5 py-2.5 font-semibold text-white transition-colors hover:bg-[#DE8435] focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-gold focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .sarh-input {
+    @apply w-full rounded-lg border border-sarh-borderLight bg-sarh-cardLight px-4 py-2.5 text-sarh-navy outline-none transition-colors placeholder:text-slate-400 focus:border-sarh-teal focus:ring-2 focus:ring-sarh-teal/30 dark:border-sarh-borderDark dark:bg-sarh-cardDark dark:text-slate-100;
+  }
+
+  .sarh-badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  }
+
+  /*
+   * Light glassmorphism for the hero's floating dashboard card.
+   *
+   * Deliberately a white-to-translucent wash rather than the dark `.sarh-glass`
+   * overlay: over a bright desk, a tinted glass would read as a grey box and
+   * lose the "paper on the table" feel the identity depends on.
+   */
+  .sarh-glass-light {
+    background: linear-gradient(
+      150deg,
+      rgba(255, 255, 255, 0.94) 0%,
+      rgba(255, 255, 255, 0.72) 55%,
+      rgba(255, 255, 255, 0.86) 100%
+    );
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow:
+      0 18px 40px -18px rgba(15, 44, 89, 0.28),
+      0 2px 10px -4px rgba(15, 44, 89, 0.1);
+  }
+
+  /* Soft beige inset used for the teacher's daily-summary box. */
+  .sarh-note-beige {
+    background: linear-gradient(140deg, #fdf3e7 0%, #fbeee0 100%);
+    border: 1px solid #f2e3d3;
+  }
+
+  /*
+   * Dark mode is opt-in, but it must not be broken: the light glass and the
+   * beige note are the two hero surfaces that would otherwise glare white on a
+   * navy page, so both get a dark counterpart rather than being left unreadable.
+   */
+  .dark .sarh-glass-light {
+    background: linear-gradient(
+      150deg,
+      rgba(15, 30, 54, 0.92) 0%,
+      rgba(15, 30, 54, 0.74) 55%,
+      rgba(15, 30, 54, 0.88) 100%
+    );
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.6);
+  }
+
+  .dark .sarh-note-beige {
+    background: linear-gradient(140deg, rgba(242, 153, 74, 0.14) 0%, rgba(242, 153, 74, 0.08) 100%);
+    border-color: rgba(242, 153, 74, 0.28);
+  }
+
+  /*
+   * Vertical edge ribbons ("التعليم / مستقبل أفضل / لأطفالنا").
+   * `writing-mode` keeps the text upright while the badge stays a narrow
+   * strip; the short side is fixed so every ribbon reads as the same width.
+   * Latin glyphs are rotated back so an English label is not set on its side.
+   */
+  .sarh-ribbon {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    letter-spacing: 0.02em;
+  }
+
+  [dir="ltr"] .sarh-ribbon {
+    writing-mode: vertical-lr;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /*
+   * Auth views (sign in → sign up → recovery → reset) share one shell, so a
+   * short fade-and-lift on mount is what makes moving between them read as a
+   * transition rather than a page swap. Pure CSS: no animation runtime is
+   * pulled into the auth bundle for it.
+   */
+  .sarh-view-enter {
+    animation: sarh-view-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sarh-view-enter {
+      animation: none;
+    }
+  }
+
+  /* Offline-first indicator bar (Design.md — Child Daily Feed) */
+  .offline-bar {
+    background-image: repeating-linear-gradient(
+      45deg,
+      #f2994a 0px,
+      #f2994a 12px,
+      #e08a3d 12px,
+      #e08a3d 24px
+    );
+  }
+
+  .skeleton {
+    @apply relative overflow-hidden rounded-lg bg-muted;
+  }
+
+  .skeleton::after {
+    @apply absolute inset-0 -translate-x-full animate-shimmer;
+    content: "";
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.45),
+      transparent
+    );
+  }
+
+  /*
+   * GSAP entrance hooks.
+   *
+   * Elements carrying `data-hero` are the ones the hero timeline animates. They
+   * are only hidden once JavaScript has claimed them (`[data-hero-ready]` is set
+   * on the section by the timeline itself), so with JS disabled or still
+   * loading the hero is fully visible instead of a blank band — the same
+   * progressive-enhancement rule `Reveal` follows.
+   */
+  [data-hero-ready] [data-hero] {
+    will-change: transform, opacity;
+  }
+}

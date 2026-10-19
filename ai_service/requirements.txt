@@ -1,0 +1,15 @@
+# SARH (صَرْح) — AI microservice dependencies (Agent.md Phase 3)
+# Python 3.11+
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+httpx==0.28.1
+pydantic==2.10.4
+python-dotenv==1.0.1
+
+# Image decoding / OCR preprocessing (receipt upload path)
+Pillow==11.1.0
+
+# Optional local OCR engine. Requires the `tesseract` binary to be installed
+# on the host; the service degrades gracefully when it is absent.
+pytesseract==0.3.13

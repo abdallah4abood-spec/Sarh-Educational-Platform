@@ -1,0 +1,486 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+/// The four staff tiers plus the parent tier. Each value owns exactly one
+/// portal (`/parent`, `/teacher`, `/supervisor`, `/institution`, `/admin`) —
+/// see `src/lib/roles.ts`, which is the single source of truth shared by the
+/// edge middleware, NextAuth and the dashboard shell.
+///
+///   PARENT              → /parent/**        family portal
+///   TEACHER             → /teacher/**       class execution (attendance, lessons, AI)
+///   SUPERVISOR          → /supervisor/**    oversight: plan review, evaluation
+///   INSTITUTION_TEACHER → /institution/**   multi-tenant center administration
+///   SUPER_ADMIN         → /admin/**         platform-wide control (and every
+///                                           other portal, for inspection)
+enum Role {
+  PARENT
+  INSTITUTION_TEACHER
+  /// Teaching staff inside a center (معلم). Owns the teacher portal.
+  TEACHER
+  /// Educational supervisor (مشرف): reviews plans, evaluates teachers, monitors
+  /// quality inside an assigned scope. Deliberately a separate tier from
+  /// TEACHER so oversight can never be granted by teaching rights alone.
+  SUPERVISOR
+  SUPER_ADMIN
+}
+
+enum InstitutionType {
+  KINDERGARTEN // Ages 5-7
+  EDUCATIONAL_CENTER // Ages 8-18 (Tawjihi)
+}
+
+enum PaymentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+/// Publication state of a lesson plan as it moves through supervision.
+/// MIRRORS `PlanStatus` in `src/lib/data/portal.ts` value-for-value so the
+/// pills, filters and dictionary keys keep working unchanged.
+enum PlanStatus {
+  PENDING
+  APPROVED
+  REVISION
+}
+
+/// Trust & Verification queue (`/admin/trust`). A centre starts UNVERIFIED,
+/// requests review, and is either verified or rejected with a note.
+enum TrustStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+/// Employment state of a staff member, used by the institution roster.
+enum StaffStatus {
+  ACTIVE
+  ON_LEAVE
+  INACTIVE
+}
+
+/// Severity/kind of a quality signal raised inside a supervision scope.
+enum SignalKind {
+  ALERT
+  ACHIEVEMENT
+  INFO
+}
+
+/// Audience a parent-facing announcement is addressed to.
+enum AnnouncementKind {
+  HOLIDAY
+  SCHEDULE
+  MEETING
+}
+
+/// Kind of platform activity, used by the admin overview chart.
+enum ActivityType {
+  SIGNUP
+  ENROLLMENT
+  PAYMENT
+  VERIFICATION
+}
+
+model User {
+  id          String   @id @default(uuid())
+  fullName    String
+  /// The account anchor: it is the login identity and the verification channel.
+  email       String   @unique
+  /// Optional alternate identifier — when present it can be used in place of
+  /// the email to sign in or to recover a password. Stored normalised to
+  /// E.164-ish form (+<digits>) so lookups are exact.
+  phoneNumber String?  @unique
+  passwordHash String
+  /// Primary role: the account's home portal and the value carried by `role`
+  /// in the JWT. It is what the sign-in flow routes on.
+  role        Role     @default(PARENT)
+  /// Additional tiers granted to the same account (e.g. a teacher who also
+  /// supervises). The dashboard role switcher lists `role` + `roles` so a
+  /// multi-tier user chooses where to work instead of signing in twice.
+  /// Never empty-by-design: the effective set always includes `role`.
+  roles       Role[]   @default([])
+  /// Null until the credential signup completes email verification.
+  /// Google accounts are stamped on first sign-in (Google already verified).
+  emailVerified DateTime?
+  /// When the sign-up form's terms & privacy checkbox was accepted.
+  termsAcceptedAt DateTime?
+  avatarUrl   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  students     Student[]
+  institutions Institution[]
+  payments     PaymentTransaction[]
+  quizzes      Quiz[]
+
+  // ---- teaching / supervision / administration relations ----
+  staffRoles        StaffMember[]
+  taughtClasses     SchoolClass[]        @relation("ClassTeacher")
+  timetableSlots    TimetableSlot[]      @relation("SlotTeacher")
+  authoredPlans     LessonPlan[]         @relation("PlanAuthor")
+  reviewedPlans     LessonPlan[]         @relation("PlanReviewer")
+  evaluationsGiven  TeacherEvaluation[]  @relation("Evaluator")
+  evaluationsGot    TeacherEvaluation[]  @relation("Evaluatee")
+  signalsRaised     QualitySignal[]      @relation("SignalAuthor")
+  messagesSent      Message[]            @relation("MessageFrom")
+  messagesReceived  Message[]            @relation("MessageTo")
+  activity          ActivityEvent[]      @relation("ActivityActor")
+}
+
+model Institution {
+  id          String         @id @default(uuid())
+  name        String
+  type        InstitutionType
+  address     String
+  zone        String
+  description String?
+  rating      Float          @default(5.0)
+  phone       String?
+  email       String?
+  /// Trust & Verification queue state (`/admin/trust`).
+  trustStatus TrustStatus    @default(UNVERIFIED)
+  /// When the centre last asked to be reviewed; null while it has never asked.
+  trustRequestedAt DateTime?
+  /// Reviewer note shown to the centre in its profile checklist.
+  trustNote   String?
+  ownerId     String
+  owner       User           @relation(fields: [ownerId], references: [id])
+  students    Enrollment[]
+  logs        DailyLog[]
+  classes     SchoolClass[]
+  staff       StaffMember[]
+  plans       LessonPlan[]
+  announcements Announcement[]
+  checklist   DirectoryChecklistItem[]
+  activity    ActivityEvent[]
+  payments    PaymentTransaction[]
+  createdAt   DateTime       @default(now())
+
+  @@index([zone, type])
+  @@index([trustStatus])
+}
+
+model Student {
+  id           String       @id @default(uuid())
+  fullName     String
+  dateOfBirth  DateTime
+  /// Free-form age tier used by the parent portal chips. The authoritative
+  /// signal is the enrolled institution's `type`, but a child can be browsing
+  /// before enrolment, so it is stored on the row as well.
+  avatarUrl    String?
+  parentId     String
+  parent       User         @relation(fields: [parentId], references: [id])
+  enrollments  Enrollment[]
+  logs         DailyLog[]
+  performance  SubjectPerformance[]
+}
+
+model Enrollment {
+  id            String        @id @default(uuid())
+  studentId     String
+  student       Student       @relation(fields: [studentId], references: [id])
+  institutionId String
+  institution   Institution   @relation(fields: [institutionId], references: [id])
+  gradeLevel    String
+  /// Optional class membership inside the institution. Null means the child is
+  /// enrolled but not yet placed — the roster pages treat that as "unassigned".
+  classId       String?
+  class         SchoolClass?  @relation(fields: [classId], references: [id])
+  commissionFee Float
+  status        PaymentStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
+
+  @@index([institutionId, status])
+  @@index([studentId])
+}
+
+model DailyLog {
+  id             String   @id @default(uuid())
+  studentId      String
+  student        Student  @relation(fields: [studentId], references: [id])
+  institutionId  String
+  institution    Institution @relation(fields: [institutionId], references: [id])
+  date           DateTime @default(now())
+  attendance     Boolean  @default(true)
+  /// Minutes late; 0 with `attendance = true` means on time.
+  lateMinutes    Int      @default(0)
+  meals          String?
+  activityPhotos String[]
+  pickupPerson   String?
+  aiSummary      String?
+  gradesJson     Json?
+  /// The day's programme as the teacher recorded it ("08:00 — طابور صباحي").
+  /// An ordered list rather than free text because the parent feed renders it
+  /// as a timeline, not a paragraph.
+  dayPlan        String[]
+  /// Homework set for that night: `[{ title, subject, done }]`. Json rather
+  /// than a relation because it is a snapshot of the day, and a later edit to
+  /// the assignment must not rewrite yesterday's log.
+  homework       Json?
+  /// Teacher-authored note shown to the parent alongside the AI summary.
+  teacherNote    String?
+
+  @@index([studentId, date])
+  @@index([institutionId, date])
+}
+
+model PaymentTransaction {
+  id         String        @id @default(uuid())
+  userId     String
+  user       User          @relation(fields: [userId], references: [id])
+  /// The centre the payment is for. Null only for platform-level charges.
+  institutionId String?
+  institution   Institution? @relation(fields: [institutionId], references: [id])
+  receiptUrl String
+  amount     Float
+  status     PaymentStatus @default(PENDING)
+  ocrData    Json?
+  /// Reviewer note captured by the Financial Centre when a receipt is
+  /// approved or rejected.
+  reviewNote String?
+  reviewedAt DateTime?
+  createdAt  DateTime      @default(now())
+
+  @@index([userId, status])
+  @@index([institutionId, status])
+  @@index([status, createdAt])
+}
+
+model Quiz {
+  id           String   @id @default(uuid())
+  subject      String
+  lesson       String
+  difficulty   String
+  questionsJson Json
+  /// Optional owner: quizzes generated inside a teacher's AI studio are scoped
+  /// to that account, platform templates have no author.
+  authorId     String?
+  author       User?    @relation(fields: [authorId], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@index([subject, difficulty])
+}
+
+/// A teaching group inside one institution (e.g. "الصف الثالث — رياضيات").
+model SchoolClass {
+  id            String      @id @default(uuid())
+  name          String
+  subject       String
+  gradeLevel    String
+  capacity      Int         @default(20)
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
+  teacherId     String?
+  teacher       User?       @relation("ClassTeacher", fields: [teacherId], references: [id])
+  /// Progress of the term plan, 0–100. Shown on the teacher cards.
+  planProgress  Int         @default(0)
+  room          String?
+  enrollments   Enrollment[]
+  slots         TimetableSlot[]
+  plans         LessonPlan[]
+  createdAt     DateTime    @default(now())
+
+  @@index([institutionId, gradeLevel])
+  @@index([teacherId])
+}
+
+/// One scheduled period on a teacher's day.
+model TimetableSlot {
+  id        String      @id @default(uuid())
+  teacherId String
+  teacher   User        @relation("SlotTeacher", fields: [teacherId], references: [id])
+  classId   String?
+  class     SchoolClass? @relation(fields: [classId], references: [id])
+  weekday   Int         // 0 = Sunday … 6 = Saturday (Palestinian week)
+  startsAt  String      // "08:00"
+  endsAt    String      // "08:45"
+  subject   String
+  room      String?
+  createdAt DateTime    @default(now())
+
+  @@index([teacherId, weekday])
+}
+
+/// Membership of a user in an institution's staff.
+model StaffMember {
+  id            String      @id @default(uuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id])
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
+  title         String
+  subjects      String[]
+  status        StaffStatus @default(ACTIVE)
+  joinedAt      DateTime    @default(now())
+
+  @@unique([userId, institutionId])
+  @@index([institutionId, status])
+}
+
+/// A lesson plan authored by a teacher and reviewed by a supervisor.
+model LessonPlan {
+  id            String      @id @default(uuid())
+  title         String
+  subject       String
+  gradeLevel    String
+  objectives    String
+  /// Day the lesson is planned for.
+  scheduledFor  DateTime
+  status        PlanStatus  @default(PENDING)
+  authorId      String
+  author        User        @relation("PlanAuthor", fields: [authorId], references: [id])
+  institutionId String?
+  institution   Institution? @relation(fields: [institutionId], references: [id])
+  classId       String?
+  class         SchoolClass? @relation(fields: [classId], references: [id])
+  reviewerId    String?
+  reviewer      User?       @relation("PlanReviewer", fields: [reviewerId], references: [id])
+  reviewNote    String?
+  reviewedAt    DateTime?
+  /// AI pre-check score for completeness (0–100), produced when the plan is
+  /// submitted. Stored rather than recomputed so a later change to the checker
+  /// cannot silently rewrite what a supervisor already reviewed.
+  completeness  Int         @default(80)
+  createdAt     DateTime    @default(now())
+
+  @@index([status, scheduledFor])
+  @@index([authorId])
+}
+
+/// A supervisor's classroom observation of a teacher.
+model TeacherEvaluation {
+  id             String   @id @default(uuid())
+  teacherId      String
+  teacher        User     @relation("Evaluatee", fields: [teacherId], references: [id])
+  supervisorId   String
+  supervisor     User     @relation("Evaluator", fields: [supervisorId], references: [id])
+  /// Human label for the period, e.g. "الفصل الأول 2026".
+  periodLabel    String
+  classroomVisits Int     @default(0)
+  /// 0–100 composite score.
+  score          Int
+  notes          String?
+  createdAt      DateTime @default(now())
+
+  @@index([teacherId])
+  @@index([supervisorId])
+}
+
+/// A quality signal inside a supervision scope (alert / achievement / info).
+model QualitySignal {
+  id          String      @id @default(uuid())
+  kind        SignalKind
+  title       String
+  detail      String?
+  /// The supervisor whose scope raised it.
+  scopeOwnerId String
+  scopeOwner  User        @relation("SignalAuthor", fields: [scopeOwnerId], references: [id])
+  /// Optional institution the signal belongs to.
+  institutionId String?
+  /// Optional teacher it refers to.
+  subjectUserId String?
+  createdAt   DateTime    @default(now())
+
+  @@index([scopeOwnerId, createdAt])
+}
+
+/// Parent-facing announcement (holiday notice, schedule change, meeting).
+model Announcement {
+  id            String           @id @default(uuid())
+  kind          AnnouncementKind
+  title         String
+  body          String
+  /// Null = platform-wide announcement.
+  institutionId String?
+  institution   Institution?     @relation(fields: [institutionId], references: [id])
+  publishedAt   DateTime         @default(now())
+
+  @@index([institutionId, publishedAt])
+}
+
+/// Direct message between a parent and a centre/teacher.
+model Message {
+  id         String    @id @default(uuid())
+  fromUserId String
+  fromUser   User      @relation("MessageFrom", fields: [fromUserId], references: [id])
+  toUserId   String
+  toUser     User      @relation("MessageTo", fields: [toUserId], references: [id])
+  subject    String
+  body       String
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([toUserId, readAt])
+  @@index([fromUserId])
+}
+
+/// Per-subject performance for one student in one term.
+model SubjectPerformance {
+  id           String  @id @default(uuid())
+  studentId    String
+  student      Student @relation(fields: [studentId], references: [id])
+  subject      String
+  term         String
+  score        Int
+  classAverage Int
+
+  @@unique([studentId, subject, term])
+}
+
+/// Platform activity feed powering the admin overview chart and recent list.
+model ActivityEvent {
+  id            String        @id @default(uuid())
+  type          ActivityType
+  label         String
+  amount        Float?
+  actorId       String?
+  actor         User?         @relation("ActivityActor", fields: [actorId], references: [id])
+  institutionId String?
+  institution   Institution?  @relation(fields: [institutionId], references: [id])
+  createdAt     DateTime      @default(now())
+
+  @@index([createdAt])
+  @@index([type, createdAt])
+}
+
+/// One row of a centre's public-directory completeness checklist. Kept in the
+/// database rather than derived in code so the admin can see exactly which
+/// requirement is outstanding.
+model DirectoryChecklistItem {
+  id            String      @id @default(uuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
+  key           String
+  label         String
+  done          Boolean     @default(false)
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([institutionId, key])
+}
+
+/// Key/value store for editable platform settings (contact details, etc.).
+/// The admin UI writes here; every read falls back to `siteConfig` when the
+/// row is missing or PostgreSQL is unreachable.
+model SiteSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+/// NextAuth-compatible single-use email verification tokens.
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@index([identifier])
+}
