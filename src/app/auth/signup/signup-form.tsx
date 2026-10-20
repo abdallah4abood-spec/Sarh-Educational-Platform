@@ -24,7 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n/language-provider";
 import { isPhoneNumber } from "@/lib/phone";
-import { dashboardFor } from "@/lib/roles";
+import { dashboardFor, PUBLIC_SIGNUP_ROLE } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
 /**
@@ -119,6 +119,9 @@ const ERROR_KEYS = {
   EMAIL_IN_USE: "emailInUse",
   PHONE_IN_USE: "phoneInUse",
   INVALID_INPUT: null,
+  // Server-side mirror of the tab notice below: the tier is granted, not
+  // registered for, so the same explanation answers a refused request.
+  ROLE_REQUIRES_INVITATION: "signupRoleLocked",
   DB_UNAVAILABLE: "registrationFailed",
   UNKNOWN: "registrationFailed",
 } as const;
@@ -172,9 +175,18 @@ export default function SignupForm() {
 
   const passwordValue = watch("password") ?? "";
   const copy = ROLE_COPY[role];
+  // Staff tiers are granted by an institution or by the platform team, so the
+  // public form can only create the general account. The tabs stay visible to
+  // explain how those accounts are obtained instead of silently disappearing.
+  const roleLocked = role !== PUBLIC_SIGNUP_ROLE;
 
   const onSubmit = async (values: SignupValues) => {
     setServerError(null);
+
+    if (roleLocked) {
+      setServerError(t("signupRoleLocked"));
+      return;
+    }
 
     try {
       const response = await fetch("/api/auth/signup", {
@@ -383,6 +395,13 @@ export default function SignupForm() {
 
         <RoleTabs value={role} onChange={setRole} legend={t("roleLabel")} />
 
+        {roleLocked ? (
+          <AuthNotice tone="info">
+            <ShieldAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{t("signupRoleLocked")}</span>
+          </AuthNotice>
+        ) : null}
+
         <div>
           <label
             htmlFor="acceptedTerms"
@@ -431,6 +450,7 @@ export default function SignupForm() {
           size="lg"
           className="w-full shadow-teal-glow"
           loading={isSubmitting}
+          disabled={roleLocked}
         >
           {isSubmitting ? t("creatingAccount") : t("signUp")}
         </Button>

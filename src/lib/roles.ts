@@ -156,13 +156,26 @@ export const ROLE_DESCRIPTION: Record<Role, string> = {
   SUPER_ADMIN: "التوثيق والمالية والمستخدمون",
 };
 
-/** Tiers granted on top of a primary role by the sign-up form. */
-export const SELF_SERVICE_ROLES: Role[] = [
-  "PARENT",
-  "TEACHER",
-  "SUPERVISOR",
-  "INSTITUTION_TEACHER",
-];
+/**
+ * The one tier a public sign-up may grant itself.
+ *
+ * The platform's general audience is parents. Every staff tier — teacher,
+ * supervisor, institution administration — carries authority over other
+ * people's records, so it is granted by an authorised path (a staff membership
+ * or a seeded/administrative grant), never by a form whose value the visitor
+ * controls. `POST /api/auth/signup` writes this constant, not the requested
+ * role.
+ */
+export const PUBLIC_SIGNUP_ROLE = "PARENT" satisfies Role;
+
+/**
+ * Tiers a public sign-up is allowed to assign.
+ *
+ * A list rather than a single value so a future policy (for example teacher
+ * onboarding behind a verified invitation) has exactly one place to widen —
+ * and the sign-up endpoint has exactly one place to enforce it.
+ */
+export const SELF_SERVICE_ROLES: Role[] = [PUBLIC_SIGNUP_ROLE];
 
 /** Staff tiers that may open the teachers' academy and teaching workspaces. */
 export const TEACHING_STAFF_ROLES: Role[] = ["TEACHER", "SUPERVISOR"];

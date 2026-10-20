@@ -100,6 +100,8 @@ const arChrome = {
   signupNameHintInstitution: "التحقق من الترخيص يدوي وقد يستغرق حتى يوم عمل.",
   signupNameHintTeacher: "سيُربط حسابك بالمركز الذي تعمل فيه بعد تأكيد بريدك.",
   signupNameHintSupervisor: "سيُربط نطاق إشرافك بالمراكز أو الروضات التي تحدّدها إدارة المنصة بعد تأكيد بريدك.",
+  signupRoleLocked:
+    "حساب المعلم أو المشرف أو إدارة المؤسسة يُمنح من مؤسستك أو من إدارة المنصة، ولا يُنشأ من التسجيل العام. أنشئ حساب ولي أمر الآن، وسيُربط دورك عند الاعتماد.",
   authVisualSignupTitle: "ابدأ رحلتك التعليمية مع صَرْح",
   authVisualForgotTitle: "استعادة آمنة لكلمة المرور",
   authVisualResetTitle: "كلمة مرور جديدة لحسابك",
@@ -505,6 +507,8 @@ const enChrome: Record<keyof typeof arChrome, string> = {
   signupNameHintInstitution: "Licence verification is manual and can take up to one working day.",
   signupNameHintTeacher: "Your account is linked to the center you work for once your email is confirmed.",
   signupNameHintSupervisor: "Your supervision scope is linked to the centers you oversee once your email is confirmed.",
+  signupRoleLocked:
+    "Teacher, supervisor and institution accounts are granted by your institution or the platform team, not through public sign-up. Create a parent account now and your role is linked once approved.",
   authVisualSignupTitle: "Start your learning journey with SARH",
   authVisualForgotTitle: "Secure password recovery",
   authVisualResetTitle: "A new password for your account",
