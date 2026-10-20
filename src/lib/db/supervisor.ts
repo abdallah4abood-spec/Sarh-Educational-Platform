@@ -1,6 +1,7 @@
-import type { Role } from "@prisma/client";
+import type { Prisma, Role } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { effectiveRoles, PLATFORM_ADMIN_ROLE } from "@/lib/roles";
 import type {
   LessonPlan,
   QualitySignal,
@@ -12,10 +13,12 @@ import type {
  * Supervisor-portal reads (`/supervisor/**`) — the oversight tier.
  *
  * A supervisor reviews *other people's* work, so every query here is scoped by
- * the supervisor's actual span: the institutions they hold a staff membership
- * in. A supervisor with no membership row is treated as platform-wide
- * (SUPER_ADMIN-style inspection), which is the only case in which these
- * queries widen.
+ * the supervisor's actual span: the institutions they hold an **active** staff
+ * membership in. The scope is resolved on the server from the signed-in user
+ * id on every call (`resolveSupervisorScope`) and fails closed — a supervisor
+ * with no usable membership row reads nothing. Only `SUPER_ADMIN`, which
+ * `roles.ts` deliberately lets into every portal for inspection, is
+ * platform-wide.
  *
  * Nothing in this module returns teacher-private data (no messages, no
  * parents); it returns exactly the artefacts supervision acts on — lesson
@@ -38,23 +41,92 @@ function clock(date: Date): string {
   ).padStart(2, "0")}`;
 }
 
+/* ------------------------------------------------------------------ */
+/* Scope resolution — the single gate every read below goes through    */
+/* ------------------------------------------------------------------ */
+
 /**
- * Institution ids the given user supervises. Empty means “platform scope”,
- * not “sees nothing” — callers must branch on that explicitly.
+ * What a caller is allowed to read.
+ *
+ *   `institutions` — a supervisor holding at least one ACTIVE staff
+ *                    membership; only those institution ids are queried.
+ *   `platform`     — SUPER_ADMIN, platform-wide by design (`roles.ts`).
+ *   `denied`       — everything else, including a SUPERVISOR whose membership
+ *                    is missing, inactive or unverifiable. Fails closed: the
+ *                    caller reads nothing rather than everything.
+ */
+export type SupervisorScope =
+  | { kind: "institutions"; institutionIds: string[] }
+  | { kind: "platform" }
+  | {
+      kind: "denied";
+      reason: "unknown-user" | "not-supervisor" | "no-membership";
+    };
+
+/**
+ * Institution ids the given user actively supervises.
+ *
+ * Only ACTIVE memberships count: a membership that has lapsed (ON_LEAVE,
+ * INACTIVE) is not a claim on a centre's supervision data. An empty array
+ * means “no active span” — never “platform scope”. Callers must not flatten
+ * it into an empty `where`, which would widen the query; use
+ * `resolveSupervisorScope` instead.
  */
 export async function supervisedInstitutionIds(
   supervisorId: string
 ): Promise<string[]> {
+  if (!supervisorId) return [];
   const rows = await prisma.staffMember.findMany({
-    where: { userId: supervisorId },
+    where: { userId: supervisorId, status: "ACTIVE" },
     select: { institutionId: true },
   });
   return [...new Set(rows.map((row) => row.institutionId))];
 }
 
-/** Prisma `where` fragment shared by the scoped queries below. */
-function scopeFilter(ids: string[]) {
-  return ids.length ? { institutionId: { in: ids } } : {};
+/**
+ * Resolve the caller's supervision scope from their own account.
+ *
+ * The role is read from the database rather than trusted from the request:
+ * an account that is not a supervisor (and not the platform admin) has no
+ * business in these reads even if it somehow reaches a loader.
+ */
+export async function resolveSupervisorScope(
+  supervisorId: string
+): Promise<SupervisorScope> {
+  if (!supervisorId) return { kind: "denied", reason: "unknown-user" };
+
+  const user = await prisma.user.findUnique({
+    where: { id: supervisorId },
+    select: { role: true, roles: true },
+  });
+  if (!user) return { kind: "denied", reason: "unknown-user" };
+
+  const roles = effectiveRoles(user.role, user.roles);
+  if (roles.includes(PLATFORM_ADMIN_ROLE)) return { kind: "platform" };
+  if (!roles.includes("SUPERVISOR")) {
+    return { kind: "denied", reason: "not-supervisor" };
+  }
+
+  const institutionIds = await supervisedInstitutionIds(supervisorId);
+  if (institutionIds.length === 0) {
+    return { kind: "denied", reason: "no-membership" };
+  }
+  return { kind: "institutions", institutionIds };
+}
+
+/**
+ * Prisma `where` fragment for a resolved scope.
+ *
+ * A denied scope becomes an empty `IN` — which matches no row — so a query
+ * reached without an early return still cannot leak another institution's
+ * rows. It is never `{}`.
+ */
+function institutionScopeWhere(
+  scope: SupervisorScope
+): Prisma.LessonPlanWhereInput {
+  if (scope.kind === "platform") return {};
+  const institutionIds = scope.kind === "institutions" ? scope.institutionIds : [];
+  return { institutionId: { in: institutionIds } };
 }
 
 /* ------------------------------------------------------------------ */
@@ -72,10 +144,11 @@ export async function loadSupervisorPlans(
   supervisorId: string,
   take = 24
 ): Promise<LessonPlan[]> {
-  const ids = await supervisedInstitutionIds(supervisorId);
+  const scope = await resolveSupervisorScope(supervisorId);
+  if (scope.kind === "denied") return [];
 
   const rows = await prisma.lessonPlan.findMany({
-    where: scopeFilter(ids),
+    where: institutionScopeWhere(scope),
     include: {
       author: { select: { fullName: true } },
       institution: { select: { name: true } },
@@ -107,14 +180,16 @@ export interface PlanCounts {
 export async function loadPlanCounts(
   supervisorId: string
 ): Promise<PlanCounts> {
-  const ids = await supervisedInstitutionIds(supervisorId);
+  const counts: PlanCounts = { PENDING: 0, APPROVED: 0, REVISION: 0 };
+  const scope = await resolveSupervisorScope(supervisorId);
+  if (scope.kind === "denied") return counts;
+
   const rows = await prisma.lessonPlan.groupBy({
     by: ["status"],
-    where: scopeFilter(ids),
+    where: institutionScopeWhere(scope),
     _count: { _all: true },
   });
 
-  const counts: PlanCounts = { PENDING: 0, APPROVED: 0, REVISION: 0 };
   for (const row of rows) counts[row.status] = row._count._all;
   return counts;
 }
@@ -133,6 +208,33 @@ function teacherCenter(
 export async function loadSupervisorEvaluations(
   supervisorId: string
 ): Promise<TeacherEvaluation[]> {
+  const scope = await resolveSupervisorScope(supervisorId);
+  if (scope.kind === "denied") return [];
+  return evaluationsFor(scope, supervisorId);
+}
+
+/** Staff-membership filter for the teacher label on a scoped read. */
+function staffLabelFilter(
+  scope: SupervisorScope
+): { institutionId: { in: string[] } } | undefined {
+  return scope.kind === "institutions"
+    ? { institutionId: { in: scope.institutionIds } }
+    : undefined;
+}
+
+/**
+ * The supervisor's own observation rows.
+ *
+ * Bounded by `supervisorId` itself: these are records this account authored.
+ * The teacher's centre label is resolved inside the supervisor's span only, so
+ * a multi-centre teacher is never described by a centre the supervisor has no
+ * claim on.
+ */
+async function evaluationsFor(
+  scope: SupervisorScope,
+  supervisorId: string
+): Promise<TeacherEvaluation[]> {
+  const labelFilter = staffLabelFilter(scope);
   const rows = await prisma.teacherEvaluation.findMany({
     where: { supervisorId },
     include: {
@@ -140,6 +242,7 @@ export async function loadSupervisorEvaluations(
         select: {
           fullName: true,
           staffRoles: {
+            ...(labelFilter ? { where: labelFilter } : {}),
             select: { institution: { select: { name: true } } },
             take: 1,
           },
@@ -200,9 +303,13 @@ export async function loadSupervisorEvaluations(
 export async function loadScopedTeachers(
   supervisorId: string
 ): Promise<ScopedTeacher[]> {
-  const evaluations = await loadSupervisorEvaluations(supervisorId);
+  const scope = await resolveSupervisorScope(supervisorId);
+  if (scope.kind === "denied") return [];
+
+  const evaluations = await evaluationsFor(scope, supervisorId);
   if (evaluations.length === 0) return [];
 
+  const labelFilter = staffLabelFilter(scope);
   const teacherRows = await prisma.teacherEvaluation.findMany({
     where: { supervisorId },
     select: {
@@ -211,6 +318,7 @@ export async function loadScopedTeachers(
         select: {
           fullName: true,
           staffRoles: {
+            ...(labelFilter ? { where: labelFilter } : {}),
             select: { institution: { select: { name: true } } },
             take: 1,
           },
@@ -224,9 +332,17 @@ export async function loadScopedTeachers(
     distinct: ["teacherId"],
   });
 
+  // Plan compliance is a figure about *this* span: a teacher who also works in
+  // another centre must be scored on the plans the supervisor can see, not on
+  // their total output platform-wide.
   const planCounts = await prisma.lessonPlan.groupBy({
     by: ["authorId", "status"],
-    where: { authorId: { in: teacherRows.map((row) => row.teacherId) } },
+    where: {
+      authorId: { in: teacherRows.map((row) => row.teacherId) },
+      ...(scope.kind === "institutions"
+        ? { institutionId: { in: scope.institutionIds } }
+        : {}),
+    },
     _count: { _all: true },
   });
 
@@ -271,8 +387,23 @@ export async function loadQualitySignals(
   supervisorId: string,
   take = 6
 ): Promise<QualitySignal[]> {
+  const scope = await resolveSupervisorScope(supervisorId);
+  if (scope.kind === "denied") return [];
+
   const rows = await prisma.qualitySignal.findMany({
-    where: { scopeOwnerId: supervisorId },
+    // A signal is in scope when this supervisor raised it *and* it belongs to
+    // one of their institutions — or to none (platform-wide context). A signal
+    // pinned to another centre is not theirs to read.
+    where:
+      scope.kind === "platform"
+        ? { scopeOwnerId: supervisorId }
+        : {
+            scopeOwnerId: supervisorId,
+            OR: [
+              { institutionId: null },
+              { institutionId: { in: scope.institutionIds } },
+            ],
+          },
     orderBy: { createdAt: "desc" },
     take,
   });

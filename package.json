@@ -10,6 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
     "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test tests/supervisor-scope.test.ts",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed"
   },
