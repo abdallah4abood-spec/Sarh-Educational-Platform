@@ -57,10 +57,11 @@ interface SiteNavItem {
  * ahead of "من نحن" on purpose: it is the top of the teacher funnel and the
  * page that proves Sarh trains the staff parents are about to trust.
  *
- * "تواصل معنا" targets the `#contact` band on the landing page, so the last
- * entry scrolls the reader to the contact block they are already looking at
- * instead of navigating them away from the directory they were reading. The
- * standalone /contact page is still linked from the footer.
+ * "تواصل معنا" now points at the standalone `/contact` page from every route,
+ * matching the footer, the portal quick links and the contact band's own CTA.
+ * The home page's `#contact` band is still a real anchor — it is simply no
+ * longer the destination of the global navigation, so a visitor always gets
+ * the full form rather than a scroll that only works on one page.
  */
 const NAV_ITEMS: SiteNavItem[] = [
   { href: "/", labelKey: "nav_home" },
@@ -68,14 +69,14 @@ const NAV_ITEMS: SiteNavItem[] = [
   { href: "/explore/kindergartens", labelKey: "nav_kindergartens" },
   { href: "/teachers-academy", labelKey: "nav_academy" },
   { href: "/about", labelKey: "nav_about" },
-  { href: "/contact", labelKey: "nav_contact", section: "contact" },
+  { href: "/contact", labelKey: "nav_contact" },
 ];
 
 /**
  * Landing sections watched while the visitor is on the home page. Module-level
  * so the array identity stays stable for `useActiveSection`.
  */
-const HOME_SECTION_IDS = ["home", "contact"] as const;
+const HOME_SECTION_IDS = ["home"] as const;
 
 /** Portal entries. `adminOnly` hides the console from everyone but an admin. */
 const PORTALS: {

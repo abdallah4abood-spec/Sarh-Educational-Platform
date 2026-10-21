@@ -93,7 +93,7 @@ export const PORTAL_QUICK_LINKS: PortalQuickLink[] = [
   { href: "/explore/kindergartens", label: "الروضات" },
   { href: "/teachers-academy", label: "أكاديمية المعلمين" },
   { href: "/about", label: "من نحن" },
-  { href: "/#contact", label: "تواصل معنا" },
+  { href: "/contact", label: "تواصل معنا" },
 ];
 
 /**
@@ -253,25 +253,25 @@ export const PORTAL_SUPPORT: Record<
     title: "تحتاج مساعدة؟",
     body: "فريق دعم صَرْح متاح لمساعدتك في متابعة أبنائك والرسوم.",
     cta: "تواصل معنا",
-    href: "/#contact",
+    href: "/contact",
   },
   teacher: {
     title: "دعم المعلمين",
     body: "نحن هنا للاستماع إلى طلباتك التعليمية وللتنسيق مع إدارة المركز.",
     cta: "تواصل معنا",
-    href: "/#contact",
+    href: "/contact",
   },
   supervisor: {
     title: "دعم الإشراف",
     body: "أدوات التقارير والزيارات الصفية تُجهَّز حسب نطاق إشرافك.",
     cta: "اطلب تقريراً",
-    href: "/#contact",
+    href: "/contact",
   },
   institution: {
     title: "نجاح مؤسستك",
     body: "شهادات الجودة وملفات المعلمين تُحدَّث بالتنسيق مع إدارة المنصة.",
     cta: "تطوير الملف",
-    href: "/#contact",
+    href: "/contact",
   },
   admin: {
     title: "متابعة المنصة",

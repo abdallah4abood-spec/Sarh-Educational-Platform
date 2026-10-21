@@ -9,14 +9,15 @@ import { mailtoHref, telHref, whatsappHref } from "@/lib/config/site";
 import { useLanguage } from "@/lib/i18n/language-provider";
 
 /**
- * Homepage contact band — the target of the navbar's "تواصل معنا" (`/#contact`).
+ * Homepage contact band — a real anchor (`#contact`) for in-page links, no
+ * longer the destination of the navbar's "تواصل معنا".
  *
- * The last navbar entry scrolls here rather than navigating away, so the reader
- * can reach a real support channel without losing the page they were on. The
- * full message form still lives on `/contact`, which this band links to; what
- * it shows inline are the three channels that need no form at all — phone,
- * WhatsApp and email — pulled from the same DB-backed settings the footer uses,
- * so the numbers can never drift between the two.
+ * The global navigation, the footer and every portal now send visitors to the
+ * standalone `/contact` page, so support is one destination everywhere. This
+ * band stays as the landing page's shortcut: it shows the three channels that
+ * need no form at all — phone, WhatsApp and email — pulled from the same
+ * DB-backed settings the footer uses, so the numbers can never drift between
+ * the two.
  */
 export function ContactBand() {
   const { t } = useLanguage();

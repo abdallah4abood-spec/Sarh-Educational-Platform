@@ -209,7 +209,7 @@ export default async function InstitutionProfilePage() {
 
           {missing.length > 0 ? (
             <Link
-              href="/#contact"
+              href="/contact"
               className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-teal hover:underline"
             >
               تواصل مع فريق صَرْح لإكمال البنود الناقصة

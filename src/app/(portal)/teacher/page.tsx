@@ -288,7 +288,7 @@ export default async function TeacherOverviewPage() {
               بشأن الجداول والحصص.
             </p>
             <Link
-              href="/#contact"
+              href="/contact"
               className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-teal hover:underline"
             >
               تواصل معنا

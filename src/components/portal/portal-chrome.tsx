@@ -391,7 +391,7 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
           </Link>
 
           <Link
-            href="/#contact"
+            href="/contact"
             aria-label={t("portalHelp")}
             className="hidden h-9 w-9 place-items-center rounded-lg text-slate-500 transition-colors hover:bg-muted hover:text-sarh-teal sm:grid dark:text-slate-400"
           >
@@ -628,10 +628,17 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
         {footer}
       </div>
 
-      {/* Floating contact affordance (mockup: bottom-left in RTL). */}
+      {/*
+       * Floating contact affordance, pinned to the start edge.
+       *
+       * On `lg` the sidebar owns that edge (268px wide), so `start-5` used to
+       * park this pill on top of the sidebar's footer and its support card.
+       * The `lg:start-[288px]` offset clears the rail by one 20px gutter; below
+       * `lg` the rail is a drawer, so the pill stays at the plain `start-5`.
+       */}
       <Link
-        href="/#contact"
-        className="fixed bottom-5 start-5 z-30 hidden items-center gap-2 rounded-full bg-sarh-navy px-4 py-2.5 text-xs font-bold text-white shadow-soft-lg transition-transform hover:-translate-y-0.5 sm:inline-flex"
+        href="/contact"
+        className="fixed bottom-5 start-5 z-30 hidden items-center gap-2 rounded-full bg-sarh-navy px-4 py-2.5 text-xs font-bold text-white shadow-soft-lg transition-transform hover:-translate-y-0.5 sm:inline-flex lg:start-[288px]"
       >
         <HelpCircle className="h-4 w-4 text-sarh-gold" aria-hidden="true" />
         {t("portalContactCta")}
