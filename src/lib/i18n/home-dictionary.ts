@@ -23,7 +23,7 @@ export const homeAr = {
   home_heroLead:
     "ابحث عن روضة أو مركز تحضير قريب منك، احجز مقعد طفلك بثقة، وتابع يومه بالصور والأنشطة والحضور لحظة بلحظة — حتى لو انقطعت الشبكة.",
   home_ctaExplore: "استكشف المراكز",
-  home_ctaPrograms: "تصفح البرامج",
+  home_ctaKindergartens: "استكشف الروضات",
   home_trustBadge: "أكثر من ١٢٠ عائلة غزّية تتابع أطفالها عبر صَرْح",
   home_trustBadgeSub: "تقييم ٤٫٩ من ٥ — مراكز موثوقة فقط",
 
@@ -187,7 +187,7 @@ export const homeEn: Record<keyof typeof homeAr, string> = {
   home_heroLead:
     "Find a kindergarten or prep center near you, book your child's seat with confidence, and follow the day through photos, activities and live attendance — even when the connection drops.",
   home_ctaExplore: "Explore centers",
-  home_ctaPrograms: "Browse programs",
+  home_ctaKindergartens: "Explore kindergartens",
   home_trustBadge: "More than 120 Gaza families follow their children through SARH",
   home_trustBadgeSub: "4.9 / 5 rating — verified centers only",
 

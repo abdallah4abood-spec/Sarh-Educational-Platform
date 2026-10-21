@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
  *
  * The observer is also rebuilt on every route change: the sections watched here
  * live on one page, and the header is shared by all of them. Without that, a
- * header that mounted on `/courses` would have found none of the elements and
+ * header that mounted on `/contact` would have found none of the elements and
  * silently never highlighted anything after navigating home.
  */
 export function useActiveSection(ids: readonly string[]): string {

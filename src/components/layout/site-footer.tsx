@@ -51,7 +51,6 @@ export function SiteFooter() {
 
   const platformLinks = [
     { href: "/", label: t("nav_home") },
-    { href: "/courses", label: t("nav_courses") },
     { href: "/explore/centers", label: t("nav_centers") },
     { href: "/explore/kindergartens", label: t("nav_kindergartens") },
     { href: "/#why", label: t("nav_why") },

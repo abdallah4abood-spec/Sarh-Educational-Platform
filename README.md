@@ -126,7 +126,7 @@ not yet complete end-to-end.
 | Search, region / category / stage / rating / price filters, sorting and pagination | Done | Client-side pipeline in `directory-view.tsx`; listings come from a bundled catalogue (`src/lib/data/directory.ts`) |
 | Institution profile page `/center/[id]` | Done | Reads the `Institution` row from PostgreSQL; unknown ids return `notFound()` |
 | Enrolment request modal on the centre page | Partial | The UI and validation exist; there is no enrolment API route yet |
-| Teachers academy, courses, about, FAQ, contact, privacy and terms pages | Done | Contact form posts to `/api/contact`; newsletter to `/api/newsletter` |
+| Teachers academy, about, FAQ, contact, privacy and terms pages | Done | Contact form posts to `/api/contact`; newsletter to `/api/newsletter` |
 
 ### Accounts, auth and access control
 
@@ -293,7 +293,7 @@ Sarh_project/
 │   └── seed.ts                # deterministic demo dataset (refuses production by default)
 ├── src/
 │   ├── app/
-│   │   ├── (public)/          # landing, explore/*, center/[id], about, courses, faq, contact,
+│   │   ├── (public)/          # landing, explore/*, center/[id], about, faq, contact,
 │   │   │                      # teachers-academy, privacy, terms
 │   │   ├── (portal)/          # parent · teacher · supervisor · institution · admin
 │   │   ├── (auth)/            # legacy sign-in/sign-up screens

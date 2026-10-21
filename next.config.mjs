@@ -91,15 +91,24 @@ const nextConfig = {
     dirs: ["src"],
   },
   /**
-   * `/learn` was a self-contained e-learning microsite with its own header and
-   * footer. It is now the platform's course directory at `/courses`, served by
-   * the shared chrome, so the old URL forwards instead of 404-ing.
+   * The course catalogue is retired.
+   *
+   * `/learn` was a self-contained e-learning microsite, then briefly the
+   * `/courses` directory. Both URLs are gone from the app now, so each one
+   * forwards to the learning-centres directory — where the programmes those
+   * pages advertised actually live — instead of leaving old bookmarks and
+   * inbound links on a 404.
    */
   async redirects() {
     return [
       {
         source: "/learn",
-        destination: "/courses",
+        destination: "/explore/centers",
+        permanent: true,
+      },
+      {
+        source: "/courses",
+        destination: "/explore/centers",
         permanent: true,
       },
     ];

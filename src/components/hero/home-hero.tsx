@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap } from "gsap";
-import { BookOpen, Compass, Heart, ShieldCheck, Zap } from "lucide-react";
+import { Baby, Compass, Heart, ShieldCheck, Zap } from "lucide-react";
 
 import { SplitHeading } from "@/components/motion/split-heading";
 import { TiltCard } from "@/components/motion/tilt-card";
@@ -192,11 +192,11 @@ export function HomeHero() {
             </Link>
             <Link
               data-hero="cta"
-              href="/courses"
+              href="/explore/kindergartens"
               className="sarh-btn-accent h-12 px-6 text-base shadow-gold-glow"
             >
-              <BookOpen className="h-5 w-5" aria-hidden="true" />
-              {t("home_ctaPrograms")}
+              <Baby className="h-5 w-5" aria-hidden="true" />
+              {t("home_ctaKindergartens")}
             </Link>
           </div>
 

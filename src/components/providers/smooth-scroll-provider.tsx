@@ -218,7 +218,7 @@ export function SmoothScrollProvider({ children }: { children: ReactNode }) {
   }, [scrollToHash]);
 
   /**
-   * A hash that arrives with a navigation (`/courses` → `/#testimonials`) is
+   * A hash that arrives with a navigation (`/about` → `/#testimonials`) is
    * only scrollable once the destination route has rendered, which is what this
    * effect waits for: it runs on every pathname change and on `hashchange`.
    */
