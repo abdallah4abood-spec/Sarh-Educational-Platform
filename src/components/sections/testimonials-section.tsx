@@ -60,7 +60,17 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
         {pick(testimonial.quote, lang)}
       </blockquote>
 
-      <footer className="mt-auto flex items-center gap-3 border-t border-sarh-borderLight pt-4 dark:border-sarh-borderDark">
+      {/*
+       * `flex-wrap` below `lg` is what keeps the card from widening its grid
+       * track. The name and role are `truncate` (i.e. `white-space: nowrap`),
+       * so their min-content width is the whole string; on a one- or two-column
+       * grid that intrinsic width (name + avatar + verified badge) is wider
+       * than the column, and the auto track grew past the viewport — the home
+       * page scrolled sideways at 360–430px in English. Letting the badge drop
+       * to its own line keeps the card inside the column without truncating the
+       * learner's name. From `lg` up there is room for the single row.
+       */}
+      <footer className="mt-auto flex flex-wrap items-center gap-3 border-t border-sarh-borderLight pt-4 lg:flex-nowrap dark:border-sarh-borderDark">
         <Avatar id={testimonial.avatar} name={name} />
         <div className="min-w-0">
           <p className="truncate text-sm font-bold text-sarh-navy dark:text-white">{name}</p>
