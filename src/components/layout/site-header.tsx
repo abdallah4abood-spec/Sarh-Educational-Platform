@@ -238,7 +238,7 @@ export function SiteHeader() {
       onClick={toggleLang}
       aria-label={t("switchLanguage")}
       title={t("switchLanguage")}
-      className="flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-sarh-navy transition-colors hover:bg-sarh-teal/10 hover:text-sarh-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal dark:text-slate-300"
+      className="flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2 text-sm font-semibold text-sarh-navy transition-colors hover:bg-sarh-teal/10 hover:text-sarh-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal dark:text-slate-300"
     >
       <Languages className="h-4 w-4" aria-hidden="true" />
       {lang === "ar" ? "EN" : "ع"}
@@ -269,17 +269,24 @@ export function SiteHeader() {
 
     if (!user) {
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
+          {/*
+           * Both CTAs refuse to wrap. A 36px control with two lines of Arabic
+           * inside is taller than the header and gets clipped by the bar's
+           * bottom border — which is exactly what used to happen at 1440px.
+           * The header gives this cluster enough room (see the nav width
+           * comment) so `nowrap` can never push the row into overflow.
+           */}
           <Link
             href="/auth/signin"
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-sarh-borderLight px-3.5 text-sm font-semibold text-sarh-navy transition-colors hover:border-sarh-teal hover:text-sarh-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal dark:border-sarh-borderDark dark:text-slate-200"
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border border-sarh-borderLight px-2.5 text-sm font-semibold text-sarh-navy transition-colors hover:border-sarh-teal hover:text-sarh-tealInk focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-tealInk dark:border-sarh-borderDark dark:text-slate-200 dark:hover:text-sarh-teal"
           >
             <LogIn className="h-4 w-4" aria-hidden="true" />
             {t("login")}
           </Link>
           <Link
             href="/auth/signup"
-            className="sarh-btn-primary h-9 rounded-lg px-4 text-sm shadow-teal-glow hover:brightness-110"
+            className="sarh-btn-primary h-9 shrink-0 whitespace-nowrap rounded-lg px-3 text-sm shadow-teal-glow"
           >
             <UserPlus className="h-4 w-4" aria-hidden="true" />
             {t("signUp")}
@@ -381,7 +388,7 @@ export function SiteHeader() {
         aria-haspopup="menu"
         aria-expanded={portalsOpen}
         className={cn(
-          "flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal",
+          "flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-tealInk",
           portalsOpen
             ? "bg-sarh-teal/10 text-sarh-teal"
             : "text-sarh-navy hover:bg-sarh-teal/10 hover:text-sarh-teal dark:text-slate-200"
@@ -453,7 +460,7 @@ export function SiteHeader() {
          * during development, and the label set below is sized to fit.
          */
         className={cn(
-          "whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal",
+          "whitespace-nowrap rounded-lg px-2 py-2 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-tealInk",
           active
             ? "bg-sarh-teal/10 text-sarh-teal"
             : "text-sarh-navy hover:text-sarh-teal dark:text-slate-200"
@@ -481,9 +488,20 @@ export function SiteHeader() {
         {t("skipToContent")}
       </a>
 
+      {/*
+       * The bar is wider than the reading column on purpose.
+       *
+       * `max-w-6xl` (1152px) left 1104px for the brand, six links and five
+       * controls, which need ~1273px in Arabic / ~1224px in English: 169px of
+       * deficit, paid for by wrapping the action labels. `max-w-7xl` at `xl`
+       * (the only widths that show this bar) gives 1232px, and the tightened
+       * control padding above brings the cluster inside it with margin. Page
+       * content keeps its 1152px column — only the navigation breathes wider,
+       * as on apple.com, where the nav is not tied to the article measure.
+       */}
       <nav
         aria-label={t("navLabel")}
-        className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6"
+        className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 xl:max-w-7xl"
       >
         {/* Brand — the glow ring reacts to hover/focus (interactive logo). */}
         <Link
@@ -511,17 +529,26 @@ export function SiteHeader() {
         {/* Desktop links — six destinations plus the portals menu and the auth
             buttons need real room, so the full bar only appears at `xl`; below
             that the categorised drawer takes over. */}
-        <div className="hidden items-center gap-0.5 xl:flex">
+        <div className="hidden items-center gap-0 xl:flex">
           {NAV_ITEMS.map((item) => renderNavLink(item))}
         </div>
 
-        {/* Desktop controls */}
-        <div className="hidden items-center gap-1.5 xl:flex">
+        {/*
+         * Desktop controls — shrink-0 on purpose.
+         *
+         * The full cluster measures ~574px in Arabic and ~480px in English
+         * with no wrapping. Allowing it to shrink is what silently broke the
+         * labels: flexbox compressed the auth buttons below their min-content
+         * width, so "إنشاء حساب جديد" wrapped to three lines inside a 36px
+         * pill. It now keeps its natural width, and the bar is wide enough to
+         * hold it (see the nav container below).
+         */}
+        <div className="hidden shrink-0 items-center gap-1 xl:flex">
           {languageButton}
           {themeButton}
           <span
             aria-hidden="true"
-            className="mx-1 h-6 w-px bg-sarh-borderLight dark:bg-sarh-borderDark"
+            className="mx-0.5 h-6 w-px bg-sarh-borderLight dark:bg-sarh-borderDark"
           />
           {portalsMenu}
           {renderProfile()}
@@ -560,14 +587,15 @@ export function SiteHeader() {
             className="overflow-hidden border-t border-sarh-borderLight bg-sarh-cardLight/95 backdrop-blur-md xl:hidden dark:border-sarh-borderDark dark:bg-sarh-cardDark/95"
           >
             <div className="flex flex-col gap-1 p-4">
-              <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              {/* No `tracking-wide`: letter-spacing breaks Arabic's joins. */}
+              <p className="px-3 pb-1 text-xs font-semibold text-sarh-inkMute dark:text-slate-400">
                 {t("navLabel")}
               </p>
               {NAV_ITEMS.map((item) =>
                 renderNavLink(item, () => setMobileOpen(false))
               )}
 
-              <p className="mt-3 border-t border-sarh-borderLight px-3 pt-3 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:border-sarh-borderDark">
+              <p className="mt-3 border-t border-sarh-borderLight px-3 pt-3 text-xs font-semibold text-sarh-inkMute dark:border-sarh-borderDark dark:text-slate-400">
                 {t("nav_portals")}
               </p>
               {visiblePortals.map(({ href, labelKey, Icon }) => (
