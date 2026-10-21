@@ -67,42 +67,44 @@ export function HomeHero() {
         gsap.set(frame, { autoAlpha: 0, y: 36, scale: 0.97 });
         gsap.set(cardBlocks, { autoAlpha: 0, y: 12 });
 
+        // One motion vocabulary, matching `--sarh-dur-*` in globals.css:
+        // 0.4s for small chrome, 0.5s for copy, 0.75s for the hero object.
         const timeline = gsap.timeline({
           defaults: { ease: "power3.out" },
           delay: 0.12,
         });
 
         timeline
-          .to(badge, { autoAlpha: 1, y: 0, duration: 0.5 })
+          .to(badge, { autoAlpha: 1, y: 0, duration: 0.4 })
           .from(
             words,
             {
               autoAlpha: 0,
               yPercent: 70,
               duration: 0.7,
-              stagger: 0.055,
+              stagger: 0.05,
               ease: "power4.out",
             },
             0.06
           )
-          .to(lead, { autoAlpha: 1, y: 0, duration: 0.55 }, 0.3)
-          .to(ctas, { autoAlpha: 1, y: 0, duration: 0.55 }, 0.4)
-          .to(proof, { autoAlpha: 1, y: 0, duration: 0.5 }, 0.5)
-          .to(frame, { autoAlpha: 1, y: 0, scale: 1, duration: 0.85 }, 0.2)
-          .to(cardBlocks, { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.09 }, 0.5)
+          .to(lead, { autoAlpha: 1, y: 0, duration: 0.5 }, 0.3)
+          .to(ctas, { autoAlpha: 1, y: 0, duration: 0.5 }, 0.4)
+          .to(proof, { autoAlpha: 1, y: 0, duration: 0.4 }, 0.5)
+          .to(frame, { autoAlpha: 1, y: 0, scale: 1, duration: 0.75 }, 0.2)
+          .to(cardBlocks, { autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.08 }, 0.5)
           .to(
             chip,
-            { autoAlpha: 1, y: 0, duration: 0.55, ease: "back.out(1.7)" },
-            0.72
+            { autoAlpha: 1, y: 0, duration: 0.5, ease: "back.out(1.7)" },
+            0.7
           )
-          .to(ribbons, { autoAlpha: 1, y: 0, duration: 0.45, stagger: 0.08 }, 0.6);
+          .to(ribbons, { autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.08 }, 0.6);
 
         // Hover micro-interaction on the two calls to action. They are separate
         // targets from the `ctas` wrapper the timeline animates, so the two
         // never fight over the same property.
         const buttons = select('[data-hero="cta"]');
         const lifts = buttons.map((button) =>
-          gsap.quickTo(button, "y", { duration: 0.25, ease: "power2.out" })
+          gsap.quickTo(button, "y", { duration: 0.2, ease: "power2.out" })
         );
         const enters = buttons.map((button, index) => () => lifts[index](-3));
         const leaves = buttons.map((button, index) => () => lifts[index](0));
@@ -154,7 +156,7 @@ export function HomeHero() {
         <div className="flex flex-col items-start gap-5">
           <span
             data-hero="badge"
-            className="sarh-badge gap-1.5 bg-white/80 px-3 py-1.5 text-sarh-teal ring-1 ring-inset ring-sarh-teal/25 shadow-soft"
+            className="sarh-badge gap-1.5 bg-white/80 px-3 py-1.5 text-sarh-tealInk ring-1 ring-inset ring-sarh-teal/25 shadow-soft"
           >
             <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
             {t("home_heroBadge")}
@@ -163,7 +165,7 @@ export function HomeHero() {
           <SplitHeading
             id="home-hero-title"
             data-hero="title"
-            className="text-balance text-[2rem] font-bold leading-[1.25] sm:text-4xl md:text-5xl xl:text-[3.4rem]"
+            className="sarh-display text-sarh-navy dark:text-white"
             segments={[
               { text: t("home_heroTitleLead"), tone: "orange" },
               { text: t("home_heroTitleConnect"), tone: "navy" },
@@ -174,7 +176,7 @@ export function HomeHero() {
 
           <p
             data-hero="lead"
-            className="max-w-xl text-sm leading-8 text-sarh-inkMute dark:text-slate-300 sm:text-base md:text-lg"
+            className="sarh-lead max-w-xl text-sarh-inkMute dark:text-slate-300"
           >
             {t("home_heroLead")}
           </p>
@@ -183,7 +185,7 @@ export function HomeHero() {
             <Link
               data-hero="cta"
               href="/explore/centers"
-              className="sarh-btn-primary h-12 px-6 text-base shadow-teal-glow hover:brightness-[1.06]"
+              className="sarh-btn-primary h-12 px-6 text-base shadow-teal-glow"
             >
               <Compass className="h-5 w-5" aria-hidden="true" />
               {t("home_ctaExplore")}
@@ -191,7 +193,7 @@ export function HomeHero() {
             <Link
               data-hero="cta"
               href="/courses"
-              className="sarh-btn-accent h-12 px-6 text-base shadow-gold-glow hover:brightness-[1.06]"
+              className="sarh-btn-accent h-12 px-6 text-base shadow-gold-glow"
             >
               <BookOpen className="h-5 w-5" aria-hidden="true" />
               {t("home_ctaPrograms")}
@@ -200,11 +202,11 @@ export function HomeHero() {
 
           <div
             data-hero="proof"
-            className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-xs font-bold text-sarh-navy/75 dark:text-slate-300"
+            className="sarh-meta flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 font-semibold text-sarh-navy/80 dark:text-slate-300"
           >
             <span className="flex items-center gap-1.5">
               <Zap
-                className="h-4 w-4 text-sarh-orange"
+                className="h-4 w-4 text-sarh-goldInk dark:text-sarh-gold"
                 fill="currentColor"
                 aria-hidden="true"
               />
@@ -233,7 +235,7 @@ export function HomeHero() {
             >
               <Heart className="h-4 w-4" fill="currentColor" />
             </span>
-            <p className="text-[11px] font-bold leading-5 text-sarh-navy dark:text-slate-100">
+            <p className="text-xs font-bold leading-5 text-sarh-navy dark:text-slate-100">
               {t("home_trustBadge")}
             </p>
           </div>

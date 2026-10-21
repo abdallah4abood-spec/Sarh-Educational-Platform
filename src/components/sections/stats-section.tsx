@@ -16,7 +16,7 @@ function StatCard({ stat }: { stat: Stat }) {
   const { ref, value } = useCountUp<HTMLSpanElement>(stat.value);
 
   return (
-    <div className="sarh-card flex flex-col items-center gap-1.5 p-6 text-center transition-transform duration-200 hover:-translate-y-1">
+    <div className="sarh-card sarh-lift flex flex-col items-center gap-1.5 p-6 text-center">
       <span
         ref={ref}
         // The number + symbol are isolated so "+15,000" and "98%" keep their
@@ -28,7 +28,7 @@ function StatCard({ stat }: { stat: Stat }) {
         {formatCount(value, lang)}
         {stat.suffix ? <span className="text-sarh-teal">{stat.suffix}</span> : null}
       </span>
-      <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+      <p className="sarh-body font-semibold text-sarh-inkMute dark:text-slate-300">
         {t(stat.labelKey)}
       </p>
     </div>
@@ -46,16 +46,16 @@ export function StatsSection() {
   const { t } = useLanguage();
 
   return (
-    <section aria-labelledby="learn-stats-title" className="px-6 py-20">
+    <section aria-labelledby="learn-stats-title" className="sarh-section-tight px-6">
       <div className="mx-auto max-w-6xl">
         <header className="mb-10 text-center">
           <h2
             id="learn-stats-title"
-            className="text-3xl font-bold text-sarh-navy md:text-4xl dark:text-white"
+            className="sarh-heading text-sarh-navy dark:text-white"
           >
             {t("learn_statsTitle")}
           </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm leading-8 text-slate-500 dark:text-slate-400">
+          <p className="sarh-lead mx-auto mt-3 max-w-2xl text-sarh-inkMute dark:text-slate-300">
             {t("learn_statsLead")}
           </p>
         </header>
@@ -70,7 +70,7 @@ export function StatsSection() {
           ))}
         </ul>
 
-        <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
+        <p className="sarh-meta mt-6 text-center text-sarh-inkMute dark:text-slate-400">
           {t("learn_statsTrustNote")}
         </p>
       </div>

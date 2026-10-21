@@ -20,9 +20,16 @@ module.exports = {
           teal: "#00A99D", // Primary Brand: Growth, Primary Actions, Active States
           tealDeep: "#00837A", // Pressed / Active States (Design.md §1)
           tealSoft: "rgba(0,169,157,0.1)", // Subdued tag fills (Design.md §1)
+          // Accessible type/fill companions to the brand hues (WCAG 2.2 AA on
+          // ivory and white). The bright tokens stay for decoration and dark
+          // mode, where they already clear 4.5:1.
+          tealInk: "#00776E", // 5.4:1 with white — primary buttons, teal text
+          tealPressed: "#00635C", // hover/pressed primary
           gold: "#F2994A", // Secondary / Accent: Highlights, Notifications, Badges
+          goldInk: "#A6500C", // 5.6:1 on white — amber text and icons
+          goldPressed: "#E88C36", // hover fill; navy type still 5.4:1
           orange: "#F2994A", // Alias used by the 2026 desk-light identity
-          orangeDeep: "#E07B2A", // Accent pressed / text-on-light state
+          orangeDeep: "#E07B2A", // Accent pressed state (decorative only)
           navy: "#0F2C59", // Deep Navy: Primary Text (Light Mode), Dark Mode Surfaces
           navyDark: "#081325", // Root background surface (dark)
           // ---- Warm "desk" light surfaces (default theme, see globals.css) ----
@@ -37,7 +44,7 @@ module.exports = {
           borderLight: "#EDE5DA", // Light Mode Border Color (warm)
           borderDark: "#1E293B", // Dark Mode Border Color
           ink: "#0D253D", // High contrast body text (Design.md §1)
-          inkMute: "#64748D", // Captions and helpers (Design.md §1)
+          inkMute: "#55657A", // Captions/helpers — 5.6:1 on ivory, 6.0:1 on white
         },
         // Semantic, theme-aware aliases so components never hard-code hex values.
         background: "var(--sarh-bg)",
@@ -142,6 +149,21 @@ module.exports = {
         "float-soft": "float-soft 6s ease-in-out infinite",
         "float-drift": "float-drift 9s ease-in-out infinite",
         "pulse-ring": "pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+      },
+      /*
+       * Motion vocabulary shared with `globals.css` (`--sarh-dur-*` /
+       * `--sarh-ease-*`). Utilities such as `duration-base` or `ease-sarh`
+       * now mean the same thing as the CSS custom properties, so a component
+       * never invents its own timing.
+       */
+      transitionDuration: {
+        fast: "150ms",
+        base: "200ms",
+        slow: "320ms",
+      },
+      transitionTimingFunction: {
+        sarh: "cubic-bezier(0.22, 1, 0.36, 1)",
+        "sarh-in-out": "cubic-bezier(0.4, 0, 0.2, 1)",
       },
     },
   },

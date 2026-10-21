@@ -51,7 +51,7 @@ export function DirectoryPagination({
   const items = pageItems(page, pageCount);
 
   const arrowClass =
-    "grid h-10 w-10 place-items-center rounded-lg border border-sarh-borderLight text-sarh-navy transition-colors hover:border-sarh-teal hover:text-sarh-teal disabled:cursor-not-allowed disabled:opacity-40 dark:border-sarh-borderDark dark:text-slate-200";
+    "grid h-10 w-10 place-items-center rounded-lg border border-sarh-borderLight text-sarh-navy transition-colors hover:border-sarh-teal hover:text-sarh-tealInk disabled:cursor-not-allowed disabled:opacity-40 dark:border-sarh-borderDark dark:text-slate-200 dark:hover:text-sarh-teal";
 
   return (
     <nav
@@ -73,7 +73,7 @@ export function DirectoryPagination({
         item === "gap" ? (
           <span
             key={`gap-${index}`}
-            className="px-1 text-sm font-bold text-slate-400"
+            className="px-1 text-sm font-bold text-sarh-inkMute dark:text-slate-400"
             aria-hidden="true"
           >
             …
@@ -86,10 +86,10 @@ export function DirectoryPagination({
             aria-current={item === page ? "page" : undefined}
             aria-label={`${t("dir_pageLabel")} ${item}`}
             className={cn(
-              "grid h-10 w-10 place-items-center rounded-lg border text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal",
+              "grid h-10 w-10 place-items-center rounded-lg border text-sm font-bold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-tealInk",
               item === page
-                ? "border-sarh-teal bg-sarh-teal text-white shadow-teal-glow"
-                : "border-sarh-borderLight text-sarh-navy hover:border-sarh-teal hover:text-sarh-teal dark:border-sarh-borderDark dark:text-slate-200"
+                ? "border-sarh-tealInk bg-sarh-tealInk text-white shadow-teal-glow"
+                : "border-sarh-borderLight text-sarh-navy hover:border-sarh-teal hover:text-sarh-tealInk dark:border-sarh-borderDark dark:text-slate-200 dark:hover:text-sarh-teal"
             )}
           >
             <bdi>{item}</bdi>

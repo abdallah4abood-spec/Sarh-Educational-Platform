@@ -52,7 +52,11 @@ function SelectShell({
 }) {
   return (
     <label className="relative flex min-w-[8rem] flex-1 flex-col gap-1 sm:min-w-[9rem]">
-      <span className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+      {/*
+       * No `tracking-wide` here: letter-spacing breaks Arabic's cursive joins.
+       * 12px + the muted ink is the smallest legible label step on the scale.
+       */}
+      <span className="flex items-center gap-1 text-xs font-semibold text-sarh-inkMute dark:text-slate-400">
         {icon}
         {label}
       </span>
@@ -66,7 +70,7 @@ function SelectShell({
           {children}
         </select>
         <ChevronDown
-          className="pointer-events-none absolute inset-y-0 end-2.5 my-auto h-4 w-4 text-slate-400"
+          className="pointer-events-none absolute inset-y-0 end-2.5 my-auto h-4 w-4 text-sarh-inkMute dark:text-slate-400"
           aria-hidden="true"
         />
       </span>
@@ -182,7 +186,7 @@ export function DirectoryFilterBar({
         <button
           type="button"
           onClick={onSearch}
-          className="sarh-btn-primary h-10 min-w-[7rem] flex-none rounded-lg shadow-teal-glow hover:brightness-110"
+          className="sarh-btn-primary h-10 min-w-[7rem] flex-none rounded-lg shadow-teal-glow"
         >
           <Search className="h-4 w-4" aria-hidden="true" />
           {t("dir_searchAction")}

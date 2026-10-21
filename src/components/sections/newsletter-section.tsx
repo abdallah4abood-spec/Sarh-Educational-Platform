@@ -22,7 +22,7 @@ export function NewsletterSection() {
     <section
       id="newsletter"
       aria-labelledby="learn-newsletter-title"
-      className="scroll-mt-24 px-6 py-20"
+      className="sarh-section-tight scroll-mt-24 px-6"
     >
       <Reveal className="mx-auto max-w-6xl">
         <div className="relative overflow-hidden rounded-3xl border border-sarh-teal/20 bg-gradient-to-br from-sarh-mist via-white to-sarh-beige p-8 shadow-soft-lg dark:border-sarh-teal/25 dark:from-sarh-cardDark dark:via-sarh-cardDark dark:to-sarh-cardDark sm:p-12">
@@ -33,17 +33,17 @@ export function NewsletterSection() {
 
           <div className="relative grid items-center gap-8 lg:grid-cols-2">
             <div className="flex flex-col items-start gap-4">
-              <span className="sarh-badge gap-1.5 bg-white/80 text-sarh-teal ring-1 ring-inset ring-sarh-teal/30">
+              <span className="sarh-badge gap-1.5 bg-white/80 text-sarh-tealInk ring-1 ring-inset ring-sarh-teal/30 dark:bg-sarh-cardDark dark:text-sarh-teal">
                 <Mail className="h-3.5 w-3.5" aria-hidden="true" />
                 {t("learn_footerLinkNewsletter")}
               </span>
               <h2
                 id="learn-newsletter-title"
-                className="text-2xl font-bold text-balance text-sarh-navy md:text-3xl dark:text-white"
+                className="sarh-heading text-sarh-navy dark:text-white"
               >
                 {t("learn_newsTitle")}
               </h2>
-              <p className="max-w-xl text-sm leading-8 text-sarh-inkMute dark:text-slate-300">
+              <p className="sarh-lead max-w-xl text-sarh-inkMute dark:text-slate-300">
                 {t("learn_newsLead")}
               </p>
             </div>

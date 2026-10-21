@@ -50,9 +50,33 @@
   --sarh-card-fg: #0f2c59;
   --sarh-border: #ede5da; /* borderLight — warm hairline */
   --sarh-muted: #f4f0e9; /* soft beige fill */
-  --sarh-muted-fg: #6b7a90;
+  --sarh-muted-fg: #55657a; /* 5.1:1 on the ivory desk — captions stay legible */
   --sarh-teal: #00a99d;
   --sarh-gold: #f2994a;
+  /*
+   * Accessible companions to the brand fills.
+   *
+   * #00A99D and #F2994A are the identity, but as *text* on the light desk they
+   * measure ~2.9:1 and ~2.2:1 — below WCAG 2.2 AA (4.5:1 normal, 3:1 large).
+   * The vibrant tokens keep their job (fills, illustration, dark mode, where
+   * they clear 4.5:1 against navy); these darker members of the same hue carry
+   * type and solid buttons instead, so the palette still reads as Sarh.
+   */
+  --sarh-teal-ink: #00776e; /* 5.4:1 on white, 5.1:1 on ivory */
+  --sarh-teal-pressed: #00635c;
+  --sarh-gold-ink: #a6500c; /* 5.6:1 on white, 5.2:1 on ivory */
+  --sarh-gold-pressed: #e88c36;
+  /*
+   * Motion scale — one duration/easing vocabulary for the whole product.
+   * `fast` is for state changes on controls, `base` for hover/press feedback,
+   * `slow` for view and entrance transitions. Easing is the same ease-out curve
+   * GSAP uses (`power3.out`) so CSS and timeline motion feel identical.
+   */
+  --sarh-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --sarh-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --sarh-dur-fast: 150ms;
+  --sarh-dur-base: 200ms;
+  --sarh-dur-slow: 320ms;
   /* Hero environment: the daylight gradient painted behind the desk scene. */
   --sarh-desk-glow: radial-gradient(
     115% 85% at 88% 6%,
@@ -137,20 +161,172 @@
     box-shadow: 0 4px 20px -2px rgba(15, 44, 89, 0.08);
   }
 
+  /*
+   * Buttons keep the brand hues but not the brand *tints*: white on #00A99D is
+   * 2.9:1, so the primary fill moves one step deeper (#00776E = 5.4:1) and the
+   * gold accent keeps its fill with navy type on top (6.2:1) instead of white
+   * (2.2:1). Hover states stay inside the same family and remain ≥4.5:1.
+   */
   .sarh-btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-sarh-teal px-5 py-2.5 font-semibold text-white transition-colors hover:bg-[#00938A] focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-sarh-tealInk px-5 py-2.5 font-semibold text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-tealInk focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+    transition:
+      background-color var(--sarh-dur-base) var(--sarh-ease-out),
+      color var(--sarh-dur-base) var(--sarh-ease-out),
+      box-shadow var(--sarh-dur-base) var(--sarh-ease-out);
+  }
+
+  .sarh-btn-primary:hover {
+    background-color: var(--sarh-teal-pressed);
   }
 
   .sarh-btn-accent {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-sarh-gold px-5 py-2.5 font-semibold text-white transition-colors hover:bg-[#DE8435] focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-gold focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-sarh-gold px-5 py-2.5 font-semibold text-sarh-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-goldInk focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+    transition:
+      background-color var(--sarh-dur-base) var(--sarh-ease-out),
+      color var(--sarh-dur-base) var(--sarh-ease-out),
+      box-shadow var(--sarh-dur-base) var(--sarh-ease-out);
+  }
+
+  .sarh-btn-accent:hover {
+    background-color: var(--sarh-gold-pressed);
   }
 
   .sarh-input {
     @apply w-full rounded-lg border border-sarh-borderLight bg-sarh-cardLight px-4 py-2.5 text-sarh-navy outline-none transition-colors placeholder:text-slate-400 focus:border-sarh-teal focus:ring-2 focus:ring-sarh-teal/30 dark:border-sarh-borderDark dark:bg-sarh-cardDark dark:text-slate-100;
   }
 
+  /* `leading-5` instead of Tailwind's 1rem: Arabic ascenders and the kasra/
+     damma marks need the extra line box, and a 12px label is the smallest step
+     the scale allows for real copy. */
   .sarh-badge {
-    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold leading-5;
+  }
+
+  /* ==========================================================
+     Typographic scale
+     ----------------------------------------------------------
+     Fluid display sizes replace the old breakpoint pile. Arabic gets a
+     taller line box (1.38–1.4) because diacritics sit above and below the
+     baseline; Latin is tightened (1.08–1.18) so display type does not float
+     apart. Arabic is never letter-spaced — tracking breaks the cursive joins.
+     ========================================================== */
+  .sarh-display {
+    font-size: clamp(2rem, 1.3rem + 3.2vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1.4;
+    letter-spacing: 0;
+    text-wrap: balance;
+  }
+
+  [dir="ltr"] .sarh-display {
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+  }
+
+  .sarh-display-sm {
+    font-size: clamp(1.75rem, 1.25rem + 2.1vw, 2.65rem);
+    font-weight: 800;
+    line-height: 1.4;
+    letter-spacing: 0;
+    text-wrap: balance;
+  }
+
+  [dir="ltr"] .sarh-display-sm {
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+  }
+
+  .sarh-heading {
+    font-size: clamp(1.65rem, 1.4rem + 1.1vw, 2.25rem);
+    font-weight: 700;
+    line-height: 1.38;
+    letter-spacing: 0;
+    text-wrap: balance;
+  }
+
+  [dir="ltr"] .sarh-heading {
+    line-height: 1.18;
+    letter-spacing: -0.01em;
+  }
+
+  /* 16px → 17px body lead: the reading size on a phone, one step up on desktop. */
+  .sarh-lead {
+    font-size: 1rem;
+    line-height: 1.9;
+  }
+
+  @media (min-width: 768px) {
+    .sarh-lead {
+      font-size: 1.0625rem;
+    }
+  }
+
+  .sarh-body {
+    font-size: 0.9375rem;
+    line-height: 1.85;
+  }
+
+  /* Metadata, captions and chip copy — the smallest step, never 11px. */
+  .sarh-meta {
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+
+  /* ==========================================================
+     Section rhythm (4px grid)
+     ----------------------------------------------------------
+     Primary chapters breathe at 48 → 64 → 80px; secondary bands stop at
+     40 → 48 → 64px. Every step is a multiple of 4, so vertical rhythm stays
+     on the same grid as the spacing scale instead of a flat `py-20`.
+     ========================================================== */
+  .sarh-section {
+    padding-block: 3rem;
+  }
+
+  .sarh-section-tight {
+    padding-block: 2.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .sarh-section {
+      padding-block: 4rem;
+    }
+
+    .sarh-section-tight {
+      padding-block: 3rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .sarh-section {
+      padding-block: 5rem;
+    }
+
+    .sarh-section-tight {
+      padding-block: 4rem;
+    }
+  }
+
+  /*
+   * The one hover lift used by cards. Declared once so every card moves by the
+   * same 4px and eases on the shared curve, and so `prefers-reduced-motion`
+   * can switch the transform off in a single place.
+   */
+  .sarh-lift {
+    transition:
+      transform var(--sarh-dur-base) var(--sarh-ease-out),
+      box-shadow var(--sarh-dur-base) var(--sarh-ease-out),
+      border-color var(--sarh-dur-base) var(--sarh-ease-out);
+  }
+
+  .sarh-lift:hover {
+    transform: translateY(-0.25rem);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sarh-lift:hover {
+      transform: none;
+    }
   }
 
   /*
@@ -231,7 +407,7 @@
    * pulled into the auth bundle for it.
    */
   .sarh-view-enter {
-    animation: sarh-view-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: sarh-view-enter var(--sarh-dur-slow) var(--sarh-ease-out) both;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -277,5 +453,25 @@
    */
   [data-hero-ready] [data-hero] {
     will-change: transform, opacity;
+  }
+
+  /*
+   * Global reduced-motion guarantee for the decorative layer.
+   *
+   * GSAP, Lenis and the count-up hook already check the media query, but CSS
+   * hover/press transforms and the shimmer/float keyframes are not scripted.
+   * They are removed here so "reduce motion" means no decorative movement at
+   * all — while spinners and progress indicators (which communicate state)
+   * keep animating, which is why this is not a `* { animation: none }` rule.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    .sarh-lift,
+    .sarh-card {
+      transition: none;
+    }
+
+    .sarh-card:hover {
+      transform: none;
+    }
   }
 }

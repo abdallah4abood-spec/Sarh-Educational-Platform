@@ -36,7 +36,7 @@ export function RatingStars({ rating, label, size = "sm", className }: RatingSta
               className={cn(
                 dimension,
                 isFilled
-                  ? "text-sarh-gold"
+                  ? "text-sarh-goldInk dark:text-sarh-gold"
                   : "text-slate-300 dark:text-slate-600"
               )}
               fill={isFilled ? "currentColor" : "none"}
@@ -49,7 +49,10 @@ export function RatingStars({ rating, label, size = "sm", className }: RatingSta
                 aria-hidden="true"
                 className="absolute inset-y-0 start-0 w-1/2 overflow-hidden"
               >
-                <Star className={cn(dimension, "text-sarh-gold")} fill="currentColor" />
+                <Star
+                  className={cn(dimension, "text-sarh-goldInk dark:text-sarh-gold")}
+                  fill="currentColor"
+                />
               </span>
             ) : null}
           </span>

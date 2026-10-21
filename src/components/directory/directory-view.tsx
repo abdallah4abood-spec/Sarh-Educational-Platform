@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronDown, SearchX, SlidersHorizontal } from "lucide-react";
 
 import { CenterCard } from "./center-card";
@@ -54,6 +54,7 @@ export function DirectoryView({ kind }: { kind: DirectoryKind }) {
 
   const resultsTop = useRef<HTMLDivElement>(null);
   const firstRun = useRef(true);
+  const reduceMotion = useReducedMotion();
 
   // Debounce the hero/filter text so each keystroke does not re-sort the grid.
   useEffect(() => {
@@ -127,8 +128,12 @@ export function DirectoryView({ kind }: { kind: DirectoryKind }) {
     setSort("rating");
   };
 
+  // `smooth` is itself motion: honour the OS setting and jump instead.
   const scrollToResults = () =>
-    resultsTop.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    resultsTop.current?.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "start",
+    });
 
   const goToPage = (next: number) => {
     setPage(Math.min(Math.max(1, next), pageCount));
@@ -187,15 +192,21 @@ export function DirectoryView({ kind }: { kind: DirectoryKind }) {
           >
             {/* ---- Results header -------------------------------- */}
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <p aria-live="polite" className="text-sm font-bold text-sarh-navy dark:text-white">
+              <p
+                aria-live="polite"
+                className="text-base font-bold text-sarh-navy dark:text-white"
+              >
                 {t("dir_resultsPre")}{" "}
                 <bdi>{sorted.length}</bdi> {t(meta.resultsUnitKey)}
               </p>
 
               <label className="relative flex items-center gap-2">
                 <span className="sr-only">{t("dir_sortBy")}</span>
-                <span className="flex items-center gap-1.5 rounded-lg border border-sarh-borderLight bg-sarh-cardLight px-3 text-xs font-semibold text-slate-500 dark:border-sarh-borderDark dark:bg-sarh-cardDark dark:text-slate-400">
-                  <SlidersHorizontal className="h-3.5 w-3.5 text-sarh-teal" aria-hidden="true" />
+                <span className="flex items-center gap-1.5 rounded-lg border border-sarh-borderLight bg-sarh-cardLight px-3 text-xs font-semibold text-sarh-inkMute dark:border-sarh-borderDark dark:bg-sarh-cardDark dark:text-slate-400">
+                  <SlidersHorizontal
+                    className="h-3.5 w-3.5 text-sarh-tealInk dark:text-sarh-teal"
+                    aria-hidden="true"
+                  />
                   {t("dir_sortBy")}
                 </span>
                 <span className="relative">
@@ -212,7 +223,7 @@ export function DirectoryView({ kind }: { kind: DirectoryKind }) {
                     ))}
                   </select>
                   <ChevronDown
-                    className="pointer-events-none absolute inset-y-0 end-2.5 my-auto h-4 w-4 text-slate-400"
+                    className="pointer-events-none absolute inset-y-0 end-2.5 my-auto h-4 w-4 text-sarh-inkMute dark:text-slate-400"
                     aria-hidden="true"
                   />
                 </span>
@@ -226,13 +237,13 @@ export function DirectoryView({ kind }: { kind: DirectoryKind }) {
                 animate={{ opacity: 1, y: 0 }}
                 className="sarh-card flex flex-col items-center gap-3 px-6 py-16 text-center"
               >
-                <span className="grid h-14 w-14 place-items-center rounded-full bg-sarh-gold/15 text-sarh-gold">
+                <span className="grid h-14 w-14 place-items-center rounded-full bg-sarh-gold/15 text-sarh-goldInk dark:text-sarh-gold">
                   <SearchX className="h-7 w-7" aria-hidden="true" />
                 </span>
                 <h2 className="text-lg font-bold text-sarh-navy dark:text-white">
                   {t("dir_emptyTitle")}
                 </h2>
-                <p className="max-w-md text-sm leading-7 text-slate-500 dark:text-slate-400">
+                <p className="sarh-body max-w-md text-sarh-inkMute dark:text-slate-400">
                   {t("dir_emptyLead")}
                 </p>
                 <Button variant="outline" size="sm" className="mt-2" onClick={clearAll}>

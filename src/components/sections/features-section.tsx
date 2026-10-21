@@ -39,20 +39,20 @@ export function FeaturesSection() {
     <section
       id="features"
       aria-labelledby="learn-features-title"
-      className="scroll-mt-24 border-y border-sarh-borderLight bg-white/60 px-6 py-20 dark:border-sarh-borderDark dark:bg-sarh-cardDark/40"
+      className="sarh-section scroll-mt-24 border-y border-sarh-borderLight bg-white/60 px-6 dark:border-sarh-borderDark dark:bg-sarh-cardDark/40"
     >
       <div className="mx-auto max-w-6xl">
         <header className="mb-10 text-center">
-          <span className="sarh-badge bg-sarh-teal/10 text-sarh-teal ring-1 ring-inset ring-sarh-teal/30">
+          <span className="sarh-badge bg-sarh-teal/10 text-sarh-tealInk ring-1 ring-inset ring-sarh-teal/30 dark:text-sarh-teal">
             {t("learn_featuresBadge")}
           </span>
           <h2
             id="learn-features-title"
-            className="mt-4 text-3xl font-bold text-sarh-navy md:text-4xl dark:text-white"
+            className="sarh-heading mt-4 text-sarh-navy dark:text-white"
           >
             {t("learn_featuresTitle")}
           </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-sm leading-8 text-slate-500 dark:text-slate-400">
+          <p className="sarh-lead mx-auto mt-3 max-w-2xl text-sarh-inkMute dark:text-slate-300">
             {t("learn_featuresLead")}
           </p>
         </header>
@@ -63,8 +63,8 @@ export function FeaturesSection() {
             return (
               <li key={feature.id} className={FEATURE_SPAN[feature.id]}>
                 <Reveal delayMs={index * 80} className="h-full">
-                  <article className="sarh-card group flex h-full flex-col gap-3 p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-teal-gold-glow">
-                    <span className="relative grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-sarh-teal/20 to-sarh-gold/20 text-sarh-teal">
+                  <article className="sarh-card sarh-lift group flex h-full flex-col gap-3 p-6 hover:shadow-teal-gold-glow">
+                    <span className="relative grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-sarh-teal/20 to-sarh-gold/20 text-sarh-tealInk dark:text-sarh-teal">
                       <span
                         aria-hidden="true"
                         className="pointer-events-none absolute -inset-1 rounded-2xl bg-sarh-teal/25 opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-100"
@@ -75,7 +75,7 @@ export function FeaturesSection() {
                     <h3 className="text-base font-bold text-sarh-navy dark:text-white">
                       {t(feature.titleKey)}
                     </h3>
-                    <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
+                    <p className="sarh-body text-slate-600 dark:text-slate-300">
                       {t(feature.bodyKey)}
                     </p>
                   </article>
@@ -85,7 +85,7 @@ export function FeaturesSection() {
           })}
         </ul>
 
-        <p className="mt-6 flex items-center justify-center gap-2 text-center text-xs font-semibold text-sarh-teal">
+        <p className="sarh-meta mt-6 flex items-center justify-center gap-2 text-center font-semibold text-sarh-tealInk dark:text-sarh-teal">
           <ShieldCheck className="h-4 w-4" aria-hidden="true" />
           {t("learn_featuresNote")}
         </p>

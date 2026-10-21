@@ -225,7 +225,7 @@ export function CoursesSection() {
                 onClick={() => setActive(category.id)}
                 onKeyDown={(event) => handleTabKeyDown(event, index)}
                 className={cn(
-                  "rounded-full border px-5 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal",
+                  "rounded-full border px-5 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-tealInk",
                   selected
                     ? "border-sarh-teal bg-sarh-teal text-white shadow-teal-glow"
                     : "border-sarh-borderLight bg-sarh-cardLight text-sarh-navy hover:border-sarh-teal hover:text-sarh-teal dark:border-sarh-borderDark dark:bg-sarh-cardDark dark:text-slate-200"

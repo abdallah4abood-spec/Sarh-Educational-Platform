@@ -31,10 +31,15 @@ export interface HeadingSegment {
   tone?: HeadingTone;
 }
 
+/*
+ * Display tones use the accessible members of the palette on the light desk
+ * (#A6500C = 4.7:1, #00776E = 5.1:1 — both clear the 3:1 large-text bar with
+ * room to spare) and the vibrant brand hues on navy, where they already pass.
+ */
 const TONE_CLASS: Record<HeadingTone, string> = {
   navy: "text-sarh-navy dark:text-white",
-  orange: "text-sarh-orange",
-  teal: "text-sarh-teal",
+  orange: "text-sarh-goldInk dark:text-sarh-orange",
+  teal: "text-sarh-tealInk dark:text-sarh-teal",
 };
 
 interface SplitHeadingProps

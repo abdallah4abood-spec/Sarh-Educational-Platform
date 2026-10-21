@@ -119,7 +119,7 @@ export function HeroSection() {
             <button
               type="button"
               onClick={() => setVideoOpen(true)}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-sarh-borderLight bg-white/70 px-6 text-base font-semibold text-sarh-navy transition-colors hover:border-sarh-teal hover:text-sarh-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal dark:border-sarh-borderDark dark:bg-transparent dark:text-slate-100"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-sarh-borderLight bg-white/70 px-6 text-base font-semibold text-sarh-navy transition-colors hover:border-sarh-teal hover:text-sarh-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-tealInk dark:border-sarh-borderDark dark:bg-transparent dark:text-slate-100"
             >
               <PlayCircle className="h-5 w-5" aria-hidden="true" />
               {t("learn_heroCtaSecondary")}

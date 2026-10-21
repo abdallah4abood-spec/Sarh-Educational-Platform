@@ -68,8 +68,8 @@ export function DirectorySidebar({
     <div className="flex flex-col gap-5">
       {/* ---- Categories -------------------------------------------- */}
       <section className="sarh-card p-5">
-        <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-sarh-navy dark:text-white">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-sarh-teal/10 text-sarh-teal">
+        <h2 className="mb-4 flex items-center gap-2 text-base font-bold leading-7 text-sarh-navy dark:text-white">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-sarh-teal/10 text-sarh-tealInk dark:text-sarh-teal">
             <LayoutGrid className="h-4 w-4" aria-hidden="true" />
           </span>
           {t("dir_sidebarCategories")}
@@ -82,14 +82,17 @@ export function DirectorySidebar({
               onClick={() => onCategory("all")}
               aria-pressed={selectedCategory === "all"}
               className={cn(
-                "flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal",
+                "flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-tealInk",
                 selectedCategory === "all"
-                  ? "bg-sarh-teal/10 text-sarh-teal"
-                  : "text-sarh-navy hover:bg-sarh-teal/5 hover:text-sarh-teal dark:text-slate-200"
+                  ? "bg-sarh-teal/10 text-sarh-tealInk dark:text-sarh-teal"
+                  : "text-sarh-navy hover:bg-sarh-teal/5 hover:text-sarh-tealInk dark:text-slate-200 dark:hover:text-sarh-teal"
               )}
             >
               <span className="flex items-center gap-2.5">
-                <LayoutGrid className="h-4 w-4 text-sarh-teal" aria-hidden="true" />
+                <LayoutGrid
+                  className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal"
+                  aria-hidden="true"
+                />
                 {t("dir_allCategories")}
               </span>
             </button>
@@ -104,17 +107,20 @@ export function DirectorySidebar({
                   onClick={() => onCategory(active ? "all" : category.id)}
                   aria-pressed={active}
                   className={cn(
-                    "flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal",
+                    "flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-tealInk",
                     active
-                      ? "bg-sarh-teal/10 text-sarh-teal"
-                      : "text-sarh-navy hover:bg-sarh-teal/5 hover:text-sarh-teal dark:text-slate-200"
+                      ? "bg-sarh-teal/10 text-sarh-tealInk dark:text-sarh-teal"
+                      : "text-sarh-navy hover:bg-sarh-teal/5 hover:text-sarh-tealInk dark:text-slate-200 dark:hover:text-sarh-teal"
                   )}
                 >
                   <span className="flex items-center gap-2.5">
-                    <Icon className="h-4 w-4 text-sarh-teal" aria-hidden="true" />
+                    <Icon
+                      className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal"
+                      aria-hidden="true"
+                    />
                     {t(category.labelKey)}
                   </span>
-                  <span className="shrink-0 text-xs font-bold text-slate-400 dark:text-slate-500">
+                  <span className="shrink-0 text-xs font-bold text-sarh-inkMute dark:text-slate-400">
                     <bdi>({category.count})</bdi>
                   </span>
                 </button>
@@ -126,7 +132,7 @@ export function DirectorySidebar({
 
       {/* ---- Why choose Sarh -------------------------------------- */}
       <section className="relative overflow-hidden rounded-2xl bg-sarh-mist p-5 ring-1 ring-inset ring-sarh-teal/15 dark:bg-sarh-cardDark">
-        <h2 className="mb-4 text-base font-bold text-sarh-navy dark:text-white">
+        <h2 className="mb-4 text-base font-bold leading-7 text-sarh-navy dark:text-white">
           {t("dir_whyTitle")}
         </h2>
         <ul className="flex flex-col gap-2.5">
@@ -136,7 +142,7 @@ export function DirectorySidebar({
                 key={line}
                 className="flex items-start gap-2 text-sm font-medium leading-6 text-slate-600 dark:text-slate-300"
               >
-                <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-sarh-teal text-white">
+                <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-sarh-tealInk text-white">
                   <Check className="h-3 w-3" aria-hidden="true" />
                 </span>
                 {line}
@@ -146,7 +152,7 @@ export function DirectorySidebar({
         </ul>
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute -bottom-4 -end-4 grid h-24 w-24 place-items-center rounded-full bg-sarh-teal/10 text-sarh-teal"
+          className="pointer-events-none absolute -bottom-4 -end-4 grid h-24 w-24 place-items-center rounded-full bg-sarh-teal/10 text-sarh-tealInk dark:text-sarh-teal"
         >
           <GraduationCap className="h-12 w-12" />
         </span>
@@ -154,10 +160,10 @@ export function DirectorySidebar({
 
       {/* ---- Newsletter ------------------------------------------- */}
       <section className="sarh-card p-5">
-        <h2 className="text-base font-bold text-sarh-navy dark:text-white">
+        <h2 className="text-base font-bold leading-7 text-sarh-navy dark:text-white">
           {t("dir_newsletterTitle")}
         </h2>
-        <p className="mt-1.5 text-sm leading-6 text-slate-500 dark:text-slate-400">
+        <p className="mt-1.5 text-sm leading-6 text-sarh-inkMute dark:text-slate-400">
           {t(meta.newsletterLeadKey)}
         </p>
         <div className="mt-4">
