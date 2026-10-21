@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { forwardRef, useState, type ForwardedRef } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Heart, MapPin, MessageCircle, Tag } from "lucide-react";
 
@@ -55,14 +55,22 @@ const SPRING = { type: "spring", stiffness: 300, damping: 30 } as const;
  *
  * The heart is a local, optimistic toggle (there is no favourites API yet), so
  * it stays a `<button aria-pressed>` rather than a dead link.
+ *
+ * `forwardRef` is not cosmetic: `AnimatePresence mode="popLayout"` clones each
+ * child with a ref so it can measure the exiting card, and a plain function
+ * component cannot receive one (React logs "Function components cannot be
+ * given refs" and the measurement silently degrades). The ref lands on the
+ * motion.article below, which is the element the exit animation needs.
  */
-export function DirectoryCard({
-  listing,
-  index = 0,
-}: {
+export interface DirectoryCardProps {
   listing: DirectoryListing;
   index?: number;
-}) {
+}
+
+function DirectoryCardImpl(
+  { listing, index = 0 }: DirectoryCardProps,
+  ref: ForwardedRef<HTMLElement>
+) {
   const { t, lang } = useLanguage();
   const [favourite, setFavourite] = useState(false);
   // Framer already tween the entrance and the hover lift; when the reader asked
@@ -76,6 +84,7 @@ export function DirectoryCard({
 
   return (
     <motion.article
+      ref={ref}
       layout
       initial={reduceMotion ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
@@ -231,3 +240,8 @@ export function DirectoryCard({
     </motion.article>
   );
 }
+
+export const DirectoryCard = forwardRef<HTMLElement, DirectoryCardProps>(
+  DirectoryCardImpl
+);
+DirectoryCard.displayName = "DirectoryCard";
