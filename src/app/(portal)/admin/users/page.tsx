@@ -5,6 +5,7 @@ import { ArrowLeft, ShieldCheck, UserCheck, UserX, Users } from "lucide-react";
 import { PageHeader, Panel, StatCard } from "@/components/portal/primitives";
 import { StatusPill, accountPill, sourcePill } from "@/components/portal/status-pill";
 import { DataTable, type Column } from "@/components/ui/data-table";
+import { requireAdminPage } from "@/lib/admin-page";
 import type { AdminUserRow } from "@/lib/data/portal";
 import { loadAdminLiveCounts, loadAdminUsers } from "@/lib/db/admin";
 import { ROLE_LABEL } from "@/lib/roles";
@@ -26,6 +27,8 @@ const nf = new Intl.NumberFormat("en-US");
  * instead of pretending the bundled snapshot is live.
  */
 export default async function AdminUsersPage() {
+  await requireAdminPage();
+
   const [live, users] = await Promise.all([
     loadAdminLiveCounts(),
     loadAdminUsers(),

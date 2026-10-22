@@ -22,6 +22,7 @@ import {
   sourcePill,
 } from "@/components/portal/status-pill";
 import { DataTable, type Column } from "@/components/ui/data-table";
+import { requireAdminPage } from "@/lib/admin-page";
 import type { AdminInstitutionRow } from "@/lib/data/portal";
 import {
   loadActivitySeries,
@@ -50,6 +51,8 @@ const nf = new Intl.NumberFormat("en-US");
  * dashboard stays readable while remaining a real control room.
  */
 export default async function AdminOverviewPage() {
+  await requireAdminPage();
+
   /*
    * Every figure on this screen is read from PostgreSQL in one parallel
    * round: counts, receipts, institutions, the 7-day activity series and the

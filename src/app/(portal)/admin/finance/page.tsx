@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { requireAdminPage } from "@/lib/admin-page";
 import {
   loadFinanceStats,
   loadPaymentReceipts,
@@ -23,6 +24,8 @@ export const metadata: Metadata = {
  * and approve/reject decisions persist through the admin API routes.
  */
 export default async function AdminFinancePage() {
+  await requireAdminPage();
+
   const [stats, receipts, approvals] = await Promise.all([
     loadFinanceStats(),
     loadPaymentReceipts(),

@@ -401,14 +401,17 @@ The AI microservice reads its own variables from `ai_service/.env`:
   performance, activity events, directory checklists, site settings, verification tokens).
 - **Migration status — read this before deploying:** the repository has **no `prisma/migrations`
   directory**. The intended local workflow is `npm run db:push`, which applies the schema directly
-  and keeps no history. If you plan to run this against a real database, generate a baseline
-  migration first:
-
-  ```bash
-  npx prisma migrate dev --name init
-  ```
-
-  Until that is done, `prisma migrate deploy` has nothing to replay.
+  and keeps no history. Do **not** run `prisma migrate dev` against an existing database — it can
+  reset it. The recommended path is documented in
+  [`docs/architecture/migration-strategy.md`](docs/architecture/migration-strategy.md): keep
+  `db push` for development, back up and clone before touching a real database, review a generated
+  baseline against the clone, and switch `prisma migrate deploy` on only after that validation.
+- **Staff roles:** `StaffMember.role` is the authorisation role (`CENTER_ADMIN`, `SECRETARY`,
+  `TEACHER`, `SUPERVISOR`, `STAFF`); `title` remains display text. The capability matrix, the
+  dev-only backfill counts and the rollback SQL are documented in
+  [`docs/architecture/staff-role-rollout.md`](docs/architecture/staff-role-rollout.md), and the
+  portal/membership audit in
+  [`docs/architecture/institution-access-audit.md`](docs/architecture/institution-access-audit.md).
 - **Seeding:** `npm run db:seed` runs `prisma/seed.ts` (via `tsx`). It is deterministic and
   idempotent, repairs demo passwords on re-run, and refuses to overwrite demo accounts when
   `NODE_ENV=production` unless `SEED_FORCE=1`.

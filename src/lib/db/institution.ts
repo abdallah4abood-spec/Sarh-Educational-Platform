@@ -1,4 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import {
+  hasCapability,
+  requireCapability,
+  type InstitutionAccess,
+} from "@/lib/institution-access";
 import type {
   CommissionRow,
   RosterStudent,
@@ -11,41 +16,21 @@ import type {
 /**
  * Institution-portal reads (`/institution/**`) — multi-tenant centre admin.
  *
- * A centre account must only ever see its own centre. `resolveInstitutionId`
- * is the gate: it walks the account's ownership first, then its staff
- * membership, and every loader below takes the resolved id — never a query
- * string — so an edited URL cannot open another tenant's roster or revenue.
+ * Every loader takes an `InstitutionAccess` token, not a bare id. That token
+ * is produced only by `resolveInstitutionAccess` in
+ * `src/lib/institution-access.ts`, which verifies ownership or an active
+ * manager membership against the database. Passing a query-string or
+ * request-body id straight to a loader is consequently a type error rather
+ * than a tenant leak, and every read below is keyed on the token's
+ * `institutionId`.
  */
-
-/**
- * The institution this account administers.
- *
- * Ownership wins over staff membership: an owner who is also on staff should
- * land on the centre they actually own. `null` means the account is not
- * attached to any centre yet (the pages render an empty-state then).
- */
-export async function resolveInstitutionId(
-  userId: string
-): Promise<string | null> {
-  const owned = await prisma.institution.findFirst({
-    where: { ownerId: userId },
-    orderBy: { createdAt: "asc" },
-    select: { id: true },
-  });
-  if (owned) return owned.id;
-
-  const staff = await prisma.staffMember.findFirst({
-    where: { userId },
-    orderBy: { joinedAt: "asc" },
-    select: { institutionId: true },
-  });
-  return staff?.institutionId ?? null;
-}
 
 /** Header identity for the centre pages. */
-export async function loadInstitutionHeader(institutionId: string) {
+export async function loadInstitutionHeader(access: InstitutionAccess) {
+  requireCapability(access, "institution.read");
+
   const row = await prisma.institution.findUnique({
-    where: { id: institutionId },
+    where: { id: access.institutionId },
     include: { _count: { select: { students: true, staff: true } } },
   });
   if (!row) return null;
@@ -90,11 +75,13 @@ function toCommissionRow(row: {
 
 /** Referral rows for one centre, newest first. */
 export async function loadInstitutionCommissions(
-  institutionId: string,
+  access: InstitutionAccess,
   take = 40
 ): Promise<CommissionRow[]> {
+  requireCapability(access, "commissions.read");
+
   const rows = await prisma.enrollment.findMany({
-    where: { institutionId },
+    where: { institutionId: access.institutionId },
     include: {
       student: { select: { fullName: true } },
       institution: { select: { name: true } },
@@ -112,10 +99,12 @@ export async function loadInstitutionCommissions(
 
 /** Enrolled students of the centre, shaped for the 1-click attendance grid. */
 export async function loadInstitutionRoster(
-  institutionId: string
+  access: InstitutionAccess
 ): Promise<RosterStudent[]> {
+  requireCapability(access, "roster.read");
+
   const rows = await prisma.enrollment.findMany({
-    where: { institutionId },
+    where: { institutionId: access.institutionId },
     include: {
       student: {
         select: {
@@ -141,18 +130,13 @@ export async function loadInstitutionRoster(
 /* Staff                                                               */
 /* ------------------------------------------------------------------ */
 
-const ROLE_BY_TITLE = (title: string): StaffRow["role"] => {
-  if (/مدير/.test(title)) return "مدير المركز";
-  if (/مشرف/.test(title)) return "مشرف";
-  if (/معلم|معلّ/.test(title)) return "معلم";
-  return "إداري";
-};
-
 export async function loadInstitutionStaff(
-  institutionId: string
+  access: InstitutionAccess
 ): Promise<StaffRow[]> {
+  requireCapability(access, "staff.read");
+
   const rows = await prisma.staffMember.findMany({
-    where: { institutionId },
+    where: { institutionId: access.institutionId },
     include: {
       user: {
         select: {
@@ -167,8 +151,9 @@ export async function loadInstitutionStaff(
   return rows.map((row) => ({
     id: row.id,
     name: row.user.fullName,
-    role: ROLE_BY_TITLE(row.title),
-    subjects: row.subjects.join("، ") || row.title,
+    // `title` is the human-facing position; `role` governs access only.
+    role: row.title,
+    subjects: row.subjects.join("، ") || "—",
     classes: row.user._count.taughtClasses,
     status:
       row.status === "ON_LEAVE"
@@ -193,10 +178,12 @@ const CHECKLIST_HINTS: Record<string, string> = {
 };
 
 export async function loadDirectoryChecklist(
-  institutionId: string
+  access: InstitutionAccess
 ): Promise<DirectoryChecklistItem[]> {
+  requireCapability(access, "profile.read");
+
   const rows = await prisma.directoryChecklistItem.findMany({
-    where: { institutionId },
+    where: { institutionId: access.institutionId },
     orderBy: { key: "asc" },
   });
 
@@ -217,15 +204,18 @@ export async function loadDirectoryChecklist(
  * enrollments rather than a fabricated review count, and `occupancy` is the
  * share of seats referred through Sarh that finance has verified.
  */
-export async function loadInstitutionProfile(institutionId: string) {
+export async function loadInstitutionProfile(access: InstitutionAccess) {
+  requireCapability(access, "profile.read");
+
   const row = await prisma.institution.findUnique({
-    where: { id: institutionId },
+    where: { id: access.institutionId },
     include: {
       students: { select: { status: true } },
     },
   });
   if (!row) return null;
 
+  const canViewFinance = hasCapability(access, "commissions.read");
   const verifiedSeats = row.students.filter(
     (enrollment) => enrollment.status === "VERIFIED"
   ).length;
@@ -236,8 +226,15 @@ export async function loadInstitutionProfile(institutionId: string) {
     phone: row.phone ?? "—",
     verified: row.trustStatus === "VERIFIED",
     rating: row.rating,
-    reviews: verifiedSeats,
-    occupancy: row.students.length === 0 ? 0 : verifiedSeats / row.students.length,
+    // Verified-enrolment counts and occupancy are finance-derived. A
+    // CENTER_ADMIN gets `null` so the value never leaves the database, rather
+    // than receiving a number the UI is expected to hide.
+    reviews: canViewFinance ? verifiedSeats : null,
+    occupancy: canViewFinance
+      ? row.students.length === 0
+        ? 0
+        : verifiedSeats / row.students.length
+      : null,
     description: row.description ?? "",
     trustNote: row.trustNote ?? "",
   };
@@ -253,10 +250,12 @@ export async function loadInstitutionProfile(institutionId: string) {
  * subject no teacher can act on.
  */
 export async function loadInstitutionSubjects(
-  institutionId: string
+  access: InstitutionAccess
 ): Promise<string[]> {
+  requireCapability(access, "ai_studio.use");
+
   const rows = await prisma.schoolClass.findMany({
-    where: { institutionId },
+    where: { institutionId: access.institutionId },
     select: { subject: true },
     distinct: ["subject"],
     orderBy: { subject: "asc" },

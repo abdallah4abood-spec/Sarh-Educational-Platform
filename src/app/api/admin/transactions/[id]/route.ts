@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
+import { requireLiveSuperAdmin } from "@/lib/admin-access";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -27,10 +28,8 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   const session = await getServerSession(authOptions);
-  const roles = session?.user?.roles ?? [];
-  if (!session?.user || !roles.includes("SUPER_ADMIN")) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
+  const denied = await requireLiveSuperAdmin(session);
+  if (denied) return denied;
 
   const parsed = reviewSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {

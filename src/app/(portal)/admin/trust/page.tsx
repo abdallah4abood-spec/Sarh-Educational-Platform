@@ -13,6 +13,7 @@ import { ActivityChart } from "@/components/portal/activity-chart";
 import { PageHeader, Panel, StatCard } from "@/components/portal/primitives";
 import { StatusPill, institutionPill, paymentPill } from "@/components/portal/status-pill";
 import { DataTable, type Column } from "@/components/ui/data-table";
+import { requireAdminPage } from "@/lib/admin-page";
 import type { ApprovalRow } from "@/lib/data/finance";
 import {
   loadActivitySeries,
@@ -39,6 +40,8 @@ const nf = new Intl.NumberFormat("en-US");
  * dashboard.
  */
 export default async function AdminTrustPage() {
+  await requireAdminPage();
+
   const [approvals, institutions, activity, totals] = await Promise.all([
     loadTrustQueue(),
     loadAdminInstitutions(),

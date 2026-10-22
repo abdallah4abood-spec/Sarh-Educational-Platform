@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Landmark } from "lucide-react";
 
+import { requireAdminPage } from "@/lib/admin-page";
+
 import { SettingsForm } from "./settings-form";
 
 export const metadata: Metadata = {
@@ -15,7 +17,9 @@ export const metadata: Metadata = {
  * `middleware.ts`). Values are persisted as `SiteSetting` rows and consumed by
  * the public footer, the contact page and `/api/settings`.
  */
-export default function AdminSettingsPage() {
+export default async function AdminSettingsPage() {
+  await requireAdminPage();
+
   return (
     <div className="mx-auto min-h-screen w-full max-w-4xl px-4 pb-20 pt-6">
       <nav className="mb-4">

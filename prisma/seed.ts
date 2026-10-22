@@ -7,6 +7,7 @@ import {
   type PlanStatus,
   type Role,
   type SignalKind,
+  type StaffRole,
   type StaffStatus,
   type TrustStatus,
 } from "@prisma/client";
@@ -568,24 +569,31 @@ async function main() {
   console.log(`✓ directory checklist (${INSTITUTIONS.length * CHECKLIST.length})`);
 
   /* ---- Staff ------------------------------------------------------ */
-  const STAFF: { institutionKey: string; email: string; title: string; subjects: string[]; status: StaffStatus }[] = [
-    { institutionKey: "noor-center", email: "center@sarh.ps", title: "مدير المركز", subjects: [], status: "ACTIVE" },
-    { institutionKey: "noor-center", email: "teacher@sarh.ps", title: "معلمة رياضيات وفيزياء", subjects: ["الرياضيات", "الفيزياء"], status: "ACTIVE" },
-    { institutionKey: "noor-center", email: "teacher2@sarh.ps", title: "معلم لغة عربية", subjects: ["اللغة العربية", "العلوم"], status: "ACTIVE" },
-    { institutionKey: "noor-center", email: "teacher3@sarh.ps", title: "معلمة لغة إنجليزية", subjects: ["اللغة الإنجليزية"], status: "ON_LEAVE" },
+  const STAFF: {
+    institutionKey: string;
+    email: string;
+    title: string;
+    role: StaffRole;
+    subjects: string[];
+    status: StaffStatus;
+  }[] = [
+    { institutionKey: "noor-center", email: "center@sarh.ps", title: "مدير المركز", role: "CENTER_ADMIN", subjects: [], status: "ACTIVE" },
+    { institutionKey: "noor-center", email: "teacher@sarh.ps", title: "معلمة رياضيات وفيزياء", role: "TEACHER", subjects: ["الرياضيات", "الفيزياء"], status: "ACTIVE" },
+    { institutionKey: "noor-center", email: "teacher2@sarh.ps", title: "معلم لغة عربية", role: "TEACHER", subjects: ["اللغة العربية", "العلوم"], status: "ACTIVE" },
+    { institutionKey: "noor-center", email: "teacher3@sarh.ps", title: "معلمة لغة إنجليزية", role: "TEACHER", subjects: ["اللغة الإنجليزية"], status: "ON_LEAVE" },
     // The supervisor holds a membership in the centre they oversee, so the
     // supervision scope resolves to real institutions instead of falling back
     // to platform-wide — the demo exercises the isolation it ships.
-    { institutionKey: "noor-center", email: "supervisor@sarh.ps", title: "مشرفة تربوية", subjects: [], status: "ACTIVE" },
-    { institutionKey: "baraem", email: "center@sarh.ps", title: "مديرة الروضة", subjects: [], status: "ACTIVE" },
-    { institutionKey: "baraem", email: "teacher3@sarh.ps", title: "معلمة تأسيس", subjects: ["التأسيس اللغوي"], status: "ACTIVE" },
-    { institutionKey: "ufuq", email: "center2@sarh.ps", title: "مدير الأكاديمية", subjects: [], status: "ACTIVE" },
-    { institutionKey: "ufuq", email: "teacher2@sarh.ps", title: "معلم رياضيات", subjects: ["الرياضيات"], status: "ACTIVE" },
-    { institutionKey: "ufuq", email: "teacher3@sarh.ps", title: "معلمة إنجليزي", subjects: ["اللغة الإنجليزية"], status: "ACTIVE" },
-    { institutionKey: "zohour", email: "center2@sarh.ps", title: "مديرة الروضة", subjects: [], status: "ACTIVE" },
-    { institutionKey: "zohour", email: "teacher3@sarh.ps", title: "معلمة أنشطة", subjects: ["الأنشطة الحسية"], status: "INACTIVE" },
-    { institutionKey: "riyada", email: "center@sarh.ps", title: "مدير المركز", subjects: [], status: "ACTIVE" },
-    { institutionKey: "riyada", email: "teacher@sarh.ps", title: "معلمة لغة عربية", subjects: ["اللغة العربية"], status: "ACTIVE" },
+    { institutionKey: "noor-center", email: "supervisor@sarh.ps", title: "مشرفة تربوية", role: "SUPERVISOR", subjects: [], status: "ACTIVE" },
+    { institutionKey: "baraem", email: "center@sarh.ps", title: "مديرة الروضة", role: "CENTER_ADMIN", subjects: [], status: "ACTIVE" },
+    { institutionKey: "baraem", email: "teacher3@sarh.ps", title: "معلمة تأسيس", role: "TEACHER", subjects: ["التأسيس اللغوي"], status: "ACTIVE" },
+    { institutionKey: "ufuq", email: "center2@sarh.ps", title: "مدير الأكاديمية", role: "CENTER_ADMIN", subjects: [], status: "ACTIVE" },
+    { institutionKey: "ufuq", email: "teacher2@sarh.ps", title: "معلم رياضيات", role: "TEACHER", subjects: ["الرياضيات"], status: "ACTIVE" },
+    { institutionKey: "ufuq", email: "teacher3@sarh.ps", title: "معلمة إنجليزي", role: "TEACHER", subjects: ["اللغة الإنجليزية"], status: "ACTIVE" },
+    { institutionKey: "zohour", email: "center2@sarh.ps", title: "مديرة الروضة", role: "CENTER_ADMIN", subjects: [], status: "ACTIVE" },
+    { institutionKey: "zohour", email: "teacher3@sarh.ps", title: "معلمة أنشطة", role: "TEACHER", subjects: ["الأنشطة الحسية"], status: "INACTIVE" },
+    { institutionKey: "riyada", email: "center@sarh.ps", title: "مدير المركز", role: "CENTER_ADMIN", subjects: [], status: "ACTIVE" },
+    { institutionKey: "riyada", email: "teacher@sarh.ps", title: "معلمة لغة عربية", role: "TEACHER", subjects: ["اللغة العربية"], status: "ACTIVE" },
   ];
   await prisma.staffMember.createMany({
     data: STAFF.map((row, index) => ({
@@ -593,6 +601,7 @@ async function main() {
       userId: user(row.email).id,
       institutionId: institutionId(row.institutionKey),
       title: row.title,
+      role: row.role,
       subjects: row.subjects,
       status: row.status,
       joinedAt: addDays(verifiedAt, -(60 + index * 7)),

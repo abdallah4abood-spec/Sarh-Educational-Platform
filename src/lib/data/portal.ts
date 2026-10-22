@@ -117,8 +117,8 @@ export interface QualitySignal {
 export interface StaffRow {
   id: string;
   name: string;
-  /** منصب داخل المركز */
-  role: "مدير المركز" | "معلم" | "مشرف" | "إداري";
+  /** منصب داخل المركز — نص وصفي من `StaffMember.title`، وليس حكمًا للصلاحيات */
+  role: string;
   subjects: string;
   classes: number;
   status: "ACTIVE" | "ON_LEAVE" | "PENDING_INVITE";

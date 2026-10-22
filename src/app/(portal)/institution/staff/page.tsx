@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { GraduationCap, MailPlus, UserCheck, UserCog, Users } from "lucide-react";
 
@@ -7,10 +8,11 @@ import { StatusPill, staffPill } from "@/components/portal/status-pill";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { authOptions } from "@/lib/auth";
 import type { StaffRow } from "@/lib/data/portal";
+import { loadInstitutionStaff } from "@/lib/db/institution";
 import {
-  loadInstitutionStaff,
-  resolveInstitutionId,
-} from "@/lib/db/institution";
+  requestedInstitutionId,
+  resolveInstitutionAccess,
+} from "@/lib/institution-access";
 
 export const metadata: Metadata = {
   title: "الطاقم التعليمي",
@@ -25,11 +27,20 @@ export const metadata: Metadata = {
  * *this* center. Adding members happens by invitation, which is why the pending
  * invite is surfaced here instead of hiding inside a form.
  */
-export default async function InstitutionStaffPage() {
+export default async function InstitutionStaffPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
-  const institutionId = userId ? await resolveInstitutionId(userId) : null;
-  const staff = institutionId ? await loadInstitutionStaff(institutionId) : [];
+  const requested = requestedInstitutionId(searchParams);
+  const access = userId
+    ? await resolveInstitutionAccess(userId, requested)
+    : null;
+  if (requested && !access) notFound();
+
+  const staff = access ? await loadInstitutionStaff(access) : [];
 
   const active = staff.filter((row) => row.status === "ACTIVE");
   const onLeave = staff.filter((row) => row.status === "ON_LEAVE");

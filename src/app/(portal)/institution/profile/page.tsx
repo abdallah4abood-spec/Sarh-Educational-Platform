@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import {
   ArrowLeft,
@@ -20,8 +21,11 @@ import { authOptions } from "@/lib/auth";
 import {
   loadDirectoryChecklist,
   loadInstitutionProfile,
-  resolveInstitutionId,
 } from "@/lib/db/institution";
+import {
+  requestedInstitutionId,
+  resolveInstitutionAccess,
+} from "@/lib/institution-access";
 
 export const metadata: Metadata = {
   title: "ملف المركز في الدليل",
@@ -36,14 +40,23 @@ export const metadata: Metadata = {
  * it shows the same fields the directory card renders, and marks what is still
  * missing before the «موثّق» badge can appear.
  */
-export default async function InstitutionProfilePage() {
+export default async function InstitutionProfilePage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
-  const institutionId = userId ? await resolveInstitutionId(userId) : null;
-  const [checklist, loaded] = institutionId
+  const requested = requestedInstitutionId(searchParams);
+  const access = userId
+    ? await resolveInstitutionAccess(userId, requested)
+    : null;
+  if (requested && !access) notFound();
+
+  const [checklist, loaded] = access
     ? await Promise.all([
-        loadDirectoryChecklist(institutionId),
-        loadInstitutionProfile(institutionId),
+        loadDirectoryChecklist(access),
+        loadInstitutionProfile(access),
       ])
     : [[], null];
 
@@ -55,8 +68,8 @@ export default async function InstitutionProfilePage() {
     phone: "—",
     verified: false,
     rating: 0,
-    reviews: 0,
-    occupancy: 0,
+    reviews: null,
+    occupancy: null,
     description: "",
     trustNote: "",
   };
@@ -96,17 +109,23 @@ export default async function InstitutionProfilePage() {
         <StatCard
           label="تقييم المركز"
           value={String(profile.rating)}
-          hint={`من ${profile.reviews} تسجيلاً موثّقاً`}
+          hint={
+            profile.reviews === null
+              ? "التقييم العام في الدليل"
+              : `من ${profile.reviews} تسجيلاً موثّقاً`
+          }
           icon={Star}
           accent="gold"
         />
-        <StatCard
-          label="نسبة الإشغال"
-          value={`${Math.round(profile.occupancy * 100)}%`}
-          hint="مقاعد محجوزة عبر المنصة"
-          icon={Store}
-          accent="navy"
-        />
+        {profile.occupancy !== null ? (
+          <StatCard
+            label="نسبة الإشغال"
+            value={`${Math.round(profile.occupancy * 100)}%`}
+            hint="مقاعد محجوزة عبر المنصة"
+            icon={Store}
+            accent="navy"
+          />
+        ) : null}
         <StatCard
           label="بنود ناقصة"
           value={String(missing.length)}
@@ -138,7 +157,8 @@ export default async function InstitutionProfilePage() {
               <span className="inline-flex items-center gap-1.5">
                 <Star className="h-3.5 w-3.5 fill-sarh-gold text-sarh-gold" aria-hidden="true" />
                 <span dir="ltr">
-                  {profile.rating} ({profile.reviews})
+                  {profile.rating}
+                  {profile.reviews !== null ? ` (${profile.reviews})` : ""}
                 </span>
               </span>
               <span className="inline-flex items-center gap-1.5">
@@ -151,13 +171,19 @@ export default async function InstitutionProfilePage() {
               </span>
             </div>
 
-            <div className="mt-4">
-              <Meter
-                label="نسبة الإشغال"
-                value={profile.occupancy * 100}
-                accent="teal"
-              />
-            </div>
+            {profile.occupancy !== null ? (
+              <div className="mt-4">
+                <Meter
+                  label="نسبة الإشغال"
+                  value={profile.occupancy * 100}
+                  accent="teal"
+                />
+              </div>
+            ) : (
+              <p className="mt-4 rounded-xl bg-sarh-gold/10 px-3 py-2.5 text-xs leading-6 text-[#C9741F] dark:text-sarh-gold">
+                بيانات الإشغال والعمولات متاحة لمالك المركز فقط.
+              </p>
+            )}
           </div>
 
           <p className="mt-4 text-xs leading-6 text-slate-500 dark:text-slate-400">

@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 import { findUserByIdentifier } from "@/lib/identifier";
+import { userHasInstitutionPortalGrant } from "@/lib/institution-access";
 import { prisma } from "@/lib/prisma";
 import { isPhoneNumber, looksLikeEmail } from "@/lib/phone";
 import { PLATFORM_ADMIN_ROLE, ROLE_HOME, effectiveRoles } from "@/lib/roles";
@@ -44,6 +45,29 @@ const googleConfigured = Boolean(
 
 /** How long a remembered session lasts (matches `session.maxAge`). */
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
+
+/**
+ * Merge the account's stored tiers with the institution portal key that its
+ * live ownership / CENTER_ADMIN membership justifies.
+ *
+ * This is additive and idempotent: a stored `INSTITUTION_TEACHER` is never
+ * removed or replaced, and the primary `role` is untouched. It does not grant
+ * any tenant data — `resolveInstitutionAccess` still checks the database on
+ * every institution page.
+ */
+async function sessionTiers(
+  userId: string,
+  primary: Role,
+  stored: readonly Role[] | undefined
+): Promise<Role[]> {
+  const tiers = effectiveRoles(primary, stored);
+  if (tiers.includes("INSTITUTION_TEACHER")) return tiers;
+
+  if (await userHasInstitutionPortalGrant(userId)) {
+    tiers.push("INSTITUTION_TEACHER");
+  }
+  return tiers;
+}
 
 /**
  * The session cookie name NextAuth itself would derive: `__Secure-` prefixed
@@ -129,7 +153,11 @@ export const authOptions: NextAuthOptions = {
           name: user.fullName,
           email: user.email,
           role: user.role as Role,
-          roles: effectiveRoles(user.role as Role, user.roles as Role[]),
+          roles: await sessionTiers(
+            user.id,
+            user.role as Role,
+            user.roles as Role[]
+          ),
           emailVerified: user.emailVerified,
         };
       },
@@ -204,7 +232,7 @@ export const authOptions: NextAuthOptions = {
 
           token.id = dbUser.id;
           token.role = dbUser.role;
-          token.roles = effectiveRoles(dbUser.role, dbUser.roles);
+          token.roles = await sessionTiers(dbUser.id, dbUser.role, dbUser.roles);
           token.activeRole = dbUser.role;
           token.emailVerified = Boolean(dbUser.emailVerified);
         } else {

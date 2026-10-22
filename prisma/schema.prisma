@@ -66,6 +66,21 @@ enum StaffStatus {
   INACTIVE
 }
 
+/// Authorisation role of a staff membership. `title` is the display label
+/// ("معلمة رياضيات وفيزياء"); this enum is what access checks read.
+///
+/// `STAFF` is the safe default for a membership that has not been classified:
+/// it grants no institution-portal authority at all. A centre director without
+/// ownership is `CENTER_ADMIN`; teachers, secretaries and supervisors keep
+/// their own roles and do not inherit owner rights.
+enum StaffRole {
+  CENTER_ADMIN
+  SECRETARY
+  TEACHER
+  SUPERVISOR
+  STAFF
+}
+
 /// Severity/kind of a quality signal raised inside a supervision scope.
 enum SignalKind {
   ALERT
@@ -315,13 +330,19 @@ model StaffMember {
   user          User        @relation(fields: [userId], references: [id])
   institutionId String
   institution   Institution @relation(fields: [institutionId], references: [id])
+  /// Display label only. Never use this for authorisation after the role
+  /// migration; use `role`.
   title         String
+  /// Authorisation role for this membership. `STAFF` is deliberately the
+  /// least-privileged default so an unclassified row cannot become an admin.
+  role          StaffRole   @default(STAFF)
   subjects      String[]
   status        StaffStatus @default(ACTIVE)
   joinedAt      DateTime    @default(now())
 
   @@unique([userId, institutionId])
   @@index([institutionId, status])
+  @@index([userId, status])
 }
 
 /// A lesson plan authored by a teacher and reviewed by a supervisor.

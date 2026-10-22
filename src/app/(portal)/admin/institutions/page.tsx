@@ -5,6 +5,7 @@ import { ArrowLeft, Building2, CircleDollarSign, ShieldCheck, Star, Users } from
 import { PageHeader, Panel, StatCard } from "@/components/portal/primitives";
 import { StatusPill, institutionPill } from "@/components/portal/status-pill";
 import { DataTable, type Column } from "@/components/ui/data-table";
+import { requireAdminPage } from "@/lib/admin-page";
 import type { AdminInstitutionRow } from "@/lib/data/portal";
 import { loadAdminInstitutions } from "@/lib/db/admin";
 
@@ -24,6 +25,8 @@ const nf = new Intl.NumberFormat("en-US");
  * the register of what is already live.
  */
 export default async function AdminInstitutionsPage() {
+  await requireAdminPage();
+
   const institutions = await loadAdminInstitutions();
 
   const verified = institutions.filter((row) => row.state === "VERIFIED");

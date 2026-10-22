@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { z } from "zod";
 
+import { requireLiveSuperAdmin } from "@/lib/admin-access";
 import { authOptions } from "@/lib/auth";
 import {
   loadSiteSettings,
@@ -65,26 +66,9 @@ export async function GET() {
 
 async function requireSuperAdmin() {
   const session = await getServerSession(authOptions);
-
-  if (!session?.user) {
-    return NextResponse.json(
-      { success: false, code: "UNAUTHENTICATED", message: "يجب تسجيل الدخول أولاً" },
-      { status: 401 }
-    );
-  }
-
-  if (session.user.role !== "SUPER_ADMIN") {
-    return NextResponse.json(
-      {
-        success: false,
-        code: "FORBIDDEN",
-        message: "لا تملك صلاحية تعديل إعدادات المنصة",
-      },
-      { status: 403 }
-    );
-  }
-
-  return null;
+  // Re-read the role from PostgreSQL: a stale JWT must not keep write access
+  // to platform settings after the account is demoted.
+  return requireLiveSuperAdmin(session);
 }
 
 async function updateSettings(request: Request) {

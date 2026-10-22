@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 import {
   ArrowLeft,
@@ -26,8 +27,12 @@ import {
   loadInstitutionCommissions,
   loadInstitutionHeader,
   loadInstitutionStaff,
-  resolveInstitutionId,
 } from "@/lib/db/institution";
+import {
+  hasCapability,
+  requestedInstitutionId,
+  resolveInstitutionAccess,
+} from "@/lib/institution-access";
 
 export const metadata: Metadata = {
   title: "لوحة المؤسسة",
@@ -45,22 +50,38 @@ const nf = new Intl.NumberFormat("en-US");
  * platform ledger — that is `/admin`'s job — which is what keeps the tenant
  * boundary honest rather than decorative.
  */
-export default async function InstitutionOverviewPage() {
+export default async function InstitutionOverviewPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
 
   /*
-   * The tenant is resolved from the account (ownership first, then staff
-   * membership) and every read below is keyed on that id — a centre account
-   * can only ever render its own rows.
+   * The tenant comes from a server-verified grant, never from the URL alone:
+   * `?institution=` selects among centres the account actually owns or
+   * manages, and any other id is refused below. Every read is keyed on the
+   * resulting access token, so one centre can never render another's rows.
    */
-  const institutionId = userId ? await resolveInstitutionId(userId) : null;
-  const [header, staff, commissions, checklist] = institutionId
+  const requested = requestedInstitutionId(searchParams);
+  const access = userId
+    ? await resolveInstitutionAccess(userId, requested)
+    : null;
+  if (requested && !access) notFound();
+
+  const canViewCommissions = access
+    ? hasCapability(access, "commissions.read")
+    : false;
+  const [header, staff, commissions, checklist] = access
     ? await Promise.all([
-        loadInstitutionHeader(institutionId),
-        loadInstitutionStaff(institutionId),
-        loadInstitutionCommissions(institutionId),
-        loadDirectoryChecklist(institutionId),
+        loadInstitutionHeader(access),
+        loadInstitutionStaff(access),
+        // Financial rows are not even queried for a non-owner CENTER_ADMIN.
+        canViewCommissions
+          ? loadInstitutionCommissions(access)
+          : Promise.resolve([]),
+        loadDirectoryChecklist(access),
       ])
     : [null, [], [], []];
 
@@ -116,7 +137,7 @@ export default async function InstitutionOverviewPage() {
       <PageHeader
         breadcrumb={["بوابة المؤسسة"]}
         title={header?.name ?? "لوحة المؤسسة"}
-        lead={`إدارة الطاقم والفصول والرسوم وملف المركز في الدليل — ${header?.zone ?? "—"}`}
+        lead={`إدارة الطاقم والفصول وملف المركز في الدليل — ${header?.zone ?? "—"}`}
         icon={Building2}
         actions={
           header?.verified ? (
@@ -147,15 +168,17 @@ export default async function InstitutionOverviewPage() {
           accent="navy"
           href="/institution/staff"
         />
-        <StatCard
-          label="عمولات بانتظار الاعتماد"
-          value={`₪${nf.format(pendingValue)}`}
-          hint={`${pendingCommissions.length} تسجيلات من المنصة`}
-          icon={Wallet}
-          accent="gold"
-          href="/institution/enrollments"
-          cta="التسجيلات"
-        />
+        {canViewCommissions ? (
+          <StatCard
+            label="عمولات بانتظار الاعتماد"
+            value={`₪${nf.format(pendingValue)}`}
+            hint={`${pendingCommissions.length} تسجيلات من المنصة`}
+            icon={Wallet}
+            accent="gold"
+            href="/institution/enrollments"
+            cta="التسجيلات"
+          />
+        ) : null}
         <StatCard
           label="اكتمال ملف الدليل"
           value={`${profileCompletion}%`}
@@ -182,6 +205,7 @@ export default async function InstitutionOverviewPage() {
             />
           </Panel>
 
+          {canViewCommissions ? (
           <Panel
             title="التسجيلات والعمولات"
             description="طلاب وصلوا إلى المركز عبر منصة صَرْح"
@@ -218,12 +242,17 @@ export default async function InstitutionOverviewPage() {
               })}
             </ul>
           </Panel>
+          ) : null}
         </div>
 
         <div className="space-y-5">
           <Panel
             title="ملف المركز في الدليل"
-            description={`تقييم ${header?.rating ?? 0} من ${verifiedSeats} تسجيلاً موثّقاً`}
+            description={
+              canViewCommissions
+                ? `تقييم ${header?.rating ?? 0} من ${verifiedSeats} تسجيلاً موثّقاً`
+                : "تقييم المركز واكتمال ملف الدليل"
+            }
             icon={Store}
             moreHref="/institution/profile"
           >
@@ -231,7 +260,8 @@ export default async function InstitutionOverviewPage() {
               <span className="inline-flex items-center gap-1.5 text-xs font-bold text-sarh-gold">
                 <Star className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
                 <span dir="ltr">
-                  {header?.rating ?? 0} ({verifiedSeats})
+                  {header?.rating ?? 0}
+                  {canViewCommissions ? ` (${verifiedSeats})` : ""}
                 </span>
               </span>
               <Meter
@@ -275,11 +305,17 @@ export default async function InstitutionOverviewPage() {
             icon={Gauge}
           >
             <div className="space-y-4">
-              <Meter
-                label="نسبة الإشغال هذا الفصل"
-                value={occupancy * 100}
-                accent="teal"
-              />
+              {canViewCommissions ? (
+                <Meter
+                  label="نسبة الإشغال هذا الفصل"
+                  value={occupancy * 100}
+                  accent="teal"
+                />
+              ) : (
+                <p className="rounded-xl bg-sarh-gold/10 px-3 py-2.5 text-xs leading-6 text-[#C9741F] dark:text-sarh-gold">
+                  بيانات الإشغال والعمولات متاحة لمالك المركز فقط.
+                </p>
+              )}
               <Meter
                 label="رضا الأهالي (من المراجعات)"
                 value={((header?.rating ?? 0) / 5) * 100}
@@ -294,14 +330,19 @@ export default async function InstitutionOverviewPage() {
 
           <Panel
             title="استوديو المعلم والذكاء الاصطناعي"
-            description="الحضور السريع، توليد الاختبارات، وجدول العمولات"
+            description={
+              canViewCommissions
+                ? "الحضور السريع، توليد الاختبارات، وجدول العمولات"
+                : "الحضور السريع وتوليد الاختبارات"
+            }
             icon={Sparkles}
             moreHref="/institution/ai-studio"
             moreLabel="فتح الاستوديو"
           >
             <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
-              استخدم أدوات صَرْح الذكية لتحضير الحصص، تسجيل الحضور بضغطة واحدة،
-              ومراجعة عمولات التسجيلات قبل اعتمادها.
+              {canViewCommissions
+                ? "استخدم أدوات صَرْح الذكية لتحضير الحصص، تسجيل الحضور بضغطة واحدة، ومراجعة عمولات التسجيلات قبل اعتمادها."
+                : "استخدم أدوات صَرْح الذكية لتحضير الحصص وتسجيل الحضور بضغطة واحدة."}
             </p>
             <Link
               href="/institution/ai-studio"

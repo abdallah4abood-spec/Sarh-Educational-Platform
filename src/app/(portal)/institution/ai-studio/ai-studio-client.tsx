@@ -25,12 +25,14 @@ export function AiStudioClient({
   roster,
   commissions,
   subjects,
+  canViewCommissions,
 }: {
   institutionId: string;
   institutionName: string;
   roster: RosterStudent[];
   commissions: CommissionRow[];
   subjects: string[];
+  canViewCommissions: boolean;
 }) {
   return (
     <div className="mx-auto min-h-screen w-full max-w-6xl px-4 pb-24 pt-6">
@@ -47,7 +49,9 @@ export function AiStudioClient({
               استوديو المعلم
             </h1>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              حضور فوري بحفظ محلي، واختبارات مولّدة بالذكاء الاصطناعي، ومتابعة العمولات.
+              {canViewCommissions
+                ? "حضور فوري بحفظ محلي، واختبارات مولّدة بالذكاء الاصطناعي، ومتابعة العمولات."
+                : "حضور فوري بحفظ محلي، واختبارات مولّدة بالذكاء الاصطناعي."}
             </p>
           </div>
           <span className="flex items-center gap-2 rounded-full bg-sarh-teal/10 px-4 py-1.5 text-xs font-bold text-sarh-teal ring-1 ring-inset ring-sarh-teal/30">
@@ -60,11 +64,15 @@ export function AiStudioClient({
       <div className="space-y-6">
         <AttendanceTracker roster={roster} institutionId={institutionId} />
         <QuizGeneratorStudio subjects={subjects} />
-        <div className="flex items-center gap-2 text-xs font-bold text-sarh-inkMute">
-          <Zap className="h-3.5 w-3.5 text-sarh-gold" aria-hidden="true" />
-          العمولات تُحدَّث فور اعتماد الإدارة المالية
-        </div>
-        <CommissionTable rows={commissions} />
+        {canViewCommissions ? (
+          <>
+            <div className="flex items-center gap-2 text-xs font-bold text-sarh-inkMute">
+              <Zap className="h-3.5 w-3.5 text-sarh-gold" aria-hidden="true" />
+              العمولات تُحدَّث فور اعتماد الإدارة المالية
+            </div>
+            <CommissionTable rows={commissions} />
+          </>
+        ) : null}
       </div>
     </div>
   );

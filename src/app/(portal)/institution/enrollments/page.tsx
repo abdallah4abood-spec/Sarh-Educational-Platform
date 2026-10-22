@@ -1,17 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { ArrowLeft, CircleDollarSign, Clock3, ShieldCheck, Wallet, XCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  CircleDollarSign,
+  Clock3,
+  LockKeyhole,
+  ShieldCheck,
+  Wallet,
+  XCircle,
+} from "lucide-react";
 
 import { PageHeader, Panel, StatCard } from "@/components/portal/primitives";
 import { StatusPill, paymentPill } from "@/components/portal/status-pill";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { authOptions } from "@/lib/auth";
 import type { CommissionRow } from "@/lib/data/institution";
+import { loadInstitutionCommissions } from "@/lib/db/institution";
 import {
-  loadInstitutionCommissions,
-  resolveInstitutionId,
-} from "@/lib/db/institution";
+  hasCapability,
+  requestedInstitutionId,
+  resolveInstitutionAccess,
+} from "@/lib/institution-access";
 
 export const metadata: Metadata = {
   title: "التسجيلات والعمولات",
@@ -28,12 +39,52 @@ const nf = new Intl.NumberFormat("en-US");
  * this screen only ever shows the referrals attributed to this tenant, which is
  * exactly the boundary Pillar 4 asks for.
  */
-export default async function InstitutionEnrollmentsPage() {
+export default async function InstitutionEnrollmentsPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
-  const institutionId = userId ? await resolveInstitutionId(userId) : null;
-  const commissions = institutionId
-    ? await loadInstitutionCommissions(institutionId, 100)
+  const requested = requestedInstitutionId(searchParams);
+  const access = userId
+    ? await resolveInstitutionAccess(userId, requested)
+    : null;
+  if (requested && !access) notFound();
+
+  /*
+   * This screen is entirely commission/financial data. A CENTER_ADMIN can
+   * administer the centre operationally but must not read its money before a
+   * separate financial policy exists; the loader would reject the call too.
+   */
+  if (access && !hasCapability(access, "commissions.read")) {
+    return (
+      <div className="space-y-5">
+        <PageHeader
+          breadcrumb={["بوابة المؤسسة", "التسجيلات والعمولات"]}
+          title="التسجيلات والعمولات"
+          lead="بيانات مالية محمية داخل نطاق المركز."
+          icon={Wallet}
+        />
+        <Panel title="بيانات مالية محمية" icon={LockKeyhole}>
+          <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
+            سجل العمولات والبيانات المالية متاح لمالك المركز فقط. يمكنك متابعة
+            الطاقم والفصول وملف المركز من لوحة المؤسسة.
+          </p>
+          <Link
+            href="/institution"
+            className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-teal hover:underline"
+          >
+            العودة إلى لوحة المؤسسة
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+          </Link>
+        </Panel>
+      </div>
+    );
+  }
+
+  const commissions = access
+    ? await loadInstitutionCommissions(access, 100)
     : [];
 
   const verified = commissions.filter((row) => row.status === "VERIFIED");

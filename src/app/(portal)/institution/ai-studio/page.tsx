@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
 
 import { authOptions } from "@/lib/auth";
@@ -7,8 +8,12 @@ import {
   loadInstitutionHeader,
   loadInstitutionRoster,
   loadInstitutionSubjects,
-  resolveInstitutionId,
 } from "@/lib/db/institution";
+import {
+  hasCapability,
+  requestedInstitutionId,
+  resolveInstitutionAccess,
+} from "@/lib/institution-access";
 
 import { AiStudioClient } from "./ai-studio-client";
 
@@ -26,27 +31,42 @@ export const metadata: Metadata = {
  * subject options all come from PostgreSQL scoped to the signed-in centre, and
  * the client shell only composes them.
  */
-export default async function AiStudioPage() {
+export default async function AiStudioPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
   const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
-  const institutionId = userId ? await resolveInstitutionId(userId) : null;
+  const requested = requestedInstitutionId(searchParams);
+  const access = userId
+    ? await resolveInstitutionAccess(userId, requested)
+    : null;
+  if (requested && !access) notFound();
 
-  const [header, roster, commissions, subjects] = institutionId
+  const canViewCommissions = access
+    ? hasCapability(access, "commissions.read")
+    : false;
+  const [header, roster, subjects] = access
     ? await Promise.all([
-        loadInstitutionHeader(institutionId),
-        loadInstitutionRoster(institutionId),
-        loadInstitutionCommissions(institutionId, 100),
-        loadInstitutionSubjects(institutionId),
+        loadInstitutionHeader(access),
+        loadInstitutionRoster(access),
+        loadInstitutionSubjects(access),
       ])
-    : [null, [], [], []];
+    : [null, [], []];
+  const commissions =
+    access && canViewCommissions
+      ? await loadInstitutionCommissions(access, 100)
+      : [];
 
   return (
     <AiStudioClient
-      institutionId={institutionId ?? ""}
+      institutionId={access?.institutionId ?? ""}
       institutionName={header?.name ?? "بوابة المؤسسة"}
       roster={roster}
       commissions={commissions}
       subjects={subjects}
+      canViewCommissions={canViewCommissions}
     />
   );
 }
