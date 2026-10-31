@@ -77,7 +77,10 @@ export async function supervisedInstitutionIds(
 ): Promise<string[]> {
   if (!supervisorId) return [];
   const rows = await prisma.staffMember.findMany({
-    where: { userId: supervisorId, status: "ACTIVE" },
+    // Staff membership is not itself supervision authority. A user's active
+    // teacher or general-staff assignment must never widen their supervisor
+    // portal to that institution.
+    where: { userId: supervisorId, status: "ACTIVE", role: "SUPERVISOR" },
     select: { institutionId: true },
   });
   return [...new Set(rows.map((row) => row.institutionId))];
@@ -216,7 +219,28 @@ export async function loadSupervisorEvaluations(
 /** Staff-membership filter for the teacher label on a scoped read. */
 function staffLabelFilter(
   scope: SupervisorScope
-): { institutionId: { in: string[] } } | undefined {
+): Prisma.StaffMemberWhereInput | undefined {
+  return scope.kind === "institutions"
+    ? {
+        institutionId: { in: scope.institutionIds },
+        role: "TEACHER",
+        status: "ACTIVE",
+      }
+    : undefined;
+}
+
+/** Evaluated teachers must also be active teachers in the resolved scope. */
+function scopedTeacherWhere(
+  scope: SupervisorScope
+): Prisma.UserWhereInput | undefined {
+  const membership = staffLabelFilter(scope);
+  return membership ? { staffRoles: { some: membership } } : undefined;
+}
+
+/** Class subjects and counts are also tenant data, so include only this span. */
+function classScopeFilter(
+  scope: SupervisorScope
+): Prisma.SchoolClassWhereInput | undefined {
   return scope.kind === "institutions"
     ? { institutionId: { in: scope.institutionIds } }
     : undefined;
@@ -235,8 +259,13 @@ async function evaluationsFor(
   supervisorId: string
 ): Promise<TeacherEvaluation[]> {
   const labelFilter = staffLabelFilter(scope);
+  const classFilter = classScopeFilter(scope);
+  const teacherFilter = scopedTeacherWhere(scope);
   const rows = await prisma.teacherEvaluation.findMany({
-    where: { supervisorId },
+    where: {
+      supervisorId,
+      ...(teacherFilter ? { teacher: { is: teacherFilter } } : {}),
+    },
     include: {
       teacher: {
         select: {
@@ -246,7 +275,11 @@ async function evaluationsFor(
             select: { institution: { select: { name: true } } },
             take: 1,
           },
-          taughtClasses: { select: { subject: true }, take: 1 },
+          taughtClasses: {
+            ...(classFilter ? { where: classFilter } : {}),
+            select: { subject: true },
+            take: 1,
+          },
         },
       },
     },
@@ -310,8 +343,13 @@ export async function loadScopedTeachers(
   if (evaluations.length === 0) return [];
 
   const labelFilter = staffLabelFilter(scope);
+  const classFilter = classScopeFilter(scope);
+  const teacherFilter = scopedTeacherWhere(scope);
   const teacherRows = await prisma.teacherEvaluation.findMany({
-    where: { supervisorId },
+    where: {
+      supervisorId,
+      ...(teacherFilter ? { teacher: { is: teacherFilter } } : {}),
+    },
     select: {
       teacherId: true,
       teacher: {
@@ -323,9 +361,9 @@ export async function loadScopedTeachers(
             take: 1,
           },
           taughtClasses: {
+            ...(classFilter ? { where: classFilter } : {}),
             select: { subject: true, _count: { select: { enrollments: true } } },
           },
-          _count: { select: { taughtClasses: true } },
         },
       },
     },
@@ -365,7 +403,7 @@ export async function loadScopedTeachers(
       name: row.teacher.fullName,
       center: teacherCenter(row.teacher.staffRoles) ?? "—",
       subject: row.teacher.taughtClasses[0]?.subject ?? "—",
-      classes: row.teacher._count.taughtClasses,
+      classes: row.teacher.taughtClasses.length,
       planCompliance: counts.total === 0 ? 1 : counts.approved / counts.total,
       score: scoreByTeacher.get(row.teacher.fullName) ?? 0,
     };

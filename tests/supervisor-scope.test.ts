@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, describe, it } from "node:test";
 
+import { createStudentResponse } from "@/app/api/institution/students/handler";
 import { prisma } from "@/lib/prisma";
 import {
   loadPlanCounts,
@@ -55,6 +56,7 @@ interface Fixture {
   planAId: string;
   planBId: string;
   multiCentreTeacherId: string;
+  outsideTeacherId: string;
   signalOwnId: string;
   signalOtherId: string;
   signalPlatformId: string;
@@ -182,6 +184,17 @@ before(async () => {
         userId: supA,
         institutionId: instA.id,
         title: "مشرفة تربوية",
+        role: "SUPERVISOR",
+        subjects: [],
+        status: "ACTIVE",
+      },
+      // A second active membership as a teacher is not an institution-level
+      // supervision grant; it must not widen supA's supervisor scope.
+      {
+        userId: supA,
+        institutionId: instB.id,
+        title: "معلمة",
+        role: "TEACHER",
         subjects: [],
         status: "ACTIVE",
       },
@@ -189,6 +202,7 @@ before(async () => {
         userId: supInactive,
         institutionId: instA.id,
         title: "مشرفة سابقة",
+        role: "SUPERVISOR",
         subjects: [],
         status: "INACTIVE",
       },
@@ -196,6 +210,15 @@ before(async () => {
         userId: teacherWithMembership,
         institutionId: instA.id,
         title: "معلمة",
+        role: "TEACHER",
+        subjects: [],
+        status: "ACTIVE",
+      },
+      {
+        userId: teacherB,
+        institutionId: instB.id,
+        title: "معلم",
+        role: "TEACHER",
         subjects: [],
         status: "ACTIVE",
       },
@@ -203,6 +226,7 @@ before(async () => {
         userId: multiTeacher,
         institutionId: instA.id,
         title: "معلمة",
+        role: "TEACHER",
         subjects: [],
         status: "ACTIVE",
       },
@@ -210,21 +234,62 @@ before(async () => {
         userId: multiTeacher,
         institutionId: instB.id,
         title: "معلمة",
+        role: "TEACHER",
         subjects: [],
         status: "ACTIVE",
       },
     ],
   });
 
+  // A multi-centre teacher's subjects and class count must be read only from
+  // the supervisor's authorised institution, even though the teacher works in
+  // both centres.
+  await prisma.schoolClass.createMany({
+    data: [
+      {
+        name: `${PREFIX}class-a`,
+        subject: "رياضيات مركز أ",
+        gradeLevel: "الصف السادس",
+        institutionId: instA.id,
+        teacherId: multiTeacher,
+      },
+      {
+        name: `${PREFIX}class-b1`,
+        subject: "علوم مركز ب",
+        gradeLevel: "الصف السادس",
+        institutionId: instB.id,
+        teacherId: multiTeacher,
+      },
+      {
+        name: `${PREFIX}class-b2`,
+        subject: "لغة مركز ب",
+        gradeLevel: "الصف السادس",
+        institutionId: instB.id,
+        teacherId: multiTeacher,
+      },
+    ],
+  });
+
   // The supervisor observed her — the only legitimate reason her row appears.
-  await prisma.teacherEvaluation.create({
-    data: {
-      teacherId: multiTeacher,
-      supervisorId: supA,
-      periodLabel: `${PREFIX}period`,
-      classroomVisits: 2,
-      score: 88,
-    },
+  await prisma.teacherEvaluation.createMany({
+    data: [
+      {
+        teacherId: multiTeacher,
+        supervisorId: supA,
+        periodLabel: `${PREFIX}period`,
+        classroomVisits: 2,
+        score: 88,
+      },
+      // An evaluation authored by supA is not enough to grant access to an
+      // evaluated teacher assigned only to another institution.
+      {
+        teacherId: teacherB,
+        supervisorId: supA,
+        periodLabel: `${PREFIX}outside-period`,
+        classroomVisits: 1,
+        score: 21,
+      },
+    ],
   });
 
   const signalOwn = await prisma.qualitySignal.create({
@@ -263,6 +328,7 @@ before(async () => {
     planAId: planA.id,
     planBId: planB.id,
     multiCentreTeacherId: multiTeacher,
+    outsideTeacherId: teacherB,
     signalOwnId: signalOwn.id,
     signalOtherId: signalOther.id,
     signalPlatformId: signalPlatform.id,
@@ -290,6 +356,9 @@ after(async () => {
   await prisma.lessonPlan.deleteMany({
     where: { title: { startsWith: PREFIX } },
   });
+  await prisma.schoolClass.deleteMany({
+    where: { name: { startsWith: PREFIX } },
+  });
   await prisma.staffMember.deleteMany({
     where: { user: { email: { startsWith: PREFIX } } },
   });
@@ -299,12 +368,13 @@ after(async () => {
     prisma.user.count({ where: { email: { startsWith: PREFIX } } }),
     prisma.staffMember.count({ where: { user: { email: { startsWith: PREFIX } } } }),
     prisma.lessonPlan.count({ where: { title: { startsWith: PREFIX } } }),
+    prisma.schoolClass.count({ where: { name: { startsWith: PREFIX } } }),
     prisma.qualitySignal.count({ where: { title: { startsWith: PREFIX } } }),
   ]);
   assert.deepEqual(
     residue,
-    [0, 0, 0, 0],
-    "test fixtures were not cleaned up (users, staff, plans, signals)"
+    [0, 0, 0, 0, 0],
+    "test fixtures were not cleaned up (users, staff, plans, classes, signals)"
   );
 });
 
@@ -314,7 +384,8 @@ describe("supervisor scope resolution", () => {
     assert.equal(scope.kind, "institutions");
     assert.deepEqual(
       scope.kind === "institutions" ? scope.institutionIds : [],
-      [fx.instA.id]
+      [fx.instA.id],
+      "a TEACHER membership must not grant supervisor scope"
     );
   });
 
@@ -425,17 +496,68 @@ describe("cross-tenant figures stay in scope", () => {
     // in-scope that is 2/2 = 1; platform-wide it would be 2/3.
     assert.equal(row.planCompliance, 1);
     assert.equal(row.center, fx.instA.name, "label resolved outside the span");
+    assert.equal(row.classes, 1, "class count included another institution");
+    assert.equal(row.subject, "رياضيات مركز أ", "subject came from another institution");
   });
 
-  it("still reports the evaluation score the supervisor authored", async () => {
+  it("excludes evaluations and teacher details outside the active supervisor scope", async () => {
+    const excludedEvaluation = await prisma.teacherEvaluation.count({
+      where: {
+        supervisorId: fx.supA,
+        teacherId: fx.outsideTeacherId,
+        periodLabel: `${PREFIX}outside-period`,
+      },
+    });
+    assert.equal(excludedEvaluation, 1, "the excluded evaluation must exist");
+
+    const evaluations = await loadSupervisorEvaluations(fx.supA);
+    assert.ok(
+      !evaluations.some((row) => row.teacherName === `${PREFIX}teacher-b`),
+      "leaked an evaluation for a teacher outside the supervisor's institutions"
+    );
+
+    const teachers = await loadScopedTeachers(fx.supA);
+    assert.ok(
+      !teachers.some((row) => row.id === fx.outsideTeacherId),
+      "leaked teacher details from an institution outside the supervisor's scope"
+    );
+  });
+
+  it("still reports the evaluation score the supervisor authored in scope", async () => {
     const evaluations = await loadSupervisorEvaluations(fx.supA);
     const row = evaluations.find((e) => e.center === fx.instA.name);
     assert.ok(row);
     assert.equal(row.score, 88);
+    assert.equal(row.subject, "رياضيات مركز أ");
   });
 });
 
 describe("other tiers are unaffected", () => {
+  it("rejects an institution write when a supervisor manually selects another institution", async () => {
+    const response = await createStudentResponse(
+      fx.supA,
+      new Request("http://localhost/api/institution/students", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          institutionId: fx.instB.id,
+          fullName: `${PREFIX}unauthorized-child`,
+          dateOfBirth: "2015-05-06",
+          gradeLevel: "الصف الرابع",
+        }),
+      })
+    );
+
+    assert.equal(response.status, 403);
+    assert.equal(
+      await prisma.student.count({
+        where: { fullName: `${PREFIX}unauthorized-child` },
+      }),
+      0,
+      "a manually selected institution id must not create a student"
+    );
+  });
+
   it("denies a non-supervisor even with an active staff membership", async () => {
     assert.deepEqual(await loadSupervisorPlans(fx.teacherWithMembership, 100), []);
     const scope = await resolveSupervisorScope(fx.teacherWithMembership);
