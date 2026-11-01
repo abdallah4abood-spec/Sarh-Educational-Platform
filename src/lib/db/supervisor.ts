@@ -213,7 +213,8 @@ export async function loadSupervisorEvaluations(
 ): Promise<TeacherEvaluation[]> {
   const scope = await resolveSupervisorScope(supervisorId);
   if (scope.kind === "denied") return [];
-  return evaluationsFor(scope, supervisorId);
+  const evaluations = await evaluationsFor(scope, supervisorId);
+  return evaluations.map(({ evaluation }) => evaluation);
 }
 
 /** Staff-membership filter for the teacher label on a scoped read. */
@@ -254,10 +255,15 @@ function classScopeFilter(
  * a multi-centre teacher is never described by a centre the supervisor has no
  * claim on.
  */
+type EvaluationForTeacher = {
+  teacherId: string;
+  evaluation: TeacherEvaluation;
+};
+
 async function evaluationsFor(
   scope: SupervisorScope,
   supervisorId: string
-): Promise<TeacherEvaluation[]> {
+): Promise<EvaluationForTeacher[]> {
   const labelFilter = staffLabelFilter(scope);
   const classFilter = classScopeFilter(scope);
   const teacherFilter = scopedTeacherWhere(scope);
@@ -288,21 +294,24 @@ async function evaluationsFor(
   });
 
   const seen = new Set<string>();
-  const evaluations: TeacherEvaluation[] = [];
+  const evaluations: EvaluationForTeacher[] = [];
   for (const row of rows) {
     if (seen.has(row.teacherId)) continue;
     seen.add(row.teacherId);
     evaluations.push({
-      id: row.id,
-      teacherName: row.teacher.fullName,
-      center: teacherCenter(row.teacher.staffRoles) ?? "—",
-      subject: row.teacher.taughtClasses[0]?.subject ?? "—",
-      score: row.score,
-      visits: row.classroomVisits,
-      lastVisit: isoDay(row.createdAt),
-      // Trend is derived from the teacher's evaluation history below when more
-      // than one row exists; a single observation is honest as "flat".
-      trend: "flat",
+      teacherId: row.teacherId,
+      evaluation: {
+        id: row.id,
+        teacherName: row.teacher.fullName,
+        center: teacherCenter(row.teacher.staffRoles) ?? "—",
+        subject: row.teacher.taughtClasses[0]?.subject ?? "—",
+        score: row.score,
+        visits: row.classroomVisits,
+        lastVisit: isoDay(row.createdAt),
+        // Trend is derived from the teacher's evaluation history below when more
+        // than one row exists; a single observation is honest as "flat".
+        trend: "flat",
+      },
     });
   }
 
@@ -315,10 +324,8 @@ async function evaluationsFor(
       row.score,
     ]);
   }
-  for (const evaluation of evaluations) {
-    const scores = byTeacher.get(
-      rows.find((row) => row.id === evaluation.id)?.teacherId ?? ""
-    );
+  for (const { teacherId, evaluation } of evaluations) {
+    const scores = byTeacher.get(teacherId);
     if (scores && scores.length > 1) {
       const delta = scores[0] - scores[1];
       evaluation.trend = delta > 2 ? "up" : delta < -2 ? "down" : "flat";
@@ -393,7 +400,9 @@ export async function loadScopedTeachers(
   }
 
   const scoreByTeacher = new Map(
-    evaluations.map((row) => [row.teacherName, row.score])
+    evaluations.map(({ teacherId, evaluation }) =>
+      [teacherId, evaluation.score] as const
+    )
   );
 
   return teacherRows.map((row) => {
@@ -405,7 +414,7 @@ export async function loadScopedTeachers(
       subject: row.teacher.taughtClasses[0]?.subject ?? "—",
       classes: row.teacher.taughtClasses.length,
       planCompliance: counts.total === 0 ? 1 : counts.approved / counts.total,
-      score: scoreByTeacher.get(row.teacher.fullName) ?? 0,
+      score: scoreByTeacher.get(row.teacherId) ?? 0,
     };
   });
 }

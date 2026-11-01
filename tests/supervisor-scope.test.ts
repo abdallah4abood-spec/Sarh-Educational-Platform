@@ -176,6 +176,12 @@ before(async () => {
   const supNoMembership = await createUser("SUPERVISOR", "supervisor-none");
   const supInactive = await createUser("SUPERVISOR", "supervisor-inactive");
   const teacherWithMembership = await createUser("TEACHER", "teacher-member");
+  // Deliberately share a display name with another evaluated teacher: names
+  // are not unique identifiers for score mapping.
+  await prisma.user.update({
+    where: { id: teacherWithMembership },
+    data: { fullName: `${PREFIX}teacher-multi` },
+  });
   const platformAdmin = await createUser("SUPER_ADMIN", "admin");
 
   await prisma.staffMember.createMany({
@@ -288,6 +294,16 @@ before(async () => {
         periodLabel: `${PREFIX}outside-period`,
         classroomVisits: 1,
         score: 21,
+      },
+      {
+        teacherId: teacherWithMembership,
+        supervisorId: supA,
+        periodLabel: `${PREFIX}same-name-period`,
+        classroomVisits: 1,
+        score: 37,
+        // Keep this after the multi-centre teacher's latest evaluation in the
+        // query order, so a name-keyed map deterministically overwrites it.
+        createdAt: new Date("2000-01-01T00:00:00.000Z"),
       },
     ],
   });
@@ -498,6 +514,18 @@ describe("cross-tenant figures stay in scope", () => {
     assert.equal(row.center, fx.instA.name, "label resolved outside the span");
     assert.equal(row.classes, 1, "class count included another institution");
     assert.equal(row.subject, "رياضيات مركز أ", "subject came from another institution");
+  });
+
+  it("maps evaluation scores by teacher ID when names are duplicated", async () => {
+    const teachers = await loadScopedTeachers(fx.supA);
+    const multiCentre = teachers.find((t) => t.id === fx.multiCentreTeacherId);
+    const sameName = teachers.find((t) => t.id === fx.teacherWithMembership);
+
+    assert.ok(multiCentre, "the multi-centre teacher should be listed");
+    assert.ok(sameName, "the other evaluated teacher should be listed");
+    assert.equal(multiCentre.name, sameName.name);
+    assert.equal(multiCentre.score, 88);
+    assert.equal(sameName.score, 37);
   });
 
   it("excludes evaluations and teacher details outside the active supervisor scope", async () => {
