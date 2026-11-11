@@ -152,7 +152,7 @@ export default function ResetPasswordForm() {
   const backToSignin = (
     <Link
       href="/auth/signin"
-      className="inline-flex items-center gap-2 text-sm font-semibold text-sarh-teal underline underline-offset-2 hover:text-sarh-teal/90"
+      className="inline-flex items-center gap-2 text-sm font-semibold text-sarh-tealInk underline underline-offset-2 hover:text-sarh-tealPressed dark:text-sarh-teal dark:hover:text-sarh-teal/90"
     >
       <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
       {t("forgotPasswordBack")}

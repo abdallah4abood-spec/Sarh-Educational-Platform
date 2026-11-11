@@ -74,14 +74,25 @@ export function CenterProfile({ center }: { center: Center }) {
     {
       icon: Star,
       label: t("ratingLabel"),
-      value: `${center.rating.toFixed(1)} (${center.reviewsCount})`,
+      // The rating alone: the number that used to sit in brackets is the
+      // enrolment count, not a review count, and the card above already shows
+      // it under its own label.
+      value: center.rating.toFixed(1),
     },
   ];
 
   return (
     <>
-      {/* ================= Hero action bar ================= */}
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-3 px-4 py-5 sm:px-6">
+      {/*
+       * Hero action bar — `id="contact"` is the target of the directory card's
+       * "تواصل مع المركز" button (`/center/{id}#contact`), which used to point at
+       * an anchor that did not exist and so landed on the top of the page.
+       * `scroll-mt-20` clears the 4rem sticky header when it does.
+       */}
+      <div
+        id="contact"
+        className="mx-auto flex max-w-6xl scroll-mt-20 flex-wrap items-center gap-3 px-4 py-5 sm:px-6"
+      >
         <Button
           onClick={() => openEnrollment()}
           icon={<CalendarCheck className="h-4 w-4" aria-hidden="true" />}
@@ -94,26 +105,26 @@ export function CenterProfile({ center }: { center: Center }) {
           href={`https://wa.me/${center.whatsapp}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-sarh-borderLight px-4 text-sm font-semibold text-sarh-navy transition-colors hover:border-sarh-teal hover:text-sarh-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal dark:border-sarh-borderDark dark:text-slate-100"
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-sarh-borderLight px-4 text-sm font-semibold text-sarh-navy transition-colors hover:border-sarh-teal hover:text-sarh-tealInk focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-tealInk dark:border-sarh-borderDark dark:text-slate-100 dark:hover:text-sarh-teal"
         >
-          <MessageCircle className="h-4 w-4 text-sarh-teal" aria-hidden="true" />
+          <MessageCircle className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />
           {t("contactWhatsApp")}
         </a>
 
         <a
           href={`tel:${center.phone}`}
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-sarh-borderLight px-4 text-sm font-semibold text-sarh-navy transition-colors hover:border-sarh-teal hover:text-sarh-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal dark:border-sarh-borderDark dark:text-slate-100"
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-sarh-borderLight px-4 text-sm font-semibold text-sarh-navy transition-colors hover:border-sarh-teal hover:text-sarh-tealInk focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-tealInk dark:border-sarh-borderDark dark:text-slate-100 dark:hover:text-sarh-teal"
         >
-          <Phone className="h-4 w-4 text-sarh-teal" aria-hidden="true" />
+          <Phone className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />
           {t("call")}
         </a>
 
         <button
           type="button"
           onClick={() => void share()}
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-sarh-borderLight px-4 text-sm font-semibold text-sarh-navy transition-colors hover:border-sarh-gold hover:text-sarh-gold focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-gold dark:border-sarh-borderDark dark:text-slate-100"
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-sarh-borderLight px-4 text-sm font-semibold text-sarh-navy transition-colors hover:border-sarh-gold hover:text-sarh-goldInk focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-goldInk dark:border-sarh-borderDark dark:text-slate-100 dark:hover:text-sarh-gold"
         >
-          <Share2 className="h-4 w-4 text-sarh-gold" aria-hidden="true" />
+          <Share2 className="h-4 w-4 text-sarh-goldInk dark:text-sarh-gold" aria-hidden="true" />
           {copied ? t("copied") : t("share")}
         </button>
       </div>
@@ -138,8 +149,8 @@ export function CenterProfile({ center }: { center: Center }) {
                 "relative flex items-center gap-2 whitespace-nowrap px-4 py-3 text-sm font-semibold transition-colors",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal",
                 tab === key
-                  ? "text-sarh-teal"
-                  : "text-slate-500 hover:text-sarh-teal dark:text-slate-400"
+                  ? "text-sarh-tealInk dark:text-sarh-teal"
+                  : "text-sarh-inkMute hover:text-sarh-tealInk dark:text-slate-400 dark:hover:text-sarh-teal"
               )}
             >
               <Icon className="h-4 w-4" aria-hidden="true" />
@@ -171,7 +182,7 @@ export function CenterProfile({ center }: { center: Center }) {
             {tab === "overview" ? (
               <div className="grid gap-8 lg:grid-cols-3">
                 <div className="lg:col-span-2">
-                  <h2 className="mb-3 text-xl font-bold text-sarh-navy dark:text-white">
+                  <h2 className="sarh-subheading mb-3 text-sarh-navy dark:text-white">
                     {t("aboutThisCenter")}
                   </h2>
                   <p className="text-sm leading-8 text-slate-600 dark:text-slate-300">
@@ -185,13 +196,13 @@ export function CenterProfile({ center }: { center: Center }) {
                         className="sarh-card flex flex-col gap-1 p-4"
                       >
                         <Icon
-                          className="h-4 w-4 text-sarh-teal"
+                          className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal"
                           aria-hidden="true"
                         />
                         <span className="text-lg font-bold text-sarh-navy dark:text-white">
                           {value}
                         </span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                        <span className="text-xs text-sarh-inkMute dark:text-slate-400">
                           {label}
                         </span>
                       </div>
@@ -200,7 +211,7 @@ export function CenterProfile({ center }: { center: Center }) {
                 </div>
 
                 <div className="sarh-card h-fit p-5">
-                  <h3 className="mb-4 text-base font-bold text-sarh-navy dark:text-white">
+                  <h3 className="sarh-subheading mb-4 text-sarh-navy dark:text-white">
                     {t("facilities")}
                   </h3>
                   <ul className="space-y-3">
@@ -210,7 +221,7 @@ export function CenterProfile({ center }: { center: Center }) {
                         className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300"
                       >
                         <CheckCircle2
-                          className="h-4 w-4 shrink-0 text-sarh-teal"
+                          className="h-4 w-4 shrink-0 text-sarh-tealInk dark:text-sarh-teal"
                           aria-hidden="true"
                         />
                         {facility}
@@ -230,13 +241,13 @@ export function CenterProfile({ center }: { center: Center }) {
                     className="sarh-card flex flex-col gap-3 p-5 transition-shadow duration-200 hover:shadow-teal-gold-glow"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <h3 className="text-base font-bold text-sarh-navy dark:text-white">
+                      <h3 className="sarh-subheading text-sarh-navy dark:text-white">
                         {program.name}
                       </h3>
                       <Badge variant="teal">{program.grades}</Badge>
                     </div>
 
-                    <p className="flex items-baseline gap-2 text-sm text-slate-500 dark:text-slate-400">
+                    <p className="flex items-baseline gap-2 text-sm text-sarh-inkMute dark:text-slate-400">
                       <span className="font-semibold text-[#C9741F] dark:text-sarh-gold">
                         {formatSarh(program.fee)}
                       </span>
@@ -288,7 +299,7 @@ export function CenterProfile({ center }: { center: Center }) {
                     <p className="text-sm font-semibold text-sarh-navy dark:text-white">
                       {t("mapPlaceholder")}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-sarh-inkMute dark:text-slate-400">
                       {center.address}
                     </p>
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1 text-xs font-medium text-sarh-navy ring-1 ring-inset ring-sarh-borderLight dark:bg-black/30 dark:text-slate-100 dark:ring-white/15">

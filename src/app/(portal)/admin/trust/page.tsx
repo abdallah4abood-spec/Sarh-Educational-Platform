@@ -65,7 +65,7 @@ export default async function AdminTrustPage() {
           <p className="font-semibold text-sarh-navy dark:text-white">
             {row.institutionName}
           </p>
-          <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400">
             {row.type} — {row.zone}
           </p>
         </div>
@@ -98,7 +98,7 @@ export default async function AdminTrustPage() {
         row.status === "PENDING" ? (
           <TrustDecisionButtons id={row.id} name={row.institutionName} />
         ) : (
-          <span className="text-xs font-semibold text-slate-400">
+          <span className="text-xs font-semibold text-sarh-inkMute dark:text-slate-400">
             لا إجراء مطلوب
           </span>
         ),
@@ -115,7 +115,7 @@ export default async function AdminTrustPage() {
         actions={
           <Link
             href="/admin/institutions"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-sarh-teal hover:underline"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal hover:underline"
           >
             سجل المؤسسات
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
@@ -185,7 +185,7 @@ export default async function AdminTrustPage() {
                     <span className="block truncate text-xs font-bold text-sarh-navy dark:text-slate-200">
                       {row.name}
                     </span>
-                    <span className="block text-[11px] text-slate-400">
+                    <span className="block text-[11px] text-sarh-inkMute dark:text-slate-400">
                       {row.owner} — {row.zone}
                     </span>
                   </span>
@@ -210,14 +210,14 @@ export default async function AdminTrustPage() {
                     className="flex items-center justify-between gap-3 rounded-xl border border-sarh-gold/40 bg-sarh-gold/8 px-3 py-2.5 text-xs font-bold text-sarh-navy dark:text-white"
                   >
                     {row.name}
-                    <span className="text-[11px] font-medium text-slate-500">
+                    <span className="text-[11px] font-medium text-sarh-inkMute dark:text-slate-400">
                       {row.type}
                     </span>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-slate-500">لا مؤسسات معلّقة.</p>
+              <p className="text-sm text-sarh-inkMute dark:text-slate-400">لا مؤسسات معلّقة.</p>
             )}
           </Panel>
         </div>

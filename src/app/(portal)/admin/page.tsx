@@ -104,7 +104,7 @@ export default async function AdminOverviewPage() {
       cell: () => (
         <Link
           href="/admin/trust"
-          className="text-xs font-bold text-sarh-teal hover:underline"
+          className="text-xs font-bold text-sarh-tealInk dark:text-sarh-teal hover:underline"
         >
           مراجعة
         </Link>
@@ -184,18 +184,18 @@ export default async function AdminOverviewPage() {
                         className="block rounded-xl border border-sarh-borderLight p-3 transition-colors hover:border-sarh-teal/50 hover:bg-sarh-teal/5 dark:border-sarh-borderDark"
                       >
                         <span className="flex items-center justify-between gap-2">
-                          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                          <span className="text-[11px] font-bold text-sarh-inkMute dark:text-slate-400">
                             #{receipt.id.replace("pay-", "")} إيصال
                           </span>
                           <Receipt
-                            className="h-4 w-4 text-sarh-teal"
+                            className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal"
                             aria-hidden="true"
                           />
                         </span>
                         <span className="mt-2 block">
                           <StatusPill tone={pill.tone}>{pill.label}</StatusPill>
                         </span>
-                        <span className="mt-1.5 block text-[11px] text-slate-400" dir="ltr">
+                        <span className="mt-1.5 block text-[11px] text-sarh-inkMute dark:text-slate-400" dir="ltr">
                           {receipt.date}
                         </span>
                       </Link>
@@ -204,7 +204,7 @@ export default async function AdminOverviewPage() {
                 })}
               </ul>
             ) : (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-sarh-inkMute dark:text-slate-400">
                 لا توجد إيصالات بانتظار المراجعة — الطابور نظيف.
               </p>
             )}
@@ -253,7 +253,7 @@ export default async function AdminOverviewPage() {
                 ↑ {Math.round(totals.verificationTrend * 100)}%
               </StatusPill>
             </div>
-            <p className="mt-2 text-xs leading-6 text-slate-500 dark:text-slate-400">
+            <p className="mt-2 text-xs leading-6 text-sarh-inkMute dark:text-slate-400">
               مؤسسة تم توثيقها واعتمادها خلال آخر ٣٠ يوماً — بزيادة{" "}
               {Math.round(totals.verificationTrend * 100)}% عن الفترة السابقة.
             </p>
@@ -277,7 +277,7 @@ export default async function AdminOverviewPage() {
                         <span className="block text-xs font-bold text-sarh-navy dark:text-slate-200">
                           الإيصال #{receipt.id.replace("pay-", "")}
                         </span>
-                        <span className="mt-0.5 block text-[11px] text-slate-400" dir="ltr">
+                        <span className="mt-0.5 block text-[11px] text-sarh-inkMute dark:text-slate-400" dir="ltr">
                           {receipt.date}
                         </span>
                       </span>
@@ -310,7 +310,7 @@ export default async function AdminOverviewPage() {
                   <span className="font-semibold text-slate-600 dark:text-slate-300">
                     {ROLE_LABEL[row.tier as keyof typeof ROLE_LABEL] ?? row.tier}
                     {row.extra.length > 0 ? (
-                      <span className="ms-1 text-[11px] font-bold text-sarh-gold">
+                      <span className="ms-1 text-[11px] font-bold text-sarh-goldInk dark:text-sarh-gold">
                         +{row.extra.length} صلاحية إضافية
                       </span>
                     ) : null}
@@ -340,7 +340,7 @@ export default async function AdminOverviewPage() {
                     className="flex items-center justify-between gap-2 rounded-xl border border-sarh-borderLight px-3 py-2.5 text-xs font-bold text-sarh-navy transition-colors hover:border-sarh-teal/50 hover:bg-sarh-teal/5 dark:border-sarh-borderDark dark:text-slate-200"
                   >
                     {link.label}
-                    <ArrowLeft className="h-3.5 w-3.5 text-sarh-teal" aria-hidden="true" />
+                    <ArrowLeft className="h-3.5 w-3.5 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />
                   </Link>
                 </li>
               ))}

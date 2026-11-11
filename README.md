@@ -123,7 +123,7 @@ not yet complete end-to-end.
 | --- | --- | --- |
 | Arabic-first landing page with bilingual (AR/EN) copy and RTL/LTR switching | Done | `LanguageProvider` + `src/lib/i18n/*` |
 | Directory hub with dedicated `/explore/centers` and `/explore/kindergartens` routes | Done | |
-| Search, region / category / stage / rating / price filters, sorting and pagination | Done | Client-side pipeline in `directory-view.tsx`; listings come from a bundled catalogue (`src/lib/data/directory.ts`) |
+| Search, region / category / stage / rating / price filters, sorting and pagination | Done | Client-side filter pipeline in `directory-view.tsx` over listings read from PostgreSQL (`src/lib/data/centers-db.ts`, verified institutions only) |
 | Institution profile page `/center/[id]` | Done | Reads the `Institution` row from PostgreSQL; unknown ids return `notFound()` |
 | Enrolment request modal on the centre page | Partial | The UI and validation exist; there is no enrolment API route yet |
 | Teachers academy, about, FAQ, contact, privacy and terms pages | Done | Contact form posts to `/api/contact`; newsletter to `/api/newsletter` |
@@ -187,7 +187,7 @@ not yet complete end-to-end.
 | PWA install + offline shell | Done | `next-pwa` (disabled in development), `/offline` fallback page |
 | Dark / light theme | Done | `next-themes` |
 | Motion and smooth scrolling | Done | `framer-motion`, GSAP, Lenis (respects reduced-motion) |
-| Automated tests | **Not present** | See [Testing and validation](#testing-and-validation) |
+| Automated tests | Done | 382 tests in 67 suites via `npm test` (Node test runner through `tsx`); no CI yet — see [Testing and validation](#testing-and-validation) |
 
 ---
 
@@ -238,7 +238,8 @@ Confirmed from `package.json`, `prisma/schema.prisma`, `next.config.mjs` and
 
 **Tooling**
 
-- ESLint (`next lint`), `tsc --noEmit`, `tsx` for running the seed script
+- ESLint (`next lint`), `tsc --noEmit`, `tsx` for the seed script and for the test runner
+- `node:test` (Node's built-in runner) as the suite behind `npm test` — no Jest/Vitest dependency
 
 ---
 
@@ -248,8 +249,8 @@ Confirmed from `package.json`, `prisma/schema.prisma`, `next.config.mjs` and
 Browser (RTL/LTR, PWA)
    │
    ├── Public pages  ──────────────► Next.js Server Components
-   │                                   ├── bundled catalogue (src/lib/data/directory.ts)
-   │                                   └── Prisma ──► PostgreSQL   (/center/[id], site settings)
+   │                                   ├── directory model + taxonomy (src/lib/data/directory.ts)
+   │                                   └── Prisma ──► PostgreSQL   (directory, /center/[id], settings)
    │
    ├── Five portals ───────────────► Next.js Server Components
    │        │                          └── Prisma ──► PostgreSQL   (src/lib/db/*)
@@ -351,9 +352,9 @@ npm install
 cp .env.example .env
 #    → edit DATABASE_URL, NEXTAUTH_SECRET, NEXT_PUBLIC_APP_URL
 
-# 4. Create the schema and load the demo dataset
+# 4. Apply the committed migrations and load the demo dataset
 npm run prisma:generate
-npm run db:push
+npx prisma migrate deploy
 npm run db:seed
 
 # 5. Start the app
@@ -377,13 +378,14 @@ Based on [`.env.example`](.env.example). Copy it to `.env`; never commit `.env`.
 | `NEXTAUTH_URL` | Yes | Canonical URL of the app (auth callbacks) |
 | `NEXTAUTH_SECRET` | Yes | Signing secret for session tokens — generate a long random value |
 | `NEXT_PUBLIC_APP_URL` | Yes | Absolute origin used in email links and OAuth callbacks |
+| `SITE_URL` | No | Public origin written into `/sitemap.xml` and `/robots.txt`; falls back to `NEXT_PUBLIC_APP_URL`, and loopback/LAN values are ignored in production |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | No | Enables the Google provider when both are set |
 | `RESEND_API_KEY` | No | Sends verification/reset email; without it the link is logged server-side |
 | `EMAIL_FROM` | No | Sender address; must be verified in Resend |
 | `NEXT_PUBLIC_SUPPORT_PHONE` / `_WHATSAPP` / `_EMAIL` / `_SITE_LOCATION` | No | Fallbacks when the DB-backed `SiteSetting` value is empty |
 | `NEXT_PUBLIC_FASTAPI_URL` | No | AI service URL used by browser-side AI screens |
 | `FASTAPI_URL` | No | Server-side AI service URL for the parent chat proxy (falls back to the public value) |
-| `NEXT_PUBLIC_SOCIAL_*`, `NEXT_PUBLIC_INTRO_VIDEO_URL` | No | Optional footer links / intro video; empty values render nothing |
+| `NEXT_PUBLIC_SOCIAL_*` | No | Optional footer social links; empty values render nothing |
 | `SEED_FORCE` | No | `1` allows re-seeding demo accounts in production (guarded by design) |
 
 The AI microservice reads its own variables from `ai_service/.env`:
@@ -399,13 +401,15 @@ The AI microservice reads its own variables from `ai_service/.env`:
   (users, institutions, students, enrolments, daily logs, payments, quizzes, classes, timetable
   slots, staff, lesson plans, evaluations, quality signals, announcements, messages, subject
   performance, activity events, directory checklists, site settings, verification tokens).
-- **Migration status — read this before deploying:** the repository has **no `prisma/migrations`
-  directory**. The intended local workflow is `npm run db:push`, which applies the schema directly
-  and keeps no history. Do **not** run `prisma migrate dev` against an existing database — it can
-  reset it. The recommended path is documented in
-  [`docs/architecture/migration-strategy.md`](docs/architecture/migration-strategy.md): keep
-  `db push` for development, back up and clone before touching a real database, review a generated
-  baseline against the clone, and switch `prisma migrate deploy` on only after that validation.
+- **Migrations:** two migrations are committed —
+  `20251108131000_init` (the baseline schema) and `20251108133000_staff_invitations_audit`
+  (`StaffInvitation` + `AuditLog`). Apply them with `npx prisma migrate deploy`; `npx prisma migrate
+  status` must report "Database schema is up to date". `npm run db:push` still exists for throwaway
+  local databases, but it is **not** the path for a database that already holds data — it skips
+  history and can drift from `schema.prisma`. `prisma migrate dev` must not be pointed at an
+  existing database (it may reset it); the backup/clone procedure and the recovery drill are in
+  [`docs/architecture/migration-strategy.md`](docs/architecture/migration-strategy.md) and
+  [`docs/architecture/phase-4.3-migration-and-recovery.md`](docs/architecture/phase-4.3-migration-and-recovery.md).
 - **Staff roles:** `StaffMember.role` is the authorisation role (`CENTER_ADMIN`, `SECRETARY`,
   `TEACHER`, `SUPERVISOR`, `STAFF`); `title` remains display text. The capability matrix, the
   dev-only backfill counts and the rollback SQL are documented in
@@ -448,16 +452,25 @@ the AI screens need it.
 
 ## Testing and validation
 
-There is **no automated test suite** in this repository yet: no `test` script, no test runner
-dependency, and no `*.test.*` / `*.spec.*` files. Please don't assume CI coverage.
+The repository ships an automated suite: 15 `*.test.ts` files (**382 tests / 67 suites**, 0
+failures on the current tree) driven by Node's built-in test runner through `tsx`. The tests cover
+role and institution isolation, teacher scope, staff invitations and `AuditLog`, guardian
+linking/approvals/join codes, rate limiting, session tiers, and a static repo-wide isolation guard
+that fails the build if a query is written without its tenant filter.
 
-The checks that exist today:
+What runs locally today:
 
 ```bash
+npm test            # node --test via tsx: 382 tests
 npm run typecheck   # tsc --noEmit
 npm run lint        # next lint
 npm run build       # production build
+npx prisma migrate status   # confirms the two committed migrations are applied
 ```
+
+There is **no CI pipeline** (no `.github/workflows`): every check above is run by hand before a
+commit, and nothing blocks a change automatically. Treat green local output as the current bar,
+not as a gate that will catch a regression for you.
 
 Manual validation that is worth doing after a change:
 
@@ -486,22 +499,33 @@ Manual validation that is worth doing after a change:
 - **Seed guard:** production seeding is blocked unless you deliberately set `SEED_FORCE=1`.
 - **Known gap:** the enrolment request form on `/center/[id]` has no API route yet, so it does not
   persist anything — it must not be described or relied on as a working submission path.
+- **Production email is not activated.** No sending domain is delegated or verified in Resend yet, so
+  `EMAIL_FROM` stays on the provider sandbox address and delivery to real invitees is unconfirmed.
+  Verify the domain (SPF/DKIM/DMARC) before any production send.
+- **Invitation tokens can reach access logs.** An acceptance link carries its one-time token in the
+  query string, so a reverse proxy, CDN or server access log can record it. The token itself is
+  single-use, bound to the invited address, expires after 7 days and is stored hashed; the response
+  also sends `Referrer-Policy: no-referrer` and `X-Robots-Tag: noindex`. Log access must still be
+  restricted and scrubbed before production — this is an accepted risk, not a closed one.
+- **Prices and marketing claims are illustrative.** The demo monthly plan price and any
+  "most chosen"-style copy belong to the seeded demo content; they are not owner-approved commercial
+  terms and should be replaced before launch.
 
 ---
 
 ## Project status
 
 The project is **under active development**. The public site, authentication, RBAC, the five portal
-shells and the AI microservice are in place, and several portals are already reading and writing
-through Prisma. What is not finished:
+shells, the AI microservice, the staff-invitation flow with `AuditLog`, guardian linking/approval,
+and the automated test suite are in place, and most portals read and write through Prisma. What is
+not finished:
 
-- No automated tests and no CI pipeline.
-- No migration history (schema applied with `db:push`); this needs a baseline migration before a
-  production deployment.
+- **No CI pipeline.** The suite, `tsc`, lint and the build are run locally; nothing runs them on push.
 - Some portal screens are still driven by curated demo fixtures rather than real workflows
   (marked **Demo** in [Key features](#key-features)).
 - Enrolment submission, and a few admin/institution actions, are UI-complete but not API-complete.
-- No live/public deployment is published, so no demo URL is linked here.
+- **No live/public deployment is published**, so no demo URL is linked here, and the production
+  email domain is not activated yet (see [Security notes](#security-notes)).
 - Desktop header polish on the signed-out public pages (compact sign-in actions).
 
 ---
@@ -510,13 +534,14 @@ through Prisma. What is not finished:
 
 Directional and unscheduled — items here are not implemented yet.
 
-- Add a test suite (unit + a smoke path per portal) and wire it into CI.
-- Replace `db:push` with a proper baseline migration and a deploy-time migrate step.
+- Wire the existing suite plus `tsc`, lint and the build into CI so a regression cannot land silently.
 - Finish the enrolment flow end to end (API route, notifications, institution-side approval).
-- Move the Explore directory onto PostgreSQL reads once the institution data model is settled.
-- Add rate limiting and audit logging to the admin and AI proxy routes.
+- Extend rate limiting and audit logging to the admin and AI proxy routes (today they cover contact,
+  staff invitations, invitation acceptance and guardian redemption).
 - Harden the PWA/offline story with a real conflict-resolution rule for queued attendance.
-- Ship an accessibility and RTL pass across the portals.
+- Ship a formal accessibility and RTL audit across the portals (contrast, focus order, screen readers).
+- Delegate and verify the Resend sending domain so production email can leave the sandbox address.
+- Replace the demo pricing and institute copy with owner-approved terms.
 
 ---
 

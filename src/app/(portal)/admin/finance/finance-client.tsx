@@ -68,10 +68,10 @@ export function FinanceClient({
   return (
     <div className="mx-auto min-h-screen w-full max-w-6xl px-4 pb-20 pt-6">
       <header className="mb-6">
-        <p className="flex items-center gap-1.5 text-xs font-bold text-sarh-teal">
+        <p className="flex items-center gap-1.5 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal">
           <span>صَرْح</span>
-          <span className="text-slate-400">/</span>
-          <span className="text-slate-500 dark:text-slate-400">
+          <span className="text-sarh-inkMute dark:text-slate-400">/</span>
+          <span className="text-sarh-inkMute dark:text-slate-400">
             الإدارة المالية
           </span>
         </p>
@@ -80,7 +80,7 @@ export function FinanceClient({
             <h1 className="text-2xl font-bold tracking-tight text-sarh-navy dark:text-white">
               المركز المالي
             </h1>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-1 text-sm text-sarh-inkMute dark:text-slate-400">
               إيرادات المنصة، مطابقة إيصالات الدفع بالذكاء الاصطناعي، وطابور
               اعتماد المؤسسات.
             </p>
@@ -124,7 +124,7 @@ export function FinanceClient({
               <stat.icon
                 className={cn(
                   "h-5 w-5",
-                  stat.accent === "teal" ? "text-sarh-teal" : "text-sarh-gold"
+                  stat.accent === "teal" ? "text-sarh-tealInk dark:text-sarh-teal" : "text-sarh-goldInk dark:text-sarh-gold"
                 )}
                 aria-hidden="true"
               />
@@ -135,7 +135,7 @@ export function FinanceClient({
             >
               {stat.value}
             </p>
-            <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">
+            <p className="mt-1 text-sm font-semibold text-sarh-inkMute dark:text-slate-400">
               {stat.label}
             </p>
           </article>

@@ -188,18 +188,18 @@ export default async function SupervisorOverviewPage() {
                       <p className="truncate text-sm font-bold text-sarh-navy dark:text-white">
                         {plan.title}
                       </p>
-                      <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                      <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400">
                         {plan.teacherName} — {plan.subject} · {plan.gradeLevel}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="hidden text-[11px] text-slate-400 sm:block" dir="ltr">
+                      <span className="hidden text-[11px] text-sarh-inkMute dark:text-slate-400 sm:block" dir="ltr">
                         {plan.submittedAt}
                       </span>
                       <StatusPill tone={pill.tone}>{pill.label}</StatusPill>
                       <Link
                         href="/supervisor/plans"
-                        className="text-xs font-bold text-sarh-teal hover:underline"
+                        className="text-xs font-bold text-sarh-tealInk dark:text-sarh-teal hover:underline"
                       >
                         مراجعة
                       </Link>
@@ -242,7 +242,7 @@ export default async function SupervisorOverviewPage() {
                     <div className="flex items-center justify-between gap-2">
                       <StatusPill tone={style.tone}>{style.label}</StatusPill>
                       <span
-                        className="font-mono text-[11px] font-bold tabular-nums text-slate-400"
+                        className="font-mono text-[11px] font-bold tabular-nums text-sarh-inkMute dark:text-slate-400"
                         dir="ltr"
                       >
                         {signal.at}
@@ -251,7 +251,7 @@ export default async function SupervisorOverviewPage() {
                     <p className="mt-2 text-xs font-bold text-sarh-navy dark:text-slate-200">
                       {signal.title}
                     </p>
-                    <p className="mt-1 text-[11px] leading-6 text-slate-500 dark:text-slate-400">
+                    <p className="mt-1 text-[11px] leading-6 text-sarh-inkMute dark:text-slate-400">
                       {signal.detail}
                     </p>
                   </li>
@@ -270,7 +270,7 @@ export default async function SupervisorOverviewPage() {
                 <li key={teacher.id}>
                   <p className="mb-1 flex items-center justify-between gap-2 text-xs font-bold text-sarh-navy dark:text-slate-200">
                     <span>{teacher.name}</span>
-                    <span className="font-mono tabular-nums text-slate-400" dir="ltr">
+                    <span className="font-mono tabular-nums text-sarh-inkMute dark:text-slate-400" dir="ltr">
                       {teacher.score}%
                     </span>
                   </p>
@@ -281,13 +281,13 @@ export default async function SupervisorOverviewPage() {
           </Panel>
 
           <Panel title="أدوات الإشراف" icon={Sparkles}>
-            <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
+            <p className="text-sm leading-7 text-sarh-inkMute dark:text-slate-400">
               أدوات التقارير والزيارات الصفية تُجهَّز حسب نطاق إشرافك، ويمكنك طلب
               تقرير مخصص لأي معلم أو مركز.
             </p>
             <Link
               href="/supervisor/evaluations"
-              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-teal hover:underline"
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal hover:underline"
             >
               فتح تقييم الأداء
               <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />

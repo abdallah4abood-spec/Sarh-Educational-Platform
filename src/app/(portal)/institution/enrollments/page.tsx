@@ -67,13 +67,13 @@ export default async function InstitutionEnrollmentsPage({
           icon={Wallet}
         />
         <Panel title="بيانات مالية محمية" icon={LockKeyhole}>
-          <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
+          <p className="text-sm leading-7 text-sarh-inkMute dark:text-slate-400">
             سجل العمولات والبيانات المالية متاح لمالك المركز فقط. يمكنك متابعة
             الطاقم والفصول وملف المركز من لوحة المؤسسة.
           </p>
           <Link
             href="/institution"
-            className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-teal hover:underline"
+            className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal hover:underline"
           >
             العودة إلى لوحة المؤسسة
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
@@ -103,7 +103,7 @@ export default async function InstitutionEnrollmentsPage({
           <p className="font-semibold text-sarh-navy dark:text-white">
             {row.studentName}
           </p>
-          <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400">
             {row.gradeLevel}
           </p>
         </div>
@@ -150,7 +150,7 @@ export default async function InstitutionEnrollmentsPage({
         actions={
           <Link
             href="/institution/ai-studio"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-sarh-teal hover:underline"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal hover:underline"
           >
             جدول العمولات في الاستوديو
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />

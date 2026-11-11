@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { loadGuardianContactNames } from "@/lib/guardian-access";
 import {
   hasCapability,
   requireCapability,
@@ -31,7 +32,13 @@ export async function loadInstitutionHeader(access: InstitutionAccess) {
 
   const row = await prisma.institution.findUnique({
     where: { id: access.institutionId },
-    include: { _count: { select: { students: true, staff: true } } },
+    include: {
+      _count: { select: { staff: true } },
+      // The header tile is "students now", so a withdrawn seat must not inflate
+      // it. The full register lives on `/institution/students`, which keeps
+      // withdrawn rows visible with their state.
+      students: { where: { enrollmentStatus: "ACTIVE" }, select: { id: true } },
+    },
   });
   if (!row) return null;
 
@@ -43,7 +50,7 @@ export async function loadInstitutionHeader(access: InstitutionAccess) {
     verified: row.trustStatus === "VERIFIED",
     trustStatus: row.trustStatus,
     rating: row.rating,
-    students: row._count.students,
+    students: row.students.length,
     staff: row._count.staff,
   };
 }
@@ -81,7 +88,16 @@ export async function loadInstitutionCommissions(
   requireCapability(access, "commissions.read");
 
   const rows = await prisma.enrollment.findMany({
-    where: { institutionId: access.institutionId },
+    where: {
+      institutionId: access.institutionId,
+      // Operational intake (the centre's own students) carries no referral
+      // commission and must never appear in the financial ledger. The filter is
+      // explicit rather than relying on `commissionFee = 0`: a fee written by
+      // any future path must still not turn intake into a referral.
+      source: "PLATFORM_REFERRAL",
+      // Deliberately **not** filtered by `enrollmentStatus`: this is the
+      // financial history of a referral and must survive a withdrawal.
+    },
     include: {
       student: { select: { fullName: true } },
       institution: { select: { name: true } },
@@ -104,25 +120,32 @@ export async function loadInstitutionRoster(
   requireCapability(access, "roster.read");
 
   const rows = await prisma.enrollment.findMany({
-    where: { institutionId: access.institutionId },
+    where: {
+      institutionId: access.institutionId,
+      // The attendance grid is "who is in class today": a withdrawn seat is
+      // not expected to be marked present, and must not hold a row in it.
+      enrollmentStatus: "ACTIVE",
+    },
     include: {
-      student: {
-        select: {
-          id: true,
-          fullName: true,
-          parent: { select: { fullName: true } },
-        },
-      },
+      student: { select: { id: true, fullName: true } },
       class: { select: { gradeLevel: true } },
     },
     orderBy: { createdAt: "asc" },
   });
 
+  // A guardian is an APPROVED `StudentGuardian`, not a guaranteed relation:
+  // a student can be enrolled before any guardian account is linked, so the
+  // roster shows "—" instead of assuming one exists.
+  const guardians = await loadGuardianContactNames(
+    rows.map((row) => row.student.id),
+    access.institutionId
+  );
+
   return rows.map((row) => ({
     id: row.student.id,
     name: row.student.fullName,
     gradeLevel: row.class?.gradeLevel ?? row.gradeLevel,
-    guardian: row.student.parent.fullName,
+    guardian: guardians.get(row.student.id) ?? "—",
   }));
 }
 
@@ -210,7 +233,14 @@ export async function loadInstitutionProfile(access: InstitutionAccess) {
   const row = await prisma.institution.findUnique({
     where: { id: access.institutionId },
     include: {
-      students: { select: { status: true } },
+      // Verified-seat figures describe referrals; the centre's own intake is
+      // operational, so it neither counts as a review nor dilutes occupancy.
+      // A withdrawn seat is not a seat any more, so it is excluded from both
+      // the numerator and the denominator.
+      students: {
+        where: { source: "PLATFORM_REFERRAL", enrollmentStatus: "ACTIVE" },
+        select: { status: true },
+      },
     },
   });
   if (!row) return null;

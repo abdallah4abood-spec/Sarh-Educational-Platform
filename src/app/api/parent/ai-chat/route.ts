@@ -1,9 +1,12 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
 import { siteConfig } from "@/lib/config/site";
+import {
+  parentChatSchema,
+  parentChatUpstreamBody,
+} from "@/lib/parent-chat";
 
 /**
  * POST /api/parent/ai-chat — the parent-portal assistant.
@@ -17,20 +20,6 @@ import { siteConfig } from "@/lib/config/site";
  * role). The session is checked again here — defence in depth, so this handler
  * cannot silently become public if that matcher is ever edited.
  */
-const chatSchema = z.object({
-  message: z.string().trim().min(1, { message: "اكتب سؤالك أولاً" }).max(600),
-  language: z.enum(["ar", "en"]).default("ar"),
-  history: z
-    .array(
-      z.object({
-        role: z.enum(["user", "assistant"]),
-        text: z.string().trim().min(1).max(1000),
-      })
-    )
-    .max(8)
-    .default([]),
-});
-
 /** Private dependency URL; `NEXT_PUBLIC_FASTAPI_URL` is the dev default. */
 function aiServiceBaseUrl(): string {
   return (process.env.FASTAPI_URL || siteConfig.fastApiUrl).replace(/\/$/, "");
@@ -55,7 +44,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const parsed = chatSchema.safeParse(payload);
+  const parsed = parentChatSchema.safeParse(payload);
   if (!parsed.success) {
     return NextResponse.json(
       {
@@ -71,11 +60,10 @@ export async function POST(request: Request) {
     const response = await fetch(`${aiServiceBaseUrl()}/api/ai/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...parsed.data,
-        // Gives the assistant the child's name for a warmer, specific answer.
-        studentName: session.user.name ?? undefined,
-      }),
+      // The assistant is a generic educational helper. No child name,
+      // institution id, grade or any other scoped record is forwarded: a
+      // parent with no grant must not leak identity to the AI service.
+      body: JSON.stringify(parentChatUpstreamBody(parsed.data)),
       signal: AbortSignal.timeout(20_000),
       cache: "no-store",
     });

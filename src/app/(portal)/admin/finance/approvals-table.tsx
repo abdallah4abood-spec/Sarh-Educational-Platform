@@ -123,7 +123,7 @@ export function ApprovalsTable({ initialRows }: { initialRows: ApprovalRow[] }) 
             {row.institutionName}
           </span>
           <span
-            className="font-mono text-xs tabular-nums text-slate-400"
+            className="font-mono text-xs tabular-nums text-sarh-inkMute dark:text-slate-400"
             dir="ltr"
           >
             {row.id}
@@ -180,7 +180,7 @@ export function ApprovalsTable({ initialRows }: { initialRows: ApprovalRow[] }) 
             </button>
           </span>
         ) : (
-          <span className="text-xs font-semibold text-slate-400">
+          <span className="text-xs font-semibold text-sarh-inkMute dark:text-slate-400">
             لا إجراء مطلوب
           </span>
         ),
@@ -196,12 +196,12 @@ export function ApprovalsTable({ initialRows }: { initialRows: ApprovalRow[] }) 
             className="flex items-center gap-2 text-lg font-bold text-sarh-navy dark:text-white"
           >
             <ClipboardCheck
-              className="h-5 w-5 text-sarh-teal"
+              className="h-5 w-5 text-sarh-tealInk dark:text-sarh-teal"
               aria-hidden="true"
             />
             طابور اعتماد المؤسسات
           </h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-sm text-sarh-inkMute dark:text-slate-400">
             طلبات انضمام رياض الأطفال والمراكز — التحديث فوري دون إعادة تحميل.
           </p>
         </div>
@@ -226,7 +226,7 @@ export function ApprovalsTable({ initialRows }: { initialRows: ApprovalRow[] }) 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative w-full sm:w-72">
           <Search
-            className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sarh-inkMute dark:text-slate-400"
             aria-hidden="true"
           />
           <input
@@ -252,7 +252,7 @@ export function ApprovalsTable({ initialRows }: { initialRows: ApprovalRow[] }) 
                   "rounded-full px-4 py-2 text-xs font-bold transition-colors",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal focus-visible:ring-offset-2",
                   active
-                    ? "bg-sarh-teal text-white"
+                    ? "bg-sarh-tealInk text-white"
                     : "bg-slate-100 text-slate-600 hover:bg-sarh-teal/10 hover:text-sarh-teal dark:bg-white/10 dark:text-slate-300"
                 )}
               >

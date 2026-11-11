@@ -41,6 +41,30 @@ enum PaymentStatus {
   REJECTED
 }
 
+/// How an enrollment came into existence.
+///
+/// `PLATFORM_REFERRAL` is the value every pre-existing row receives (the seed
+/// fixtures and the public referral journey); `INSTITUTION` is written by a
+/// centre's own student intake. Financial reporting reads `PLATFORM_REFERRAL`
+/// rows only, so operational intake can never look like a referral commission.
+///
+/// `PARENT_PORTAL` does not exist yet on purpose: the parent portal creates
+/// students, not enrollments. A value is added when a path actually writes it.
+enum EnrollmentSource {
+  PLATFORM_REFERRAL
+  INSTITUTION
+}
+
+/// Operational state of an enrollment.
+///
+/// Deliberately separate from `PaymentStatus` (which remains the commission /
+/// payment state on `Enrollment.status`) so an unpaid invoice and an active
+/// seat can never be confused.
+enum EnrollmentStatus {
+  ACTIVE
+  WITHDRAWN
+}
+
 /// Publication state of a lesson plan as it moves through supervision.
 /// MIRRORS `PlanStatus` in `src/lib/data/portal.ts` value-for-value so the
 /// pills, filters and dictionary keys keep working unchanged.
@@ -79,6 +103,32 @@ enum StaffRole {
   TEACHER
   SUPERVISOR
   STAFF
+}
+
+/// How a guardianship link between an account and a student stands.
+///
+/// Only `APPROVED` grants any parent-portal read access. `PENDING` is a
+/// request awaiting review; `REJECTED` and `REVOKED` are explicit denials and
+/// must never be bypassed by the legacy `Student.parentId` column.
+enum GuardianLinkStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REVOKED
+}
+
+/// Append-only audit trail for a guardianship link.
+///
+/// `LEGACY_IMPORTED` marks the migration of a pre-existing `Student.parentId`
+/// relationship; the remaining values record the transitions of the linking
+/// flow that follows in a later phase.
+enum GuardianAuditAction {
+  LEGACY_IMPORTED
+  MIGRATED
+  REQUESTED
+  APPROVED
+  REJECTED
+  REVOKED
 }
 
 /// Severity/kind of a quality signal raised inside a supervision scope.
@@ -135,6 +185,12 @@ model User {
   payments     PaymentTransaction[]
   quizzes      Quiz[]
 
+  // ---- guardianship (StudentGuardian is the authorisation source) ----
+  guardianLinks      StudentGuardian[]      @relation("GuardianLinks")
+  issuedJoinCodes    StudentJoinCode[]      @relation("JoinCodeIssuer")
+  redeemedJoinCodes  StudentJoinCode[]      @relation("JoinCodeRedeemer")
+  guardianEvents     StudentGuardianEvent[] @relation("GuardianAuditActor")
+
   // ---- teaching / supervision / administration relations ----
   staffRoles        StaffMember[]
   taughtClasses     SchoolClass[]        @relation("ClassTeacher")
@@ -150,6 +206,8 @@ model User {
 }
 
 model Institution {
+  guardianGrants      StudentGuardianGrant[]
+  subjectPerformance  SubjectPerformance[]
   id          String         @id @default(uuid())
   name        String
   type        InstitutionType
@@ -176,6 +234,11 @@ model Institution {
   checklist   DirectoryChecklistItem[]
   activity    ActivityEvent[]
   payments    PaymentTransaction[]
+  joinCodes   StudentJoinCode[]
+  /// Staff invitations issued by this centre (phase 4.4).
+  staffInvitations StaffInvitation[]
+  /// Guardianship requests/decisions this centre made (phase 4.2).
+  guardianEvents StudentGuardianEvent[] @relation("GuardianEventInstitution")
   createdAt   DateTime       @default(now())
 
   @@index([zone, type])
@@ -190,11 +253,111 @@ model Student {
   /// signal is the enrolled institution's `type`, but a child can be browsing
   /// before enrolment, so it is stored on the row as well.
   avatarUrl    String?
-  parentId     String
-  parent       User         @relation(fields: [parentId], references: [id])
+  /// Legacy single-guardian column, kept for the parent-portal creation path
+  /// and for compatibility until that path is reviewed on its own.
+  ///
+  /// Nullable because an institution may create a student before any guardian
+  /// is linked. It is **not** an authorisation source — parent-portal reads go
+  /// through `guardians` with `status = APPROVED` only, so a revoked link can
+  /// never be bypassed through this column.
+  parentId     String?
+  /// `Restrict` is explicit: making the column nullable must not turn
+  /// "delete an account" into "silently orphan its students".
+  parent       User?        @relation(fields: [parentId], references: [id], onDelete: Restrict)
   enrollments  Enrollment[]
   logs         DailyLog[]
   performance  SubjectPerformance[]
+
+  // ---- guardianship ----
+  guardians       StudentGuardian[]
+  joinCodes       StudentJoinCode[]
+  guardianEvents  StudentGuardianEvent[]
+
+  @@index([parentId])
+}
+
+/// One guardian account linked to one student.
+///
+/// This table — not `Student.parentId` — is what the parent portal authorises
+/// against. A student may have several guardians (mother, father, grandparent);
+/// exactly one APPROVED link per student should carry `isPrimary = true`, and
+/// that is the contact the teacher/institution rosters display. The invariant
+/// is enforced by the write paths (there is no partial unique index in
+/// PostgreSQL through Prisma), and every roster read falls back to "—" rather
+/// than assuming a guardian exists.
+model StudentGuardian {
+  grants      StudentGuardianGrant[]
+  id          String             @id @default(uuid())
+  studentId   String
+  student     Student            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User               @relation("GuardianLinks", fields: [userId], references: [id])
+  status      GuardianLinkStatus @default(PENDING)
+  /// The guardian shown as "the" contact in rosters and messages.
+  isPrimary   Boolean            @default(false)
+  /// Display-only relation (الأم، الأب، الجدّة…). Never consulted for access.
+  relation    String?
+  requestedAt DateTime           @default(now())
+  approvedAt  DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  events      StudentGuardianEvent[]
+
+  /// One link per (student, account): a re-request updates the existing row
+  /// instead of creating a second relationship that could disagree with it.
+  @@unique([studentId, userId])
+  @@index([userId, status])
+  @@index([studentId, status, isPrimary])
+}
+
+/// A single-use code an institution issues to hand a student's records to a
+/// guardian account. Issuing/redemption endpoints are a later phase; the table
+/// exists now so the schema and the audit trail are settled.
+model StudentJoinCode {
+  id            String      @id @default(uuid())
+  code          String      @unique
+  studentId     String
+  student       Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id])
+  createdById   String
+  createdBy     User        @relation("JoinCodeIssuer", fields: [createdById], references: [id])
+  expiresAt     DateTime
+  redeemedAt    DateTime?
+  redeemedById  String?
+  redeemedBy    User?       @relation("JoinCodeRedeemer", fields: [redeemedById], references: [id])
+  createdAt     DateTime    @default(now())
+
+  @@index([studentId])
+  @@index([institutionId, expiresAt])
+}
+
+/// Append-only audit row for a guardianship link.
+///
+/// `dedupeKey` is what makes the legacy backfill idempotent: re-running it
+/// cannot append a second `LEGACY_IMPORTED` row for the same pair.
+model StudentGuardianEvent {
+  id         String              @id @default(uuid())
+  studentId  String
+  student    Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  linkId     String?
+  link       StudentGuardian?    @relation(fields: [linkId], references: [id], onDelete: SetNull)
+  guardianId String?
+  guardian   User?               @relation("GuardianAuditActor", fields: [guardianId], references: [id])
+  /// The centre that requested (REQUESTED) or decided (APPROVED/REJECTED)
+  /// this link. Null only for rows written before phase 4.2.
+  institutionId String?
+  institution   Institution?        @relation("GuardianEventInstitution", fields: [institutionId], references: [id], onDelete: SetNull)
+  action     GuardianAuditAction
+  /// Stable per-action key, e.g. `legacy:<studentId>:<userId>`.
+  dedupeKey  String?             @unique
+  note       String?
+  createdAt  DateTime            @default(now())
+
+  @@index([studentId, createdAt])
+  @@index([guardianId, createdAt])
+  @@index([linkId, createdAt])
 }
 
 model Enrollment {
@@ -209,11 +372,18 @@ model Enrollment {
   classId       String?
   class         SchoolClass?  @relation(fields: [classId], references: [id])
   commissionFee Float
+  /// Commission / payment state. Never the operational state of the seat.
   status        PaymentStatus @default(PENDING)
+  /// Where the enrollment originated. Existing rows default to a referral;
+  /// institution intake explicitly writes `INSTITUTION`.
+  source        EnrollmentSource @default(PLATFORM_REFERRAL)
+  /// Operational state of the seat, independent of payment.
+  enrollmentStatus EnrollmentStatus @default(ACTIVE)
   createdAt     DateTime      @default(now())
 
   @@index([institutionId, status])
   @@index([studentId])
+  @@index([institutionId, source])
 }
 
 model DailyLog {
@@ -345,6 +515,91 @@ model StaffMember {
   @@index([userId, status])
 }
 
+/// Lifecycle of a staff invitation (phase 4.4).
+///
+/// Deliberately a separate enum from `StaffStatus`: an invitation is not a
+/// membership and never appears in `StaffMember`. That is what keeps the staff
+/// roster an accurate list of people who actually work in the centre, and why
+/// `INVITED` was never added to `StaffStatus`.
+enum StaffInvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+/// A pending offer to join an institution's staff (phase 4.4).
+///
+/// The row is independent of `StaffMember`; accepting it creates the membership
+/// inside the same transaction that marks the invitation `ACCEPTED` and writes
+/// the audit row. `tokenHash` is the only stored form of the secret — the
+/// plaintext token exists in the invitation link and nowhere else, so a
+/// database dump contains no usable invitation.
+///
+/// `email` is stored normalised (trimmed, lower-case) because acceptance compares
+/// it against the account's normalised address.
+model StaffInvitation {
+  id            String      @id @default(uuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  email         String
+  /// The role this invitation will create. Never taken from a client body at
+  /// acceptance time; it is read from this row.
+  role          StaffRole
+  /// Display position written onto the membership (`StaffMember.title`).
+  title         String
+  subjects      String[]
+  /// `sha256:<hex>` of the invitation secret. Unique so a rotated token can
+  /// never collide with a live one, and so lookup is a single indexed read.
+  tokenHash     String      @unique
+  status        StaffInvitationStatus @default(PENDING)
+  /// Actor ids, not relations: the audit trail lives in `AuditLog`, which
+  /// survives the deletion of the account that sent the invitation.
+  invitedById   String
+  expiresAt     DateTime
+  acceptedAt    DateTime?
+  acceptedById  String?
+  revokedAt     DateTime?
+  revokedById   String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  /// The list and resend paths always read one centre at a time.
+  @@index([institutionId, status, createdAt])
+  @@index([email, status])
+}
+
+/// General, append-only audit trail (decision D1).
+///
+/// Deliberately untyped (`action`/`entityType` are strings): the platform adds
+/// audited operations faster than it would add enums, and a new action must not
+/// require a migration. `actorId` and `institutionId` are plain columns with no
+/// foreign keys so the trail remains readable after an account or a centre is
+/// deleted — an audit row is evidence, not a cache.
+///
+/// Only ids, action names and non-secret metadata belong here. Tokens, token
+/// hashes and invitation links must never be written.
+model AuditLog {
+  id            String   @id @default(uuid())
+  /// Dotted upper-case operation, e.g. `STAFF_INVITATION.CREATED`.
+  action        String
+  /// Model or aggregate the operation touched, e.g. `StaffInvitation`.
+  entityType    String
+  entityId      String
+  actorId       String?
+  /// Actor role at the time of the action, e.g. `OWNER` or `SUPER_ADMIN`.
+  actorRole     String?
+  institutionId String?
+  /// Non-secret context (previous status, target role, …). Never a token.
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([entityType, entityId, createdAt])
+  @@index([institutionId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+}
+
 /// A lesson plan authored by a teacher and reviewed by a supervisor.
 model LessonPlan {
   id            String      @id @default(uuid())
@@ -442,17 +697,24 @@ model Message {
   @@index([fromUserId])
 }
 
-/// Per-subject performance for one student in one term.
+/// Per-subject performance for one student in one term at one institution.
+///
+/// `institutionId` is required: a score always belongs to the centre that
+/// produced it. `Restrict` is explicit so deleting an institution cannot make
+/// historical scores silently disappear or become unattributed.
 model SubjectPerformance {
-  id           String  @id @default(uuid())
-  studentId    String
-  student      Student @relation(fields: [studentId], references: [id])
-  subject      String
-  term         String
-  score        Int
-  classAverage Int
+  id            String      @id @default(uuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Restrict)
+  studentId     String
+  student       Student     @relation(fields: [studentId], references: [id])
+  subject       String
+  term          String
+  score         Int
+  classAverage  Int
 
-  @@unique([studentId, subject, term])
+  @@unique([studentId, institutionId, subject, term])
+  @@index([institutionId, subject])
 }
 
 /// Platform activity feed powering the admin overview chart and recent list.
@@ -494,6 +756,43 @@ model SiteSetting {
   key       String   @unique
   value     String
   updatedAt DateTime @updatedAt
+}
+
+/// Grant of read access to ONE child at ONE institution — phase 4.3.
+///
+/// `StudentGuardian` remains the family relationship (and the home of
+/// `isPrimary`); this table is the only source of institutional read access.
+/// Approving one institution can therefore never open another institution's
+/// records. `approvedById`/`revokedById` are actor ids, not relations: the
+/// audit trail lives in `StudentGuardianEvent`, which survives actor deletion.
+model StudentGuardianGrant {
+  id            String           @id @default(uuid())
+  linkId        String
+  link          StudentGuardian  @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  institutionId String
+  institution   Institution      @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  status       GrantStatus @default(PENDING)
+  requestedAt  DateTime    @default(now())
+  approvedAt   DateTime?
+  approvedById String?
+  revokedAt    DateTime?
+  revokedById  String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  /// One grant per (family link, institution): a re-request reopens this row
+  /// instead of creating a second state that could disagree with it.
+  @@unique([linkId, institutionId])
+  @@index([institutionId, status])
+  @@index([linkId, status])
+}
+
+enum GrantStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REVOKED
 }
 
 /// NextAuth-compatible single-use email verification tokens.

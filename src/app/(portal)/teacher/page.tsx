@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getServerSession } from "next-auth";
 import {
   ArrowLeft,
   BookOpen,
@@ -16,8 +15,9 @@ import {
 
 import { PageHeader, Panel, StatCard, Meter } from "@/components/portal/primitives";
 import { StatusPill } from "@/components/portal/status-pill";
-import { authOptions } from "@/lib/auth";
+import { TeacherScopeGate } from "@/components/portal/teacher-scope-gate";
 import { loadTeacherOverview, loadTeacherWorkload } from "@/lib/db/teacher";
+import { loadTeacherPageScope } from "@/lib/teacher-page";
 
 export const metadata: Metadata = {
   title: "لوحة المعلم",
@@ -39,24 +39,32 @@ const SLOT_STATUS: Record<string, { label: string; tone: "teal" | "gold" | "slat
  * teacher-owned workspace; nothing on this screen reads another tier's data,
  * which is the functional boundary the supervisor portal exists to hold.
  */
-export default async function TeacherOverviewPage() {
-  const session = await getServerSession(authOptions);
-  const firstName = (session?.user?.name ?? "أستاذنا").split(" ")[0];
-  const userId = session?.user?.id;
+export default async function TeacherOverviewPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  const { state, firstName } = await loadTeacherPageScope(searchParams);
+
+  // No ACTIVE teaching membership, or more than one centre without a choice:
+  // render the explanation/selector and read no teacher rows at all.
+  if (state.kind !== "scope") {
+    return <TeacherScopeGate state={state} path="/teacher" />;
+  }
 
   /*
-   * Everything below is read from PostgreSQL for the signed-in teacher:
-   * their own classes, their own timetable, and the grading load derived
-   * from the homework recorded in their classes' daily logs.
+   * Everything below is read from PostgreSQL for the signed-in teacher, inside
+   * the one institution their active membership covers: their own classes,
+   * their own timetable, and the grading load derived from the homework
+   * recorded in those classes' daily logs.
    */
-  const [overview, workload] = userId
-    ? await Promise.all([
-        loadTeacherOverview(userId),
-        loadTeacherWorkload(userId),
-      ])
-    : [null, { total: 0, graded: 0, pending: 0 }];
-  const classes = overview?.classes ?? [];
-  const today = overview?.today ?? [];
+  const scope = state.scope;
+  const [overview, workload] = await Promise.all([
+    loadTeacherOverview(scope),
+    loadTeacherWorkload(scope),
+  ]);
+  const classes = overview.classes;
+  const today = overview.today;
 
   const totalStudents = classes.reduce((sum, klass) => sum + klass.students, 0);
   const deliveredToday = today.filter((slot) => slot.status !== "UPCOMING").length;
@@ -79,11 +87,11 @@ export default async function TeacherOverviewPage() {
           ومساعدات الذكاء الاصطناعي التي تُوفّر وقتك.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-bold text-sarh-tealDeep ring-1 ring-inset ring-sarh-teal/25 dark:bg-white/10 dark:text-sarh-teal">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-bold text-sarh-tealInk dark:text-sarh-teal ring-1 ring-inset ring-sarh-teal/25 dark:bg-white/10">
             <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
             {today.length} حصص اليوم
           </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-bold text-[#B4641A] ring-1 ring-inset ring-sarh-gold/40 dark:bg-white/10 dark:text-sarh-gold">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-[11px] font-bold text-sarh-goldInk ring-1 ring-inset ring-sarh-gold/40 dark:bg-white/10 dark:text-sarh-gold">
             <ClipboardCheck className="h-3.5 w-3.5" aria-hidden="true" />
             {workload.pending} واجبات بانتظار التصحيح
           </span>
@@ -143,7 +151,7 @@ export default async function TeacherOverviewPage() {
                   >
                     <div className="flex items-center gap-3">
                       <span
-                        className="font-mono text-xs font-bold tabular-nums text-slate-500 dark:text-slate-400"
+                        className="font-mono text-xs font-bold tabular-nums text-sarh-inkMute dark:text-slate-400"
                         dir="ltr"
                       >
                         {slot.start} - {slot.end}
@@ -151,7 +159,7 @@ export default async function TeacherOverviewPage() {
                       <span
                         className={
                           slot.kind === "activity"
-                            ? "rounded-full bg-sarh-gold/15 px-2.5 py-1 text-[11px] font-bold text-[#B4641A] dark:text-sarh-gold"
+                            ? "rounded-full bg-sarh-gold/15 px-2.5 py-1 text-[11px] font-bold text-sarh-goldInk dark:text-sarh-gold"
                             : "rounded-full bg-sarh-teal/10 px-2.5 py-1 text-[11px] font-bold text-sarh-tealDeep dark:text-sarh-teal"
                         }
                       >
@@ -162,7 +170,7 @@ export default async function TeacherOverviewPage() {
                       <p className="truncate text-sm font-bold text-sarh-navy dark:text-white">
                         {slot.subject}
                       </p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <p className="text-[11px] text-sarh-inkMute dark:text-slate-400">
                         {slot.className} — {slot.room}
                       </p>
                     </div>
@@ -189,7 +197,7 @@ export default async function TeacherOverviewPage() {
                     <p className="text-sm font-bold text-sarh-navy dark:text-white">
                       {klass.name}
                     </p>
-                    <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                    <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400">
                       {klass.subject} — {klass.students} طالباً
                     </p>
                     <div className="mt-3 space-y-2.5">
@@ -235,12 +243,12 @@ export default async function TeacherOverviewPage() {
                       <span className="block text-xs font-bold text-sarh-navy dark:text-slate-200">
                         {tool.label}
                       </span>
-                      <span className="mt-0.5 block text-[11px] text-slate-400">
+                      <span className="mt-0.5 block text-[11px] text-sarh-inkMute dark:text-slate-400">
                         {tool.detail}
                       </span>
                     </span>
                     <ArrowLeft
-                      className="mt-1 h-3.5 w-3.5 shrink-0 text-sarh-teal"
+                      className="mt-1 h-3.5 w-3.5 shrink-0 text-sarh-tealInk dark:text-sarh-teal"
                       aria-hidden="true"
                     />
                   </Link>
@@ -256,7 +264,7 @@ export default async function TeacherOverviewPage() {
           >
             <ul className="space-y-3 text-sm">
               <li className="flex items-center justify-between gap-3">
-                <span className="text-slate-500 dark:text-slate-400">
+                <span className="text-sarh-inkMute dark:text-slate-400">
                   حصص منتهية
                 </span>
                 <span className="font-mono font-bold tabular-nums text-sarh-navy dark:text-white">
@@ -264,7 +272,7 @@ export default async function TeacherOverviewPage() {
                 </span>
               </li>
               <li className="flex items-center justify-between gap-3">
-                <span className="text-slate-500 dark:text-slate-400">
+                <span className="text-sarh-inkMute dark:text-slate-400">
                   واجبات مصحّحة
                 </span>
                 <span className="font-mono font-bold tabular-nums text-sarh-navy dark:text-white">
@@ -272,7 +280,7 @@ export default async function TeacherOverviewPage() {
                 </span>
               </li>
               <li className="flex items-center justify-between gap-3">
-                <span className="text-slate-500 dark:text-slate-400">
+                <span className="text-sarh-inkMute dark:text-slate-400">
                   واجبات معلّقة
                 </span>
                 <span className="font-mono font-bold tabular-nums text-sarh-navy dark:text-white">
@@ -283,13 +291,13 @@ export default async function TeacherOverviewPage() {
           </Panel>
 
           <Panel title="دعم المعلمين" icon={LifeBuoy}>
-            <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
+            <p className="text-sm leading-7 text-sarh-inkMute dark:text-slate-400">
               نحن هنا للاستماع إلى طلباتك التعليمية وللتنسيق مع إدارة المركز
               بشأن الجداول والحصص.
             </p>
             <Link
               href="/contact"
-              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-teal hover:underline"
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal hover:underline"
             >
               تواصل معنا
               <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />

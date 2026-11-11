@@ -10,9 +10,10 @@
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test tests/supervisor-scope.test.ts tests/signup-role.test.ts tests/institution-access.test.ts tests/admin-access.test.ts",
+    "test": "node --import tsx --test tests/supervisor-scope.test.ts tests/signup-role.test.ts tests/institution-access.test.ts tests/admin-access.test.ts tests/guardian-links.test.ts tests/institution-students.test.ts tests/guardian-join-codes.test.ts tests/rate-limit.test.ts tests/guardian-approvals.test.ts tests/phase-4.3-scope.test.ts tests/session-tiers.test.ts tests/teacher-scope.test.ts tests/staff-invitations.test.ts tests/test-isolation-guard.test.ts tests/test-isolation-guard.repo.test.ts",
     "db:push": "prisma db push",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "db:backfill-guardians": "tsx prisma/backfill-guardians.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

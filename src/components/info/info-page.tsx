@@ -69,17 +69,17 @@ export function InfoPage({
   return (
     <article className="mx-auto w-full max-w-4xl px-4 pb-20 pt-12 sm:px-6">
       <header className="mb-10">
-        <span className="sarh-badge bg-sarh-teal/10 text-sarh-teal ring-1 ring-inset ring-sarh-teal/30">
+        <span className="sarh-badge bg-sarh-teal/10 text-sarh-tealInk ring-1 ring-inset ring-sarh-teal/30 dark:text-sarh-teal">
           {t(badgeKey)}
         </span>
-        <h1 className="mt-3 text-3xl font-bold text-sarh-navy dark:text-white md:text-4xl">
+        <h1 className="sarh-display-sm mt-3 text-sarh-navy dark:text-white">
           {t(titleKey)}
         </h1>
-        <p className="mt-3 max-w-3xl text-sm leading-8 text-slate-600 dark:text-slate-300 md:text-base">
+        <p className="sarh-lead mt-3 max-w-3xl text-sarh-inkMute dark:text-slate-300">
           {t(leadKey)}
         </p>
         {metaKey ? (
-          <p className="mt-3 text-xs font-medium text-slate-400 dark:text-slate-500">
+          <p className="mt-3 text-xs font-medium text-sarh-inkMute dark:text-slate-400">
             {t(metaKey)}
           </p>
         ) : null}
@@ -89,8 +89,8 @@ export function InfoPage({
         <div className="space-y-5">
           {sections.map(({ titleKey: sectionTitle, bodyKey }, index) => (
             <section key={sectionTitle} className="sarh-card p-6">
-              <h2 className="mb-2 flex items-center gap-2 text-base font-bold text-sarh-navy dark:text-white">
-                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-sarh-teal/10 text-xs font-bold text-sarh-teal">
+              <h2 className="sarh-subheading mb-2 flex items-center gap-2 text-sarh-navy dark:text-white">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-sarh-teal/10 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal">
                   {index + 1}
                 </span>
                 {t(sectionTitle)}
@@ -106,7 +106,7 @@ export function InfoPage({
       {cards && cards.length > 0 ? (
         <section className="mt-10">
           {cardsTitleKey ? (
-            <h2 className="mb-4 text-xl font-bold text-sarh-navy dark:text-white">
+            <h2 className="sarh-heading mb-4 text-sarh-navy dark:text-white">
               {t(cardsTitleKey)}
             </h2>
           ) : null}
@@ -115,10 +115,10 @@ export function InfoPage({
               const Icon = ICONS[icon];
               return (
                 <section key={cardTitle} className="sarh-card p-6">
-                  <span className="mb-3 grid h-11 w-11 place-items-center rounded-xl bg-sarh-gold/15 text-sarh-gold">
+                  <span className="mb-3 grid h-11 w-11 place-items-center rounded-xl bg-sarh-gold/15 text-sarh-goldInk dark:text-sarh-gold">
                     <Icon className="h-5 w-5" aria-hidden="true" />
                   </span>
-                  <h2 className="mb-2 text-base font-bold text-sarh-navy dark:text-white">
+                  <h2 className="sarh-subheading mb-2 text-sarh-navy dark:text-white">
                     {t(cardTitle)}
                   </h2>
                   <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
@@ -147,7 +147,7 @@ export function InfoPage({
             </Link>
             <Link
               href="/faq"
-              className="inline-flex h-10 items-center gap-2 rounded-lg border border-sarh-borderLight px-4 text-sm font-semibold text-sarh-navy transition-colors hover:border-sarh-teal hover:text-sarh-teal dark:border-sarh-borderDark dark:text-slate-100"
+              className="inline-flex h-10 items-center gap-2 rounded-lg border border-sarh-borderLight px-4 text-sm font-semibold text-sarh-navy transition-colors hover:border-sarh-teal hover:text-sarh-tealInk dark:border-sarh-borderDark dark:text-slate-100 dark:hover:text-sarh-teal"
             >
               {t("nav_faq")}
             </Link>

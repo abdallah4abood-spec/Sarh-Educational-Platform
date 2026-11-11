@@ -70,7 +70,7 @@ export default async function SupervisorEvaluationsPage() {
           <p className="font-semibold text-sarh-navy dark:text-white">
             {row.teacherName}
           </p>
-          <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400">
             {row.subject} — {row.center}
           </p>
         </div>
@@ -187,7 +187,7 @@ export default async function SupervisorEvaluationsPage() {
                   {SIGNAL_LABEL[signal.kind]}
                 </StatusPill>
                 <span
-                  className="font-mono text-[11px] font-bold tabular-nums text-slate-400"
+                  className="font-mono text-[11px] font-bold tabular-nums text-sarh-inkMute dark:text-slate-400"
                   dir="ltr"
                 >
                   {signal.at}
@@ -196,10 +196,10 @@ export default async function SupervisorEvaluationsPage() {
               <p className="mt-2 text-xs font-bold text-sarh-navy dark:text-slate-200">
                 {signal.title}
               </p>
-              <p className="mt-1 text-[11px] leading-6 text-slate-500 dark:text-slate-400">
+              <p className="mt-1 text-[11px] leading-6 text-sarh-inkMute dark:text-slate-400">
                 {signal.detail}
               </p>
-              <p className="mt-2 text-[10px] font-bold text-sarh-teal">
+              <p className="mt-2 text-[10px] font-bold text-sarh-tealInk dark:text-sarh-teal">
                 {signal.center}
               </p>
             </li>

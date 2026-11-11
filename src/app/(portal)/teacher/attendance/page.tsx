@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getServerSession } from "next-auth";
 import { CheckCircle2, Clock3, Sparkles, UserCheck, UserX } from "lucide-react";
 
 import { PageHeader, Panel, StatCard } from "@/components/portal/primitives";
 import { StatusPill, attendancePill } from "@/components/portal/status-pill";
-import { authOptions } from "@/lib/auth";
+import { TeacherScopeGate } from "@/components/portal/teacher-scope-gate";
 import { loadTeacherAttendanceBoard } from "@/lib/db/teacher";
+import { loadTeacherPageScope } from "@/lib/teacher-page";
 
 export const metadata: Metadata = {
   title: "الحضور والغياب",
@@ -21,10 +21,18 @@ export const metadata: Metadata = {
  * the numbers here and in `/teacher/ai-studio` cannot diverge. Marking itself
  * is the offline-first grid in the shared attendance tracker.
  */
-export default async function TeacherAttendancePage() {
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
-  const board = userId ? await loadTeacherAttendanceBoard(userId) : [];
+export default async function TeacherAttendancePage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  const { state } = await loadTeacherPageScope(searchParams);
+
+  if (state.kind !== "scope") {
+    return <TeacherScopeGate state={state} path="/teacher/attendance" />;
+  }
+
+  const board = await loadTeacherAttendanceBoard(state.scope);
 
   const rows = board.flatMap((klass) =>
     klass.students.map((student) => ({
@@ -48,7 +56,7 @@ export default async function TeacherAttendancePage() {
         actions={
           <Link
             href="/teacher/ai-studio"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-sarh-teal px-4 py-2.5 text-xs font-bold text-white shadow-teal-glow"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-sarh-tealInk px-4 py-2.5 text-xs font-bold text-white shadow-teal-glow"
           >
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
             تسجيل الحضور الآن
@@ -103,13 +111,13 @@ export default async function TeacherAttendancePage() {
                       <p className="text-sm font-semibold text-sarh-navy dark:text-white">
                         {student.name}
                       </p>
-                      <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                      <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400">
                         {student.guardian}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
                       <span
-                        className="font-mono text-xs font-bold tabular-nums text-slate-500 dark:text-slate-400"
+                        className="font-mono text-xs font-bold tabular-nums text-sarh-inkMute dark:text-slate-400"
                         dir="ltr"
                       >
                         {student.score}%
@@ -124,7 +132,7 @@ export default async function TeacherAttendancePage() {
         );
       })}
 
-      <p className="rounded-2xl bg-sarh-gold/10 px-4 py-3 text-xs leading-6 text-[#B4641A] dark:text-sarh-gold">
+      <p className="rounded-2xl bg-sarh-gold/10 px-4 py-3 text-xs leading-6 text-sarh-goldInk dark:text-sarh-gold">
         يستخدم صَرْح حفظاً محلياً فورياً (Dexie / IndexedDB) أثناء انقطاع
         الإنترنت، ثم يُرسل سجل الحضور تلقائياً إلى الخادم عند عودة الاتصال — دون
         فقدان أي تعديل.

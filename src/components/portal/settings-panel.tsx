@@ -59,19 +59,19 @@ export async function SettingsPanel({
         <Panel title="بيانات الحساب" icon={ShieldCheck} description="لا يمكن تعديلها من هنا">
           <dl className="space-y-3 text-sm">
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-slate-500 dark:text-slate-400">الاسم</dt>
+              <dt className="text-sarh-inkMute dark:text-slate-400">الاسم</dt>
               <dd className="font-bold text-sarh-navy dark:text-white">
                 {session?.user?.name ?? "—"}
               </dd>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-slate-500 dark:text-slate-400">البريد الإلكتروني</dt>
+              <dt className="text-sarh-inkMute dark:text-slate-400">البريد الإلكتروني</dt>
               <dd className="font-medium text-sarh-navy dark:text-slate-200" dir="ltr">
                 {session?.user?.email ?? "—"}
               </dd>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-slate-500 dark:text-slate-400">حالة البريد</dt>
+              <dt className="text-sarh-inkMute dark:text-slate-400">حالة البريد</dt>
               <dd>
                 {session?.user?.emailVerified ? (
                   <StatusPill tone="teal" icon={MailCheck}>
@@ -83,19 +83,19 @@ export async function SettingsPanel({
               </dd>
             </div>
             <div className="flex items-start justify-between gap-3">
-              <dt className="text-slate-500 dark:text-slate-400">الفئة الأساسية</dt>
+              <dt className="text-sarh-inkMute dark:text-slate-400">الفئة الأساسية</dt>
               <dd className="text-end">
                 <span className="block font-bold text-sarh-navy dark:text-white">
                   {primary ? ROLE_LABEL[primary] : "—"}
                 </span>
-                <span className="mt-0.5 block text-[11px] text-slate-400">
+                <span className="mt-0.5 block text-[11px] text-sarh-inkMute dark:text-slate-400">
                   {primary ? ROLE_DESCRIPTION[primary] : ""}
                 </span>
               </dd>
             </div>
             {extra.length > 0 ? (
               <div className="flex items-start justify-between gap-3">
-                <dt className="text-slate-500 dark:text-slate-400">
+                <dt className="text-sarh-inkMute dark:text-slate-400">
                   صلاحيات إضافية
                 </dt>
                 <dd className="flex flex-wrap justify-end gap-1.5">
@@ -124,11 +124,11 @@ export async function SettingsPanel({
                   className="flex items-center justify-between gap-2 rounded-xl border border-sarh-borderLight px-3 py-2.5 text-xs font-bold text-sarh-navy transition-colors hover:border-sarh-teal/50 hover:bg-sarh-teal/5 dark:border-sarh-borderDark dark:text-slate-200"
                 >
                   تغيير كلمة المرور
-                  <ArrowLeft className="h-3.5 w-3.5 text-sarh-teal" aria-hidden="true" />
+                  <ArrowLeft className="h-3.5 w-3.5 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />
                 </Link>
               </li>
-              <li className="flex items-start gap-2 rounded-xl border border-sarh-borderLight px-3 py-2.5 text-[11px] leading-6 text-slate-500 dark:border-sarh-borderDark dark:text-slate-400">
-                <LogOut className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sarh-teal" aria-hidden="true" />
+              <li className="flex items-start gap-2 rounded-xl border border-sarh-borderLight px-3 py-2.5 text-[11px] leading-6 text-sarh-inkMute dark:text-slate-400 dark:border-sarh-borderDark">
+                <LogOut className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />
                 زر <strong>تسجيل الخروج</strong> متاح في قائمة حسابك أعلى كل لوحة تحكم،
                 وينهي الجلسة على هذا الجهاز فقط.
               </li>
@@ -147,9 +147,9 @@ export async function SettingsPanel({
                     <p className="text-xs font-bold text-sarh-navy dark:text-slate-200">
                       {item.title}
                     </p>
-                    <span className="shrink-0 text-[11px] text-slate-400">{item.at}</span>
+                    <span className="shrink-0 text-[11px] text-sarh-inkMute dark:text-slate-400">{item.at}</span>
                   </div>
-                  <p className="mt-1 text-[11px] leading-6 text-slate-500 dark:text-slate-400">
+                  <p className="mt-1 text-[11px] leading-6 text-sarh-inkMute dark:text-slate-400">
                     {item.body}
                   </p>
                 </li>

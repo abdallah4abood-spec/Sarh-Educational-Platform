@@ -1,8 +1,8 @@
 /**
  * SARH — /explore/centers & /explore/kindergartens copy.
  *
- * Its own module for the same reason the homepage, /learn and the academy have
- * one: the two directory routes carry a large amount of interface copy (hero,
+ * Its own module for the same reason the homepage and the academy have one: the
+ * two directory routes carry a large amount of interface copy (hero,
  * advanced filter bar, sidebar, cards, sorting, pagination), and keeping it
  * here means `dictionary.ts` stays readable.
  *
@@ -69,12 +69,12 @@ export const directoryAr = {
   dir_sidebarCategories: "الفئات الرئيسية",
   dir_allCategories: "جميع الفئات",
   dir_whyTitle: "لماذا تختار منصة صرح؟",
-  dir_why1: "معلومات موثوقة ومحدثة",
-  dir_why2: "تقييمات وتجارب حقيقية",
+  dir_why1: "بيانات المركز كما أدخلتها إدارته",
+  dir_why2: "الرسوم والبرامج معلنة قبل الزيارة",
   dir_why3: "تواصل مباشر مع المراكز",
   dir_why4: "تجربة بحث سهلة وسريعة",
   dir_whyKg3: "تواصل مباشر مع الروضات",
-  dir_whyKg4: "مواعيد وساعات عمل واضحة",
+  dir_whyKg4: "الأعمار المقبولة واضحة في كل ملف",
   dir_newsletterTitle: "اشترك في نشرتنا",
   dir_newsletterLead: "كن أول من يعرف عن أحدث المراكز والعروض",
   dir_newsletterLeadKg: "كن أول من يعرف عن أحدث الروضات والعروض",
@@ -174,6 +174,9 @@ export const directoryAr = {
   city_deirAlBalah: "دير البلح",
   city_jabalia: "جباليا",
   city_rafah: "رفح",
+  // Fallback for an institution whose zone is outside the listed governorates.
+  // Without it, an unknown zone would have to borrow another city's label.
+  city_other: "فلسطين",
 } as const;
 
 /** English mirror — key-for-key, enforced by the type annotation below. */
@@ -225,12 +228,12 @@ export const directoryEn: Record<keyof typeof directoryAr, string> = {
   dir_sidebarCategories: "Main categories",
   dir_allCategories: "All categories",
   dir_whyTitle: "Why choose the Sarh platform?",
-  dir_why1: "Reliable, up-to-date information",
-  dir_why2: "Real ratings and experiences",
+  dir_why1: "Center details as entered by its team",
+  dir_why2: "Fees and programs published before you visit",
   dir_why3: "Direct contact with centers",
   dir_why4: "A fast, easy search experience",
   dir_whyKg3: "Direct contact with kindergartens",
-  dir_whyKg4: "Clear opening days and hours",
+  dir_whyKg4: "Accepted ages spelled out on every profile",
   dir_newsletterTitle: "Subscribe to our newsletter",
   dir_newsletterLead: "Be the first to hear about the newest centers and offers",
   dir_newsletterLeadKg:
@@ -324,4 +327,5 @@ export const directoryEn: Record<keyof typeof directoryAr, string> = {
   city_deirAlBalah: "Deir al-Balah",
   city_jabalia: "Jabalia",
   city_rafah: "Rafah",
+  city_other: "Palestine",
 };

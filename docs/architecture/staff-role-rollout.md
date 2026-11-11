@@ -60,13 +60,22 @@ portalTierForStaffRole("SECRETARY"); // null
 
 هذه دالة عرض (projection) وليست تفويضًا: مجرد حمل الطبقة لا يعطي بيانات مؤسسة.
 
-**الاشتقاق عند تسجيل الدخول:** يضيف `sessionTiers` في `src/lib/auth.ts` طبقة
-`INSTITUTION_TEACHER` إلى JWT إذا كان الحساب يملك مؤسسة (`ownerId`) أو عضوية
-**نشطة** بدور `CENTER_ADMIN`. لا يضيفها للمعلم أو السكرتير أو المشرف أو `STAFF`.
-هذا يجعل تعيين مدير غير مالك يعمل دون تعديل يدوي لـ`User.roles`، لكنه يظل مفتاح
-بوابة فقط: الطبقة لا تتجاوز `resolveInstitutionAccess`. تغيير العضوية أو إلغاؤها
-ينعكس فورًا على البيانات، أما مفتاح البوابة في JWT فيتحدث عند تسجيل الدخول التالي
-(الجلسة 30 يومًا)؛ البوابة الخادمية تمنع الوصول إلى البيانات في الأثناء.
+**الاشتقاق الحيّ (D5):** يبني `loadLiveTiers` في `src/lib/session-tiers.ts` مجموعة
+الطبقات من صف `User` والعضويات **النشطة** وحدهما، ولا يقرأ `role`/`roles` من
+التوكن إطلاقًا. يضيف `INSTITUTION_TEACHER` لمن يملك مؤسسة (`ownerId`) أو عضوية
+نشطة بدور `CENTER_ADMIN`، ويضيف `TEACHER` لعضوية نشطة بدور `TEACHER`. لا يضيفها
+للسكرتير أو المشرف أو `STAFF`، ولا لعضوية `ON_LEAVE` أو `INACTIVE`.
+
+`callbacks.jwt` في `src/lib/auth.ts` يستدعي هذه الوحدة في **كل** قراءة جلسة، لا
+عند تسجيل الدخول فقط: NextAuth يمرّر التوكن عبر هذا الـcallback عند كل
+`getServerSession` وعند `useSession().update()`، فتتغيّر مجموعة الطبقات مع تغيّر
+العضوية. الإنشاء/الإلغاء ينعكس فورًا على البيانات عبر `resolveInstitutionAccess`
+و`resolveTeacherScope`، وينعكس على مفتاح البوابة عند أول قراءة جلسة تالية.
+
+> إعادة الحساب داخل مسار RSC لا تكتب الكوكي: NextAuth يستخدم `setCookie` فارغة في
+> `next-auth/next/index.js`. تحديث الكوكي يحتاج `useSession().update()` (طلب
+> `POST /api/auth/session`). لكن البيانات محمية دائمًا بالفحص الخادمي الحيّ، فأي
+> توكن قديم لا يمنح وصولًا.
 
 > إزالة `INSTITUTION_TEACHER` من `User.roles` وحدها **ليست** آلية إلغاء العضوية.
 > الإلغاء الفعلي هو تحويل `StaffMember.role` أو `StaffMember.status`. هذا فصل

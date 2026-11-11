@@ -116,7 +116,7 @@ function DirectoryCardImpl(
           <span
             className={cn(
               "absolute end-3 top-3 inline-flex items-center rounded-full px-3 py-1 text-xs font-bold leading-5 shadow-soft",
-              BADGE_STYLES[category.id] ?? "bg-sarh-teal text-white"
+              BADGE_STYLES[category.id] ?? "bg-sarh-tealInk text-white"
             )}
           >
             {t(category.badgeKey)}
@@ -163,11 +163,15 @@ function DirectoryCardImpl(
             label={`${listing.rating.toFixed(1)} / 5`}
             size="sm"
           />
+          {/*
+           * Rating only. The parenthesised number used to be a review count,
+           * but there is no review table yet — the figure in the data is the
+           * enrolment count, and printing it beside the stars claimed reviews
+           * the platform cannot show. It stays in the model for sorting, and
+           * the sm:text-xs label steps down to the same muted ink.
+           */}
           <span className="text-sm font-bold text-sarh-navy dark:text-slate-100">
             <bdi>{listing.rating.toFixed(1)}</bdi>
-          </span>
-          <span className="text-xs font-medium text-sarh-inkMute dark:text-slate-400">
-            <bdi>({listing.reviewsCount})</bdi>
           </span>
         </div>
 

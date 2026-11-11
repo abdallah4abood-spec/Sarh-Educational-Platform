@@ -12,11 +12,11 @@ import { DirectoryPagination } from "./pagination";
 import { DirectorySidebar } from "./directory-sidebar";
 import { KindergartenCard } from "./kindergarten-card";
 import { Button } from "@/components/ui/button";
-import { KIND_META, listingsFor, type DirectoryKind } from "@/lib/data/directory";
+import { KIND_META, type DirectoryKind, type DirectoryListing } from "@/lib/data/directory";
 import type { DictionaryKey } from "@/lib/i18n/dictionary";
 import { useLanguage } from "@/lib/i18n/language-provider";
 
-type SortKey = "rating" | "reviews" | "priceLow" | "priceHigh" | "name";
+type SortKey = "rating" | "priceLow" | "priceHigh" | "name";
 
 const PAGE_SIZE = 9;
 const DEBOUNCE_MS = 250;
@@ -24,7 +24,6 @@ const DEBOUNCE_MS = 250;
 /** Sort dropdown options, in display order. */
 const SORT_OPTIONS: { key: SortKey; labelKey: DictionaryKey }[] = [
   { key: "rating", labelKey: "dir_sortRating" },
-  { key: "reviews", labelKey: "dir_sortReviews" },
   { key: "priceLow", labelKey: "dir_sortPriceLow" },
   { key: "priceHigh", labelKey: "dir_sortPriceHigh" },
   { key: "name", labelKey: "dir_sortName" },
@@ -37,14 +36,21 @@ const SORT_OPTIONS: { key: SortKey; labelKey: DictionaryKey }[] = [
  * search, the advanced filter bar and the sidebar categories are three views of
  * the same state instead of three independent filters that can disagree.
  *
- * `listingsFor(kind)` is a bundled, offline-safe catalogue (the same pattern the
- * rest of the app uses) — the route itself stays a Server Component and only
- * hands this component a `kind`.
+ * `listings` is fetched by the route's Server Component straight from the
+ * institutions table — the same rows the center profile page reads, so a card's
+ * id always resolves. This component owns only the filter → sort → paginate
+ * pipeline, never the data source.
  */
-export function DirectoryView({ kind }: { kind: DirectoryKind }) {
+export function DirectoryView({
+  kind,
+  listings,
+}: {
+  kind: DirectoryKind;
+  listings: DirectoryListing[];
+}) {
   const { t, lang } = useLanguage();
   const meta = KIND_META[kind];
-  const all = listingsFor(kind);
+  const all = listings;
 
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -102,8 +108,6 @@ export function DirectoryView({ kind }: { kind: DirectoryKind }) {
     const rows = [...filtered];
     rows.sort((a, b) => {
       switch (sort) {
-        case "reviews":
-          return b.reviewsCount - a.reviewsCount;
         case "priceLow":
           return a.priceMin - b.priceMin;
         case "priceHigh":
@@ -174,6 +178,7 @@ export function DirectoryView({ kind }: { kind: DirectoryKind }) {
           <aside className="order-2 lg:order-1">
             <DirectorySidebar
               kind={kind}
+              listings={all}
               selectedCategory={filters.category}
               onCategory={(id) => patchFilters({ category: id })}
             />

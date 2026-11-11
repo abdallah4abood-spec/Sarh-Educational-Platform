@@ -474,6 +474,56 @@ async function clearSeedRows() {
   await prisma.paymentTransaction.deleteMany({ where: { id: { startsWith: PREFIX } } });
   await prisma.activityEvent.deleteMany({ where: { id: { startsWith: PREFIX } } });
   await prisma.quiz.deleteMany({ where: { id: { startsWith: PREFIX } } });
+  // Guardianship rows belong to a student, so they go before it; the audit
+  // rows go before the links they describe. Selection is by *student* prefix as
+  // well as by the row's own id: an audit row written by another path (a
+  // backfill run, a manual approval) for a fixture student has a random id and
+  // used to disappear through `ON DELETE CASCADE` without ever being named.
+  // Now it is counted and deleted explicitly, so the run says what it removes.
+  const staleLinks = await prisma.studentGuardian.count({
+    where: { studentId: { startsWith: PREFIX } },
+  });
+  const staleEvents = await prisma.studentGuardianEvent.count({
+    where: { studentId: { startsWith: PREFIX } },
+  });
+  const staleGrants = await prisma.studentGuardianGrant.count({
+    where: {
+      OR: [
+        { id: { startsWith: PREFIX } },
+        { link: { studentId: { startsWith: PREFIX } } },
+      ],
+    },
+  });
+  if (staleLinks > 0 || staleEvents > 0 || staleGrants > 0) {
+    console.log(
+      `  guardianship rows     : ${staleLinks} link(s), ${staleGrants} grant(s), ${staleEvents} audit row(s) — fixture students are rebuilt below`
+    );
+  }
+  await prisma.studentGuardianGrant.deleteMany({
+    where: {
+      OR: [
+        { id: { startsWith: PREFIX } },
+        { link: { studentId: { startsWith: PREFIX } } },
+      ],
+    },
+  });
+  await prisma.studentGuardianEvent.deleteMany({
+    where: {
+      OR: [
+        { id: { startsWith: PREFIX } },
+        { studentId: { startsWith: PREFIX } },
+      ],
+    },
+  });
+  await prisma.studentJoinCode.deleteMany({ where: { id: { startsWith: PREFIX } } });
+  await prisma.studentGuardian.deleteMany({
+    where: {
+      OR: [
+        { id: { startsWith: PREFIX } },
+        { studentId: { startsWith: PREFIX } },
+      ],
+    },
+  });
   await prisma.student.deleteMany({ where: { id: { startsWith: PREFIX } } });
   await prisma.institution.deleteMany({ where: { id: { startsWith: PREFIX } } });
 }
@@ -674,14 +724,70 @@ async function main() {
   };
   console.log(`✓ students (${STUDENTS.length})`);
 
+  /* ---- Guardianship links ----------------------------------------- */
+  // `Student.parentId` is still written above — the legacy column is nullable
+  // now, but this fixture keeps filling it so the demo also exercises the
+  // backfill path. The parent portal authorises against these APPROVED rows.
+  // Seeding them keeps the demo readable without requiring a separate backfill
+  // run on a fresh database. These are fixtures, not real approvals, so no
+  // audit row is invented for them: a re-seed rebuilds them and the previous
+  // run's rows are reported above.
+  await prisma.studentGuardian.createMany({
+    data: STUDENTS.map((fixture, index) => ({
+      id: id("grd", index + 1),
+      studentId: studentIds[index],
+      userId: user(fixture.parentEmail).id,
+      status: "APPROVED" as const,
+      isPrimary: true,
+      requestedAt: now,
+      approvedAt: now,
+    })),
+    skipDuplicates: true,
+  });
+  await prisma.studentGuardianGrant.createMany({
+    data: STUDENTS.map((fixture, index) => ({
+      id: id("grant", index + 1),
+      linkId: id("grd", index + 1),
+      institutionId: institutionId(fixture.institutionKey),
+      status: "APPROVED" as const,
+      requestedAt: now,
+      approvedAt: now,
+    })),
+    skipDuplicates: true,
+  });
+  console.log(
+    `✓ guardian links and grants (${STUDENTS.length} each, scoped per centre)`
+  );
+
   /* ---- Enrollments ------------------------------------------------ */
   const ENROLLMENT_STATUS: PaymentStatus[] = ["VERIFIED", "VERIFIED", "PENDING", "VERIFIED", "PENDING", "VERIFIED", "REJECTED", "VERIFIED", "PENDING", "VERIFIED"];
+  /**
+   * The class this fixture's student sits in **at their own institution**.
+   *
+   * `CLASS_MEMBERSHIP` lists a student in every class they attend as a subject,
+   * and a secondary student can appear in more than one centre's classes. The
+   * enrollment row is per institution, so its `classId` must belong to that
+   * same institution — otherwise the roster shows a class from another tenant.
+   */
+  const classKeyFor = (fixture: (typeof STUDENTS)[number]) => {
+    const match = Object.entries(CLASS_MEMBERSHIP).find(([key, members]) => {
+      if (!members.includes(fixture.key)) return false;
+      const klass = CLASSES.find((entry) => entry.key === key);
+      return klass?.institutionKey === fixture.institutionKey;
+    });
+    if (!match) {
+      throw new Error(
+        `no class of ${fixture.institutionKey} lists student ${fixture.key} in CLASS_MEMBERSHIP`
+      );
+    }
+    return match[0];
+  };
   const enrollments = STUDENTS.map((fixture, index) => ({
     id: id("enr", index + 1),
     studentId: studentIds[index],
     institutionId: institutionId(fixture.institutionKey),
     gradeLevel: fixture.gradeLevel,
-    classId: classId(Object.entries(CLASS_MEMBERSHIP).find(([, members]) => members.includes(fixture.key))![0]),
+    classId: classId(classKeyFor(fixture)),
     commissionFee: 45 + (index % 4) * 15,
     status: ENROLLMENT_STATUS[index % ENROLLMENT_STATUS.length],
   }));
@@ -772,6 +878,7 @@ async function main() {
   const performance = STUDENTS.flatMap((fixture, studentIndex) =>
     SUBJECTS.map((subject, subjectIndex) => ({
       id: id("perf", `${studentIndex + 1}-${subjectIndex + 1}`),
+      institutionId: institutionId(STUDENTS[studentIndex].institutionKey),
       studentId: studentIds[studentIndex],
       subject,
       term: "الفصل الأول 2026",

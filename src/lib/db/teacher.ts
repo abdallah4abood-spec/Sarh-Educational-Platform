@@ -1,3 +1,4 @@
+import { loadGuardianContactNames } from "@/lib/guardian-access";
 import { prisma } from "@/lib/prisma";
 import type { RosterStudent } from "@/lib/data/institution";
 import type {
@@ -7,14 +8,24 @@ import type {
   TeacherClass,
   TimetableSlot,
 } from "@/lib/data/portal";
+import type { TeacherScope } from "@/lib/teacher-access";
 
 /**
  * Teacher-portal reads (`/teacher/**`) — the execution tier.
  *
- * Everything is scoped to the signed-in teacher: the classes they actually
- * teach, the roster of those classes, and their own timetable. There is no
- * "all classes" query in this module on purpose — a teacher portal that can
- * render another teacher's roster is a data-leak, not a feature.
+ * Every function takes a `TeacherScope` (decision D5) instead of a bare
+ * `teacherId`. The scope is produced by `resolveTeacherScope` from an ACTIVE
+ * teaching membership and carries the one institution the caller is working
+ * in, so **every** query here filters on both `teacherId` and `institutionId`.
+ *
+ * Why both: a class can be assigned to a teacher at a centre where their
+ * membership has since lapsed. `teacherId` alone would still match that row —
+ * assignment is not authorisation — so the institution is part of the `where`
+ * on every read, including the relations that hang off it.
+ *
+ * There is deliberately no "all classes" query in this module: a teacher
+ * portal that can render another teacher's roster is a data-leak, not a
+ * feature.
  */
 
 /** Minutes since midnight for an `HH:MM` string. */
@@ -58,15 +69,30 @@ export interface TeacherOverview {
  * attendance (from real daily logs, last 28 days) and plan progress (from the
  * class row, which supervision updates as the term advances).
  */
-export async function loadTeacherClasses(teacherId: string): Promise<TeacherClass[]> {
+export async function loadTeacherClasses(
+  scope: TeacherScope
+): Promise<TeacherClass[]> {
   const since = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000);
 
   const classes = await prisma.schoolClass.findMany({
-    where: { teacherId },
+    where: {
+      teacherId: scope.userId,
+      institutionId: scope.institutionId,
+    },
     orderBy: { gradeLevel: "asc" },
     include: {
-      _count: { select: { enrollments: true, slots: true } },
-      enrollments: { select: { studentId: true } },
+      // Attendance and headcount describe the class as it is today: a
+      // withdrawn seat keeps its history but leaves the class figures.
+      _count: {
+        select: {
+          enrollments: { where: { enrollmentStatus: "ACTIVE" } },
+          slots: true,
+        },
+      },
+      enrollments: {
+        where: { enrollmentStatus: "ACTIVE" },
+        select: { studentId: true },
+      },
       slots: { orderBy: [{ weekday: "asc" }, { startsAt: "asc" }] },
     },
   });
@@ -75,22 +101,25 @@ export async function loadTeacherClasses(teacherId: string): Promise<TeacherClas
     row.enrollments.map((enrollment) => enrollment.studentId)
   );
 
-  // One query for every log in the window, then aggregate in memory: a
-  // per-class `count()` would be N round-trips for the same rows.
+  // Aggregate by (student, institution): the same pupil can sit in classes at
+  // two centres, and one centre's logs must never feed the other's rate.
   const logs = studentIds.length
     ? await prisma.dailyLog.groupBy({
-        by: ["studentId"],
+        by: ["studentId", "institutionId"],
         where: { studentId: { in: studentIds }, date: { gte: since } },
         _count: { _all: true },
       })
     : [];
   const attendanceByStudent = new Map(
-    logs.map((row) => [row.studentId, row._count._all])
+    logs.map((row) => [
+      `${row.studentId}:${row.institutionId}`,
+      row._count._all,
+    ])
   );
 
   const presentLogs = studentIds.length
     ? await prisma.dailyLog.groupBy({
-        by: ["studentId"],
+        by: ["studentId", "institutionId"],
         where: {
           studentId: { in: studentIds },
           date: { gte: since },
@@ -100,17 +129,24 @@ export async function loadTeacherClasses(teacherId: string): Promise<TeacherClas
       })
     : [];
   const presentByStudent = new Map(
-    presentLogs.map((row) => [row.studentId, row._count._all])
+    presentLogs.map((row) => [
+      `${row.studentId}:${row.institutionId}`,
+      row._count._all,
+    ])
   );
 
   return classes.map((row) => {
     const mine = row.enrollments.map((enrollment) => enrollment.studentId);
     const totalLogs = mine.reduce(
-      (sum, studentId) => sum + (attendanceByStudent.get(studentId) ?? 0),
+      (sum, studentId) =>
+        sum +
+        (attendanceByStudent.get(`${studentId}:${row.institutionId}`) ?? 0),
       0
     );
     const present = mine.reduce(
-      (sum, studentId) => sum + (presentByStudent.get(studentId) ?? 0),
+      (sum, studentId) =>
+        sum +
+        (presentByStudent.get(`${studentId}:${row.institutionId}`) ?? 0),
       0
     );
     const next = row.slots[0];
@@ -132,12 +168,19 @@ export async function loadTeacherClasses(teacherId: string): Promise<TeacherClas
 
 /** The teacher's timetable for one weekday (defaults to today). */
 export async function loadTeacherTimetable(
-  teacherId: string,
+  scope: TeacherScope,
   weekday = new Date().getDay(),
   now = new Date()
 ): Promise<TimetableSlot[]> {
   const slots = await prisma.timetableSlot.findMany({
-    where: { teacherId, weekday },
+    where: {
+      teacherId: scope.userId,
+      weekday,
+      // Slots carry no institution of their own, so the class is the anchor.
+      // A slot with no class cannot be attributed to a centre and is dropped
+      // rather than shown in whichever one happens to be selected.
+      class: { institutionId: scope.institutionId },
+    },
     orderBy: { startsAt: "asc" },
     include: { class: { select: { name: true, gradeLevel: true, room: true } } },
   });
@@ -157,13 +200,20 @@ export async function loadTeacherTimetable(
   }));
 }
 
-export async function loadTeacherOverview(teacherId: string): Promise<TeacherOverview> {
+export async function loadTeacherOverview(
+  scope: TeacherScope
+): Promise<TeacherOverview> {
   const [classes, today, planCounts] = await Promise.all([
-    loadTeacherClasses(teacherId),
-    loadTeacherTimetable(teacherId),
+    loadTeacherClasses(scope),
+    loadTeacherTimetable(scope),
     prisma.lessonPlan.groupBy({
       by: ["status"],
-      where: { authorId: teacherId },
+      // A plan without an institution is not attributable to this centre; it
+      // is excluded rather than counted on a screen that claims this scope.
+      where: {
+        authorId: scope.userId,
+        institutionId: scope.institutionId,
+      },
       _count: { _all: true },
     }),
   ]);
@@ -191,18 +241,24 @@ export async function loadTeacherOverview(teacherId: string): Promise<TeacherOve
  * to read another teacher's roster.
  */
 export async function loadClassRoster(
-  teacherId: string,
+  scope: TeacherScope,
   classId: string
 ): Promise<{ className: string; students: ClassStudent[] } | null> {
   const schoolClass = await prisma.schoolClass.findFirst({
-    where: { id: classId, teacherId },
+    // Assignment alone is not authorisation: the class must also sit in the
+    // institution the caller's ACTIVE membership covers.
+    where: {
+      id: classId,
+      teacherId: scope.userId,
+      institutionId: scope.institutionId,
+    },
     include: {
       enrollments: {
-        include: {
-          student: {
-            include: { parent: { select: { fullName: true } } },
-          },
-        },
+        // The roster behind attendance/grading is the current class; a
+        // withdrawn student's logs stay in the database but are not a row the
+        // teacher is asked to mark today.
+        where: { enrollmentStatus: "ACTIVE" },
+        include: { student: { select: { fullName: true } } },
         orderBy: { createdAt: "asc" },
       },
     },
@@ -210,6 +266,10 @@ export async function loadClassRoster(
   if (!schoolClass) return null;
 
   const studentIds = schoolClass.enrollments.map((row) => row.studentId);
+  const guardians = await loadGuardianContactNames(
+    studentIds,
+    schoolClass.institutionId
+  );
 
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
@@ -221,6 +281,7 @@ export async function loadClassRoster(
       ? prisma.dailyLog.findMany({
           where: {
             studentId: { in: studentIds },
+            institutionId: schoolClass.institutionId,
             date: { gte: startOfToday, lte: endOfToday },
           },
           orderBy: { date: "desc" },
@@ -228,7 +289,11 @@ export async function loadClassRoster(
       : [],
     studentIds.length
       ? prisma.subjectPerformance.findMany({
-          where: { studentId: { in: studentIds }, subject: schoolClass.subject },
+          where: {
+            studentId: { in: studentIds },
+            institutionId: schoolClass.institutionId,
+            subject: schoolClass.subject,
+          },
         })
       : [],
   ]);
@@ -247,7 +312,8 @@ export async function loadClassRoster(
         name: row.student.fullName,
         attendance: !log ? "PRESENT" : log.attendance ? (log.lateMinutes > 0 ? "LATE" : "PRESENT") : "ABSENT",
         score: scoreByStudent.get(row.studentId) ?? 0,
-        guardian: row.student.parent.fullName,
+        // No approved guardian → "—"; the roster never assumes one exists.
+        guardian: guardians.get(row.studentId) ?? "—",
         notes: log?.teacherNote ?? "",
       };
     }),
@@ -261,22 +327,38 @@ export async function loadClassRoster(
  * tile and the workload list can never contradict the logs they come from.
  */
 export async function loadTeacherWorkload(
-  teacherId: string,
+  scope: TeacherScope,
   windowDays = 7
 ): Promise<{ total: number; graded: number; pending: number }> {
   const since = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000);
 
-  const studentIds = (
-    await prisma.schoolClass.findMany({
-      where: { teacherId },
-      select: { enrollments: { select: { studentId: true } } },
+  const pairs = await prisma.schoolClass
+    .findMany({
+      where: {
+        teacherId: scope.userId,
+        institutionId: scope.institutionId,
+      },
+      select: {
+        institutionId: true,
+        enrollments: {
+          where: { enrollmentStatus: "ACTIVE" },
+          select: { studentId: true },
+        },
+      },
     })
-  ).flatMap((row) => row.enrollments.map((enrollment) => enrollment.studentId));
+    .then((classes) =>
+      classes.flatMap((row) =>
+        row.enrollments.map((enrollment) => ({
+          studentId: enrollment.studentId,
+          institutionId: row.institutionId,
+        }))
+      )
+    );
 
-  if (studentIds.length === 0) return { total: 0, graded: 0, pending: 0 };
+  if (pairs.length === 0) return { total: 0, graded: 0, pending: 0 };
 
   const logs = await prisma.dailyLog.findMany({
-    where: { studentId: { in: studentIds }, date: { gte: since } },
+    where: { OR: pairs, date: { gte: since } },
     select: { homework: true },
   });
 
@@ -296,11 +378,15 @@ export async function loadTeacherWorkload(
 }
 
 export interface TeacherStudio {
-  /** Students of every class this teacher owns, for the attendance grid. */
+  /** Students of every class this teacher owns *in the scoped centre*. */
   roster: RosterStudent[];
-  /** Institution of the teacher's first class (the queue's tenant key). */
+  /**
+   * The centre this payload belongs to — taken from the validated scope.
+   * It is never derived from class ordering: a teacher with classes in two
+   * centres must not have one centre's rows filed under the other's key.
+   */
   institutionId: string;
-  /** Distinct subjects the teacher actually teaches. */
+  /** Distinct subjects the teacher actually teaches in this centre. */
   subjects: string[];
 }
 
@@ -310,37 +396,50 @@ export interface TeacherStudio {
  * they can generate quizzes for.
  */
 export async function loadTeacherStudio(
-  teacherId: string
+  scope: TeacherScope
 ): Promise<TeacherStudio> {
   const classes = await prisma.schoolClass.findMany({
-    where: { teacherId },
-    select: { id: true, subject: true, institutionId: true },
+    where: {
+      teacherId: scope.userId,
+      institutionId: scope.institutionId,
+    },
+    select: { id: true, subject: true },
     orderBy: { gradeLevel: "asc" },
   });
 
   const enrollments = await prisma.enrollment.findMany({
-    where: { class: { teacherId } },
-    include: {
-      student: {
-        select: {
-          id: true,
-          fullName: true,
-          parent: { select: { fullName: true } },
-        },
+    // The shared attendance grid only offers students the teacher can mark
+    // in the centre the scope selected.
+    where: {
+      class: {
+        teacherId: scope.userId,
+        institutionId: scope.institutionId,
       },
+      enrollmentStatus: "ACTIVE",
+    },
+    include: {
+      student: { select: { id: true, fullName: true } },
       class: { select: { gradeLevel: true } },
     },
     orderBy: { createdAt: "asc" },
   });
+
+  // A teacher can own classes at more than one centre. Contact names are
+  // read from the selected tenant only, so a roster rendered for centre A can
+  // never show a guardian whose grant exists only at centre B.
+  const guardians = await loadGuardianContactNames(
+    enrollments.map((row) => row.student.id),
+    scope.institutionId
+  );
 
   return {
     roster: enrollments.map((row) => ({
       id: row.student.id,
       name: row.student.fullName,
       gradeLevel: row.class?.gradeLevel ?? row.gradeLevel,
-      guardian: row.student.parent.fullName,
+      guardian: guardians.get(row.student.id) ?? "—",
     })),
-    institutionId: classes[0]?.institutionId ?? "",
+    institutionId: scope.institutionId,
     subjects: [...new Set(classes.map((row) => row.subject))],
   };
 }
@@ -358,10 +457,13 @@ export interface AttendanceBoard {
  * instead of the page re-shaping three arrays.
  */
 export async function loadTeacherAttendanceBoard(
-  teacherId: string
+  scope: TeacherScope
 ): Promise<AttendanceBoard[]> {
   const classes = await prisma.schoolClass.findMany({
-    where: { teacherId },
+    where: {
+      teacherId: scope.userId,
+      institutionId: scope.institutionId,
+    },
     orderBy: { gradeLevel: "asc" },
     select: { id: true, name: true, subject: true },
   });
@@ -369,17 +471,20 @@ export async function loadTeacherAttendanceBoard(
   return Promise.all(
     classes.map(async (row) => ({
       ...row,
-      students: (await loadClassRoster(teacherId, row.id))?.students ?? [],
+      students: (await loadClassRoster(scope, row.id))?.students ?? [],
     }))
   );
 }
 
 /** Subjects this teacher teaches → the classes in which they teach them. */
 export async function loadTeacherAssignments(
-  teacherId: string
+  scope: TeacherScope
 ): Promise<{ subject: string; classes: string[] }[]> {
   const classes = await prisma.schoolClass.findMany({
-    where: { teacherId },
+    where: {
+      teacherId: scope.userId,
+      institutionId: scope.institutionId,
+    },
     select: { name: true, subject: true },
     orderBy: { name: "asc" },
   });

@@ -147,13 +147,13 @@ export function AcademyContent() {
         />
 
         <div className="relative mx-auto max-w-4xl px-6 py-16 text-center lg:py-20">
-          <span className="sarh-badge mx-auto gap-1.5 bg-white/80 px-3 py-1.5 text-sarh-teal ring-1 ring-inset ring-sarh-teal/25 shadow-soft">
+          <span className="sarh-badge mx-auto gap-1.5 bg-white px-3 py-1.5 text-sarh-tealInk ring-1 ring-inset ring-sarh-teal/25 shadow-soft dark:bg-sarh-cardDark dark:text-sarh-teal">
             <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" />
             {t("academy_badge")}
           </span>
 
           <SplitHeading
-            className="mt-5 text-balance text-[1.85rem] font-bold leading-[1.28] sm:text-4xl md:text-[2.75rem]"
+            className="sarh-display-sm mt-5"
             segments={[
               { text: t("academy_titleLead"), tone: "navy" },
               { text: t("academy_titleHighlight"), tone: "orange" },
@@ -161,7 +161,7 @@ export function AcademyContent() {
             ]}
           />
 
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-8 text-sarh-inkMute md:text-base">
+          <p className="sarh-lead mx-auto mt-4 max-w-2xl text-sarh-inkMute dark:text-slate-300">
             {t("academy_lead")}
           </p>
 
@@ -181,7 +181,7 @@ export function AcademyContent() {
 
             <Link
               href="#tracks"
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-sarh-borderLight bg-white/70 px-6 text-base font-semibold text-sarh-navy transition-colors hover:border-sarh-teal hover:text-sarh-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal sm:w-auto dark:border-sarh-borderDark dark:bg-transparent dark:text-slate-100"
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-sarh-borderLight bg-white/70 px-6 text-base font-semibold text-sarh-navy transition-colors hover:border-sarh-teal hover:text-sarh-tealInk focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-tealInk sm:w-auto dark:border-sarh-borderDark dark:bg-transparent dark:text-slate-100 dark:hover:text-sarh-teal"
             >
               <BookOpen className="h-5 w-5" aria-hidden="true" />
               {t("academy_ctaBrowse")}
@@ -191,21 +191,21 @@ export function AcademyContent() {
           {/* A signed-in teacher gets the studio as a second, quieter action. */}
           {isTeachingStaff ? (
             <div className="mt-4 flex flex-col items-center gap-2">
-              <p className="text-xs font-bold text-sarh-teal">{t("academy_signedIn")}</p>
+              <p className="text-xs font-bold text-sarh-tealInk dark:text-sarh-teal">{t("academy_signedIn")}</p>
               <Link
                 href={portalHref}
-                className="text-xs font-semibold text-sarh-navy/70 underline decoration-sarh-teal/40 decoration-2 underline-offset-4 transition-colors hover:text-sarh-teal dark:text-slate-300"
+                className="text-xs font-semibold text-sarh-navy/70 underline decoration-sarh-teal/40 decoration-2 underline-offset-4 transition-colors hover:text-sarh-tealInk dark:text-slate-300 dark:hover:text-sarh-teal"
               >
                 {t("academy_ctaStudio")}
               </Link>
             </div>
           ) : (
-            <p className="mt-4 text-xs font-semibold text-sarh-inkMute">
+            <p className="mt-4 text-xs font-semibold text-sarh-inkMute dark:text-slate-400">
               {t("academy_ctaJoinHint")}
             </p>
           )}
 
-          <p className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-sarh-orange/10 px-3 py-1.5 text-[11px] font-bold text-sarh-orangeDeep">
+          <p className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-sarh-orange/10 px-3 py-1.5 text-[11px] font-bold text-sarh-goldInk dark:text-sarh-gold">
             <WifiOff className="h-3.5 w-3.5" aria-hidden="true" />
             {t("academy_offlineNote")}
           </p>
@@ -215,16 +215,16 @@ export function AcademyContent() {
       {/* ============================================================ */}
       {/* 2. Training tracks                                           */}
       {/* ============================================================ */}
-      <section id="tracks" className="scroll-mt-24 px-6 py-16 lg:py-20">
+      <section id="tracks" className="sarh-section scroll-mt-24 px-6">
         <div className="mx-auto max-w-6xl">
           <header className="mb-10 text-center">
-            <span className="sarh-badge mx-auto bg-sarh-teal/10 text-sarh-teal ring-1 ring-inset ring-sarh-teal/30">
+            <span className="sarh-badge mx-auto bg-sarh-teal/10 text-sarh-tealInk ring-1 ring-inset ring-sarh-teal/30 dark:text-sarh-teal">
               {TRACKS.length} {t("academy_trackCount")}
             </span>
-            <h2 className="mt-4 text-2xl font-bold text-sarh-navy md:text-3xl dark:text-white">
+            <h2 className="sarh-heading mt-4 text-sarh-navy dark:text-white">
               {t("academy_tracksTitle")}
             </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-sm leading-8 text-slate-500 dark:text-slate-400">
+            <p className="sarh-lead mx-auto mt-3 max-w-2xl text-sarh-inkMute dark:text-slate-400">
               {t("academy_tracksLead")}
             </p>
           </header>
@@ -236,16 +236,16 @@ export function AcademyContent() {
                 <li key={track.titleKey}>
                   <Reveal delayMs={index * 70} className="h-full">
                     <article className="sarh-card flex h-full flex-col gap-3 p-6 transition-transform duration-200 hover:-translate-y-1 hover:shadow-teal-gold-glow">
-                      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-sarh-teal/15 to-sarh-orange/15 text-sarh-teal">
+                      <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-sarh-teal/15 to-sarh-orange/15 text-sarh-tealInk dark:text-sarh-teal">
                         <Icon className="h-5 w-5" aria-hidden="true" />
                       </span>
-                      <h3 className="text-base font-bold text-sarh-navy dark:text-white">
+                      <h3 className="sarh-subheading text-sarh-navy dark:text-white">
                         {t(track.titleKey)}
                       </h3>
                       <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
                         {t(track.bodyKey)}
                       </p>
-                      <p className="mt-auto flex items-center gap-1.5 text-[11px] font-bold text-sarh-orangeDeep">
+                      <p className="mt-auto flex items-center gap-1.5 text-[11px] font-bold text-sarh-goldInk dark:text-sarh-gold">
                         <CalendarClock className="h-3.5 w-3.5" aria-hidden="true" />
                         {t(track.metaKey)}
                       </p>
@@ -261,17 +261,17 @@ export function AcademyContent() {
       {/* ============================================================ */}
       {/* 3. AI teacher assistant                                      */}
       {/* ============================================================ */}
-      <section className="border-y border-sarh-borderLight bg-white/60 px-6 py-16 lg:py-20 dark:border-sarh-borderDark dark:bg-sarh-cardDark/40">
+      <section className="sarh-section border-y border-sarh-borderLight bg-white/60 px-6 dark:border-sarh-borderDark dark:bg-sarh-cardDark/40">
         <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2">
           <Reveal>
-            <span className="sarh-badge bg-sarh-teal/10 text-sarh-teal ring-1 ring-inset ring-sarh-teal/30">
+            <span className="sarh-badge bg-sarh-teal/10 text-sarh-tealInk ring-1 ring-inset ring-sarh-teal/30 dark:text-sarh-teal">
               <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
               {t("academy_aiBadge")}
             </span>
-            <h2 className="mt-4 text-2xl font-bold text-sarh-navy md:text-3xl dark:text-white">
+            <h2 className="sarh-heading mt-4 text-sarh-navy dark:text-white">
               {t("academy_aiTitle")}
             </h2>
-            <p className="mt-3 text-sm leading-8 text-slate-500 dark:text-slate-400">
+            <p className="sarh-lead mt-3 text-sarh-inkMute dark:text-slate-400">
               {t("academy_aiLead")}
             </p>
 
@@ -280,14 +280,14 @@ export function AcademyContent() {
                 const Icon = feature.icon;
                 return (
                   <li key={feature.titleKey} className="flex items-start gap-3">
-                    <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-sarh-teal/10 text-sarh-teal">
+                    <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-sarh-teal/10 text-sarh-tealInk dark:text-sarh-teal">
                       <Icon className="h-4 w-4" aria-hidden="true" />
                     </span>
                     <div>
                       <p className="text-sm font-bold text-sarh-navy dark:text-white">
                         {t(feature.titleKey)}
                       </p>
-                      <p className="mt-0.5 text-xs leading-6 text-slate-500 dark:text-slate-400">
+                      <p className="mt-0.5 text-xs leading-6 text-sarh-inkMute dark:text-slate-400">
                         {t(feature.bodyKey)}
                       </p>
                     </div>
@@ -310,7 +310,7 @@ export function AcademyContent() {
                     </span>
                     {t("home_mockLive")}
                   </span>
-                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-sarh-orange/12 text-sarh-orange ring-1 ring-inset ring-sarh-orange/25">
+                  <span className="grid h-9 w-9 place-items-center rounded-xl bg-sarh-orange/12 text-sarh-goldInk ring-1 ring-inset ring-sarh-orange/25 dark:text-sarh-gold">
                     <Bot className="h-4 w-4" aria-hidden="true" />
                   </span>
                 </div>
@@ -320,7 +320,7 @@ export function AcademyContent() {
                 </p>
 
                 <div className="sarh-note-beige mt-3 rounded-xl p-3.5">
-                  <p className="flex items-center gap-1.5 text-[11px] font-bold text-sarh-orangeDeep">
+                  <p className="flex items-center gap-1.5 text-[11px] font-bold text-sarh-goldInk dark:text-sarh-gold">
                     <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
                     {t("academy_aiFeature2Title")}
                   </p>
@@ -329,7 +329,7 @@ export function AcademyContent() {
                   </p>
                 </div>
 
-                <div className="mt-3 flex items-center gap-2 text-[11px] font-bold text-sarh-teal">
+                <div className="mt-3 flex items-center gap-2 text-[11px] font-bold text-sarh-tealInk dark:text-sarh-teal">
                   <WifiOff className="h-3.5 w-3.5" aria-hidden="true" />
                   {t("academy_aiFeature3Title")}
                 </div>
@@ -342,9 +342,9 @@ export function AcademyContent() {
       {/* ============================================================ */}
       {/* 4. Trust — written for parents and center directors          */}
       {/* ============================================================ */}
-      <section className="px-6 py-16 lg:py-20">
+      <section className="sarh-section px-6">
         <div className="mx-auto max-w-6xl">
-          <h2 className="mb-10 text-center text-2xl font-bold text-sarh-navy md:text-3xl dark:text-white">
+          <h2 className="sarh-heading mb-10 text-center text-sarh-navy dark:text-white">
             {t("academy_trustTitle")}
           </h2>
 
@@ -355,10 +355,10 @@ export function AcademyContent() {
                 <li key={item.titleKey}>
                   <Reveal delayMs={index * 70} className="h-full">
                     <article className="sarh-card flex h-full flex-col gap-3 p-6">
-                      <span className="grid h-11 w-11 place-items-center rounded-2xl bg-sarh-orange/10 text-sarh-orange">
+                      <span className="grid h-11 w-11 place-items-center rounded-2xl bg-sarh-orange/10 text-sarh-goldInk dark:text-sarh-gold">
                         <Icon className="h-5 w-5" aria-hidden="true" />
                       </span>
-                      <h3 className="text-base font-bold text-sarh-navy dark:text-white">
+                      <h3 className="sarh-subheading text-sarh-navy dark:text-white">
                         {t(item.titleKey)}
                       </h3>
                       <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
@@ -376,9 +376,9 @@ export function AcademyContent() {
       {/* ============================================================ */}
       {/* 5. How it works                                              */}
       {/* ============================================================ */}
-      <section className="border-y border-sarh-borderLight bg-white/60 px-6 py-16 lg:py-20 dark:border-sarh-borderDark dark:bg-sarh-cardDark/40">
+      <section className="sarh-section border-y border-sarh-borderLight bg-white/60 px-6 dark:border-sarh-borderDark dark:bg-sarh-cardDark/40">
         <div className="mx-auto max-w-5xl">
-          <h2 className="mb-10 text-center text-2xl font-bold text-sarh-navy md:text-3xl dark:text-white">
+          <h2 className="sarh-heading mb-10 text-center text-sarh-navy dark:text-white">
             {t("academy_stepsTitle")}
           </h2>
 
@@ -391,11 +391,11 @@ export function AcademyContent() {
                     <div className="flex flex-col items-center gap-3 text-center">
                       <span className="relative grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-sarh-teal to-sarh-tealDeep text-white shadow-teal-glow">
                         <Icon className="h-6 w-6" aria-hidden="true" />
-                        <span className="absolute -end-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full bg-sarh-orange text-[11px] font-bold text-white ring-2 ring-white dark:ring-sarh-cardDark">
+                        <span className="absolute -end-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full bg-sarh-gold text-[11px] font-bold text-sarh-navy ring-2 ring-white dark:ring-sarh-cardDark">
                           {index + 1}
                         </span>
                       </span>
-                      <h3 className="text-base font-bold text-sarh-navy dark:text-white">
+                      <h3 className="sarh-subheading text-sarh-navy dark:text-white">
                         {t(step.titleKey)}
                       </h3>
                       <p className="text-sm leading-7 text-slate-600 dark:text-slate-300">
@@ -413,12 +413,12 @@ export function AcademyContent() {
       {/* ============================================================ */}
       {/* 6. Closing call to action                                    */}
       {/* ============================================================ */}
-      <section className="px-6 py-16 lg:py-20">
+      <section className="sarh-section px-6">
         <Reveal>
           {/* A light teal-tinted band rather than the old navy block: the whole
               identity avoids dark surfaces for default states. */}
           <div className="mx-auto max-w-4xl rounded-3xl border border-sarh-teal/20 bg-gradient-to-br from-sarh-teal/[0.10] via-white to-sarh-orange/[0.10] px-8 py-12 text-center shadow-soft dark:border-sarh-teal/25 dark:from-sarh-teal/10 dark:via-transparent dark:to-sarh-orange/10">
-            <h2 className="text-2xl font-bold text-sarh-navy md:text-3xl dark:text-white">
+            <h2 className="sarh-heading text-sarh-navy dark:text-white">
               {t("academy_finalTitle")}
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-8 text-slate-600 dark:text-slate-300">
@@ -444,7 +444,7 @@ export function AcademyContent() {
               ) : (
                 <Link
                   href="/contact"
-                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-sarh-borderLight bg-white px-6 text-base font-semibold text-sarh-navy transition-colors hover:border-sarh-teal hover:text-sarh-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal sm:w-auto dark:border-sarh-borderDark dark:bg-transparent dark:text-slate-100"
+                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-sarh-borderLight bg-white px-6 text-base font-semibold text-sarh-navy transition-colors hover:border-sarh-teal hover:text-sarh-tealInk focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-tealInk sm:w-auto dark:border-sarh-borderDark dark:bg-transparent dark:text-slate-100 dark:hover:text-sarh-teal"
                 >
                   {t("nav_contact")}
                 </Link>

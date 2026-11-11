@@ -38,7 +38,7 @@ const COLUMNS: Column<CommissionRow>[] = [
     align: "end",
     cell: (row) => (
       <span
-        className="font-mono font-bold tabular-nums text-sarh-teal"
+        className="font-mono font-bold tabular-nums text-sarh-tealInk dark:text-sarh-teal"
         dir="ltr"
       >
         {formatSarh(row.referralFee, "en-US")}
@@ -99,13 +99,13 @@ export function CommissionTable({ rows }: { rows: CommissionRow[] }) {
       label: "المحصلة",
       value: totals.verified,
       icon: TrendingUp,
-      tone: "text-sarh-teal",
+      tone: "text-sarh-tealInk dark:text-sarh-teal",
     },
     {
       label: "قيد التحصيل",
       value: totals.pending,
       icon: Landmark,
-      tone: "text-sarh-gold",
+      tone: "text-sarh-goldInk dark:text-sarh-gold",
     },
   ];
 
@@ -117,10 +117,10 @@ export function CommissionTable({ rows }: { rows: CommissionRow[] }) {
             id="commissions-heading"
             className="flex items-center gap-2 text-lg font-bold text-sarh-navy dark:text-white"
           >
-            <Wallet className="h-5 w-5 text-sarh-teal" aria-hidden="true" />
+            <Wallet className="h-5 w-5 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />
             عمولات التسجيل
           </h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-sm text-sarh-inkMute dark:text-slate-400">
             مبالغ إحالة الطلاب الجدد المعتمدة من الإدارة المالية.
           </p>
         </div>
@@ -136,10 +136,10 @@ export function CommissionTable({ rows }: { rows: CommissionRow[] }) {
         {stats.map((stat) => (
           <div key={stat.label} className="sarh-card flex items-center gap-3 p-4">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sarh-teal/10 ring-1 ring-inset ring-sarh-teal/25">
-              <stat.icon className="h-5 w-5 text-sarh-teal" aria-hidden="true" />
+              <stat.icon className="h-5 w-5 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />
             </span>
             <div className="min-w-0">
-              <p className="truncate text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <p className="truncate text-xs font-semibold text-sarh-inkMute dark:text-slate-400">
                 {stat.label}
               </p>
               <p

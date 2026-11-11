@@ -56,11 +56,11 @@ export function BrandCard() {
       aria-label="صَرْح — الصفحة الرئيسية"
       className="group flex items-center gap-3 rounded-xl border border-sarh-borderLight bg-sarh-cardLight/80 p-3 shadow-soft transition-colors hover:border-sarh-teal hover:bg-sarh-teal/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal dark:border-sarh-borderDark dark:bg-sarh-cardDark/80"
     >
-      <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-sarh-teal text-xl font-bold leading-none text-white shadow-teal-glow">
+      <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-sarh-tealInk text-xl font-bold leading-none text-white shadow-teal-glow">
         صَ
       </span>
       <span className="flex flex-col">
-        <span className="text-lg font-bold text-sarh-navy transition-colors group-hover:text-sarh-teal dark:text-white">
+        <span className="text-lg font-bold text-sarh-navy transition-colors group-hover:text-sarh-tealInk dark:text-white dark:group-hover:text-sarh-teal">
           صَرْح
         </span>
         <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
@@ -83,10 +83,10 @@ export function AuthHeading({
     <div className="mb-6 flex flex-col gap-4">
       <BrandCard />
       <div>
-        <h1 className="text-3xl font-bold text-sarh-navy dark:text-white sm:text-4xl">
+        <h1 className="sarh-display-sm text-sarh-navy dark:text-white">
           {title}
         </h1>
-        <p className="mt-1.5 text-sm leading-7 text-slate-500 dark:text-slate-400">
+        <p className="mt-1.5 text-sm leading-7 text-sarh-inkMute dark:text-slate-400">
           {subtitle}
         </p>
       </div>
@@ -345,8 +345,8 @@ export function AuthNotice({
       role={tone === "error" ? "alert" : "status"}
       className={cn(
         "mb-4 flex flex-wrap items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium",
-        tone === "success" && "bg-sarh-teal/10 text-sarh-teal",
-        tone === "info" && "bg-sarh-gold/15 text-[#C9741F] dark:text-sarh-gold",
+        tone === "success" && "bg-sarh-teal/10 text-sarh-tealInk dark:text-sarh-teal",
+        tone === "info" && "bg-sarh-gold/15 text-sarh-goldInk dark:text-sarh-gold",
         tone === "error" &&
           "bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-300"
       )}
@@ -361,7 +361,7 @@ export function AuthDivider({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-3">
       <span className="h-px flex-1 bg-sarh-borderLight dark:bg-sarh-borderDark" />
-      <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+      <span className="text-xs font-medium text-sarh-inkMute dark:text-slate-400">
         {label}
       </span>
       <span className="h-px flex-1 bg-sarh-borderLight dark:bg-sarh-borderDark" />
@@ -471,11 +471,11 @@ const ACCENTS = {
   teal: {
     active:
       "border-sarh-teal bg-sarh-teal/10 text-sarh-teal dark:bg-sarh-teal/15",
-    ring: "border-sarh-teal bg-sarh-teal text-white",
+    ring: "border-sarh-teal bg-sarh-tealInk text-white",
   },
   gold: {
     active: "border-sarh-gold bg-sarh-gold/12 text-[#C9741F] dark:text-sarh-gold",
-    ring: "border-sarh-gold bg-sarh-gold text-white",
+    ring: "border-sarh-gold bg-sarh-goldInk text-white",
   },
   navy: {
     active:
@@ -577,7 +577,7 @@ export function RoleTabs({
               <span className="block text-sm font-semibold text-sarh-navy dark:text-white">
                 {t(option.labelKey)}
               </span>
-              <span className="block text-[11px] leading-5 text-slate-500 dark:text-slate-400">
+              <span className="block text-[11px] leading-5 text-sarh-inkMute dark:text-slate-400">
                 {t(option.hintKey)}
               </span>
             </button>
@@ -675,7 +675,7 @@ export function TextField({
       {error ? (
         <p
           id={`${id}-error`}
-          className="mt-1.5 text-xs font-medium text-red-500"
+          className="mt-1.5 text-xs font-medium text-red-600 dark:text-red-400"
         >
           {error}
         </p>
@@ -829,17 +829,17 @@ export function PasswordStrengthMeter({
   return (
     <div className="mt-2.5" aria-live="polite">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+        <span className="text-[11px] font-medium text-sarh-inkMute dark:text-slate-400">
           {t("passwordStrength")}
         </span>
         <span
           className={cn(
             "text-[11px] font-bold",
             strength.score <= 1
-              ? "text-red-500"
+              ? "text-red-600 dark:text-red-400"
               : strength.score === 2
-                ? "text-sarh-gold"
-                : "text-sarh-teal"
+                ? "text-sarh-goldInk dark:text-sarh-gold"
+                : "text-sarh-tealInk dark:text-sarh-teal"
           )}
         >
           {label}
@@ -880,8 +880,8 @@ export function PasswordStrengthMeter({
               className={cn(
                 "flex items-center gap-1 text-[11px] transition-colors",
                 passed
-                  ? "text-sarh-teal"
-                  : "text-slate-400 dark:text-slate-500"
+                  ? "text-sarh-tealInk dark:text-sarh-teal"
+                  : "text-sarh-inkMute dark:text-slate-400"
               )}
             >
               <Check

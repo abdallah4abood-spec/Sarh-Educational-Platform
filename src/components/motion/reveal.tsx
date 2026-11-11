@@ -28,8 +28,15 @@ interface RevealProps {
  * content simply sits in its final state.
  *
  * The children are always in the DOM and never hidden by CSS — the initial
- * `autoAlpha: 0` is applied by JavaScript — so crawlers, screen readers and
- * text selection see the real markup even if the script never runs.
+ * fade is applied by JavaScript — so crawlers, screen readers and text
+ * selection see the real markup even if the script never runs.
+ *
+ * The tween fades `opacity`, deliberately not GSAP's `autoAlpha`. `autoAlpha`
+ * also flips `visibility: hidden`, and a `visibility: hidden` subtree is removed
+ * from the accessibility tree: every card that had not scrolled into view yet
+ * was announced as an empty list item (the homepage's four "why Sarh" cards
+ * were exactly that). Opacity alone keeps the text readable to a screen reader
+ * and to find-in-page while the element is still waiting for its cue.
  */
 export function Reveal({
   children,
@@ -49,9 +56,9 @@ export function Reveal({
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         gsap.fromTo(
           node,
-          { autoAlpha: 0, y: distance },
+          { opacity: 0, y: distance },
           {
-            autoAlpha: 1,
+            opacity: 1,
             y: 0,
             duration: 0.75,
             ease: "power3.out",

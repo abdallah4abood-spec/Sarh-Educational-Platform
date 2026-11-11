@@ -47,7 +47,7 @@ export function TrustDecisionButtons({
         type="button"
         disabled={busy !== null}
         onClick={() => void decide("VERIFIED")}
-        className="rounded-lg bg-sarh-teal px-3 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-sarh-tealDeep disabled:cursor-not-allowed disabled:opacity-60"
+        className="rounded-lg bg-sarh-tealInk px-3 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-sarh-tealDeep disabled:cursor-not-allowed disabled:opacity-60"
       >
         {busy === "VERIFIED" ? "جارٍ الاعتماد…" : "اعتماد"}
       </button>

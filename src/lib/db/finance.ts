@@ -105,7 +105,10 @@ export async function loadFinanceStats(): Promise<FinanceStats> {
         _sum: { amount: true },
       }),
       prisma.enrollment.aggregate({
-        where: { status: "VERIFIED" },
+        // Platform commission exists only on referrals. The filter is explicit
+        // so a future path that writes a fee on `INSTITUTION` intake cannot
+        // leak into the platform total through this aggregate.
+        where: { status: "VERIFIED", source: "PLATFORM_REFERRAL" },
         _sum: { commissionFee: true },
       }),
       prisma.paymentTransaction.count({ where: { status: "PENDING" } }),

@@ -83,7 +83,7 @@ export function AddChildForm() {
       <button
         type="submit"
         disabled={saving}
-        className="inline-flex items-center gap-2 rounded-xl bg-sarh-teal px-4 py-2.5 text-xs font-bold text-white shadow-teal-glow disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex items-center gap-2 rounded-xl bg-sarh-tealInk px-4 py-2.5 text-xs font-bold text-white shadow-teal-glow disabled:cursor-not-allowed disabled:opacity-60"
       >
         <UserPlus className="h-4 w-4" aria-hidden="true" />
         {saving ? "جارٍ الحفظ…" : "إضافة طالب"}

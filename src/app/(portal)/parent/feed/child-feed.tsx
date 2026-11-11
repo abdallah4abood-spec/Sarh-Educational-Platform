@@ -296,6 +296,39 @@ export function ChildFeed({
   /* First paint → all clock-dependent UI unlocks (hydration stays clean). */
   useEffect(() => setMounted(true), []);
 
+  /*
+   * Prune device-cached data for children the server no longer returns.
+   *
+   * `kids` is already limited to APPROVED guardian links, so a child missing
+   * from it has lost that link. Deleting their cached logs is the smallest
+   * safe change: a stale week can no longer be rendered here, and the local
+   * copy is gone. It cannot reach a device that never comes back online — the
+   * server stays the authority for what it is willing to send.
+   */
+  const allowedKidIds = kids.map((item) => item.id).join(",");
+  useEffect(() => {
+    const allowed = new Set(allowedKidIds.split(",").filter(Boolean));
+    void (async () => {
+      try {
+        const cachedLogs = await db.dailyLogs.toArray();
+        const staleLogs = cachedLogs
+          .filter((row) => !allowed.has(row.studentId))
+          .map((row) => row.id);
+        if (staleLogs.length > 0) await db.dailyLogs.bulkDelete(staleLogs);
+
+        const cachedStudents = await db.students.toArray();
+        const staleStudents = cachedStudents
+          .filter((row) => !allowed.has(row.id))
+          .map((row) => row.id);
+        if (staleStudents.length > 0) {
+          await db.students.bulkDelete(staleStudents);
+        }
+      } catch {
+        // IndexedDB unavailable (private mode) — there is nothing to prune.
+      }
+    })();
+  }, [allowedKidIds]);
+
   /* Default selection: today when it is a school day inside the strip. */
   useEffect(() => {
     if (!mounted || week.length === 0) return;
@@ -472,19 +505,19 @@ export function ChildFeed({
       <header className="mb-4">
         <div className="mb-3 flex items-center justify-between">
           <div>
-            <p className="flex items-center gap-1.5 text-xs font-bold text-sarh-teal">
+            <p className="flex items-center gap-1.5 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal">
               <Link href="/" className="hover:underline">
                 صَرْح
               </Link>
-              <span className="text-slate-400">/</span>
-              <span className="text-slate-500 dark:text-slate-400">بوابة الوالدين</span>
+              <span className="text-sarh-inkMute dark:text-slate-400">/</span>
+              <span className="text-sarh-inkMute dark:text-slate-400">بوابة الوالدين</span>
             </p>
             <h1 className="text-2xl font-bold tracking-tight text-sarh-navy dark:text-white">
               يوميتي
             </h1>
           </div>
           {cacheReady ? (
-            <span className="flex items-center gap-1.5 rounded-full bg-sarh-teal/10 px-3 py-1 text-[11px] font-bold text-sarh-teal ring-1 ring-inset ring-sarh-teal/30">
+            <span className="flex items-center gap-1.5 rounded-full bg-sarh-teal/10 px-3 py-1 text-[11px] font-bold text-sarh-tealInk dark:text-sarh-teal ring-1 ring-inset ring-sarh-teal/30">
               <Database className="h-3.5 w-3.5" aria-hidden="true" />
               محفوظ للعمل دون إنترنت
             </span>
@@ -508,7 +541,7 @@ export function ChildFeed({
                 className={cn(
                   "flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal focus-visible:ring-offset-2",
                   active
-                    ? "bg-sarh-teal text-white shadow-teal-glow"
+                    ? "bg-sarh-tealInk text-white shadow-teal-glow"
                     : "border border-sarh-borderLight bg-card text-sarh-navy hover:border-sarh-teal hover:text-sarh-teal dark:border-sarh-borderDark dark:text-slate-200"
                 )}
               >
@@ -532,7 +565,7 @@ export function ChildFeed({
             <ChevronRight className="h-5 w-5" aria-hidden="true" />
           </button>
           <span className="flex items-center gap-1.5 text-sm font-bold text-sarh-navy dark:text-white">
-            <CalendarDays className="h-4 w-4 text-sarh-teal" aria-hidden="true" />
+            <CalendarDays className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />
             {mounted ? monthLabel.format(anchor) : "…"}
           </span>
           <button
@@ -568,10 +601,10 @@ export function ChildFeed({
                     className={cn(
                       "flex w-full flex-col items-center gap-0.5 rounded-xl px-1 py-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal",
                       active
-                        ? "bg-sarh-teal text-white shadow-teal-glow"
+                        ? "bg-sarh-tealInk text-white shadow-teal-glow"
                         : school
                           ? "text-sarh-navy hover:bg-sarh-teal/10 dark:text-slate-200"
-                          : "cursor-not-allowed text-slate-400 opacity-60"
+                          : "cursor-not-allowed text-sarh-inkMute dark:text-slate-400 opacity-60"
                     )}
                   >
                     <span className="text-[10px] font-semibold">
@@ -602,11 +635,11 @@ export function ChildFeed({
           <div>
             <p className="font-bold text-sarh-navy dark:text-white">
               {child.name}
-              <span className="mr-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+              <span className="mr-2 text-xs font-semibold text-sarh-inkMute dark:text-slate-400">
                 {child.gradeLevel}
               </span>
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-sarh-inkMute dark:text-slate-400">
               {child.institutionName}
               {selectedDate ? ` — ${dayLabel.format(selectedDate)}` : ""}
             </p>
@@ -626,13 +659,13 @@ export function ChildFeed({
           <Skeleton className="h-56 w-full" />
         </div>
       ) : !selectedDate ? (
-        <Section title="عطلة نهاية الأسبوع" icon={<Moon className="h-4 w-4 text-sarh-teal" aria-hidden="true" />}>
+        <Section title="عطلة نهاية الأسبوع" icon={<Moon className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />}>
           <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
             لا يوجد يوم دراسي في هذا التاريخ — تعود المتابعة يوم الأحد القادم.
           </p>
         </Section>
       ) : isFuture ? (
-        <Section title="بانتظار يوم الدراسة" icon={<CalendarDays className="h-4 w-4 text-sarh-teal" aria-hidden="true" />}>
+        <Section title="بانتظار يوم الدراسة" icon={<CalendarDays className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />}>
           <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
             لم تُسجَّل ملاحظات بعد لهذا اليوم. ستظهر هنا فور إدخالها من المعلمة.
           </p>
@@ -649,7 +682,7 @@ export function ChildFeed({
         <div className="space-y-4">
           <Section
             title="برنامج اليوم والأنشطة"
-            icon={<ListChecks className="h-4 w-4 text-sarh-teal" aria-hidden="true" />}
+            icon={<ListChecks className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />}
             delay={0.05}
           >
             <div className="space-y-4">
@@ -665,7 +698,7 @@ export function ChildFeed({
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-sm text-slate-500">لم يُسجَّل برنامج اليوم بعد.</p>
+                  <p className="text-sm text-sarh-inkMute dark:text-slate-400">لم يُسجَّل برنامج اليوم بعد.</p>
                 )}
               </div>
               <div>
@@ -674,7 +707,7 @@ export function ChildFeed({
                   {log.activities.map((activity) => (
                     <span
                       key={activity}
-                      className="rounded-full bg-sarh-tealSoft px-3 py-1 text-xs font-semibold text-sarh-teal ring-1 ring-inset ring-sarh-teal/25"
+                      className="rounded-full bg-sarh-tealSoft px-3 py-1 text-xs font-semibold text-sarh-tealInk dark:text-sarh-teal ring-1 ring-inset ring-sarh-teal/25"
                     >
                       {activity}
                     </span>
@@ -686,7 +719,7 @@ export function ChildFeed({
 
           <Section
             title="صور النشاط"
-            icon={<Camera className="h-4 w-4 text-sarh-teal" aria-hidden="true" />}
+            icon={<Camera className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />}
             delay={0.1}
           >
             <div className="grid grid-cols-2 gap-3">
@@ -712,7 +745,7 @@ export function ChildFeed({
 
           <Section
             title="مسؤول الاستلام المعتمد"
-            icon={<UserCheck className="h-4 w-4 text-sarh-teal" aria-hidden="true" />}
+            icon={<UserCheck className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />}
             delay={0.15}
           >
             {log.pickupPerson ? (
@@ -725,7 +758,7 @@ export function ChildFeed({
                     <p className="font-bold text-sarh-navy dark:text-white">
                       {log.pickupPerson.name}
                     </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                    <p className="text-xs text-sarh-inkMute dark:text-slate-400">
                       {log.pickupPerson.relation}
                     </p>
                   </div>
@@ -736,13 +769,13 @@ export function ChildFeed({
                     مصادق عليه
                   </span>
                 ) : (
-                  <span className="rounded-full bg-slate-500/10 px-3 py-1 text-xs font-bold text-slate-500 ring-1 ring-inset ring-slate-500/25">
+                  <span className="rounded-full bg-slate-500/10 px-3 py-1 text-xs font-bold text-sarh-inkMute dark:text-slate-400 ring-1 ring-inset ring-slate-500/25">
                     قيد التوثيق
                   </span>
                 )}
               </div>
             ) : (
-              <p className="text-sm text-slate-500">لم يُحدد مسؤول الاستلام لهذا اليوم.</p>
+              <p className="text-sm text-sarh-inkMute dark:text-slate-400">لم يُحدد مسؤول الاستلام لهذا اليوم.</p>
             )}
           </Section>
         </div>
@@ -777,12 +810,12 @@ export function ChildFeed({
 
           <Section
             title="قائمة الواجبات"
-            icon={<ListChecks className="h-4 w-4 text-sarh-teal" aria-hidden="true" />}
+            icon={<ListChecks className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />}
             delay={0.1}
           >
             <div className="mb-3 flex items-center justify-between text-xs font-bold">
               <span className="text-sarh-inkMute">تم إنجاز</span>
-              <span className="font-mono text-sarh-teal tabular-nums">
+              <span className="font-mono text-sarh-tealInk dark:text-sarh-teal tabular-nums">
                 {homeworkDone} / {homework.length}
               </span>
             </div>

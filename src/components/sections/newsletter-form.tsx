@@ -28,7 +28,7 @@ export function NewsletterForm({
   placeholder,
   cta,
   showHint = true,
-  idPrefix = "learn-newsletter",
+  idPrefix = "newsletter",
 }: {
   /** Override the field placeholder (the sidebar wants its own copy). */
   placeholder?: string;
@@ -91,7 +91,7 @@ export function NewsletterForm({
   return (
     <form onSubmit={handleSubmit} noValidate className="w-full">
       <label htmlFor={emailId} className="sr-only">
-        {t("learn_newsEmailLabel")}
+        {t("newsletterEmailLabel")}
       </label>
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -117,7 +117,7 @@ export function NewsletterForm({
               if (invalid || status === "error") setStatus("idle");
             }}
             onBlur={handleBlur}
-            placeholder={placeholder ?? t("learn_newsPlaceholder")}
+            placeholder={placeholder ?? t("newsletterPlaceholder")}
             aria-invalid={invalid}
             aria-describedby={showHint ? hintId : undefined}
             className={cn(
@@ -135,10 +135,10 @@ export function NewsletterForm({
           {sending ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              {t("learn_newsSending")}
+              {t("newsletterSending")}
             </>
           ) : (
-            (cta ?? t("learn_newsCta"))
+            (cta ?? t("newsletterCta"))
           )}
         </button>
       </div>
@@ -148,7 +148,7 @@ export function NewsletterForm({
           id={hintId}
           className="mt-3 text-xs leading-6 text-slate-500 dark:text-slate-400"
         >
-          {t("learn_newsHint")}
+          {t("newsletterHint")}
         </p>
       ) : null}
 
@@ -157,21 +157,21 @@ export function NewsletterForm({
       {invalid ? (
         <p role="alert" className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-red-600 dark:text-red-400">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          {t("learn_newsInvalid")}
+          {t("newsletterInvalid")}
         </p>
       ) : null}
 
       {status === "error" ? (
         <p role="alert" className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-red-600 dark:text-red-400">
           <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          {t("learn_newsError")}
+          {t("newsletterError")}
         </p>
       ) : null}
 
       {status === "success" ? (
         <p role="status" className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
           <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          {t("learn_newsSuccess")}
+          {t("newsletterSuccess")}
         </p>
       ) : null}
     </form>

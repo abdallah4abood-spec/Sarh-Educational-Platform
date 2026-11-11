@@ -1,7 +1,7 @@
 /**
  * SARH — /teachers-academy copy.
  *
- * Its own module for the same reason the homepage and /learn have one: the
+ * Its own module for the same reason the homepage and the directory have one: the
  * public academy landing page carries a lot of marketing copy, and keeping it
  * here means `dictionary.ts` stays readable. `academyEn` is typed against
  * `keyof typeof academyAr`, so a key added to one language but not the other is

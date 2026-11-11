@@ -309,16 +309,25 @@ export function SiteHeader() {
           aria-label={user.name ?? user.email ?? t("dashboard")}
           className="flex h-9 items-center gap-2 rounded-full py-1 ps-1 pe-2 text-sarh-navy transition-colors hover:bg-sarh-teal/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal dark:text-slate-100"
         >
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-sarh-teal text-xs font-bold text-white">
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-sarh-tealInk text-xs font-bold text-white">
             {initials}
           </span>
-          {/* Capped at 6rem: the signed-in name is the only nav control whose
-              width an end user controls, and the bar is capped at `max-w-6xl`
-              — an unbounded name would push the six links into an overflow.
-              The full value lives in the button's aria-label and the menu. */}
-          <span className="hidden max-w-[6rem] truncate text-sm font-semibold xl:inline">
-            {user.name ?? user.email}
-          </span>
+          {/*
+           * The trigger shows the account *role*, not the account name.
+           *
+           * The name is the only control in the bar whose width the user
+           * controls, and an institution name such as "أكاديمية الأفق
+           * التعليمية" does not fit the cluster: it used to be capped at 6rem
+           * with `truncate`, so the label read "أكاديمية الأ…" — cut mid-word,
+           * which told the visitor nothing. A role label is short, predictable
+           * and never truncated, and the full name and e-mail remain in the
+           * menu panel below and in this button's `aria-label`.
+           */}
+          {role ? (
+            <span className="hidden whitespace-nowrap text-sm font-semibold xl:inline">
+              {ROLE_LABEL[role]}
+            </span>
+          ) : null}
           <ChevronDown
             className={cn("h-4 w-4 transition-transform", profileOpen && "rotate-180")}
             aria-hidden="true"
@@ -345,7 +354,7 @@ export function SiteHeader() {
                   </p>
                 ) : null}
                 {role ? (
-                  <span className="mt-2 inline-flex rounded-full bg-sarh-teal/10 px-2.5 py-1 text-[11px] font-semibold text-sarh-teal ring-1 ring-inset ring-sarh-teal/30">
+                  <span className="mt-2 inline-flex rounded-full bg-sarh-teal/10 px-2.5 py-1 text-[11px] font-semibold text-sarh-tealInk ring-1 ring-inset ring-sarh-teal/30 dark:text-sarh-teal">
                     {ROLE_LABEL[role]}
                   </span>
                 ) : null}
@@ -391,7 +400,7 @@ export function SiteHeader() {
         className={cn(
           "flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-tealInk",
           portalsOpen
-            ? "bg-sarh-teal/10 text-sarh-teal"
+            ? "bg-sarh-teal/10 text-sarh-tealInk dark:bg-sarh-teal/15 dark:text-sarh-teal"
             : "text-sarh-navy hover:bg-sarh-teal/10 hover:text-sarh-teal dark:text-slate-200"
         )}
       >
@@ -418,7 +427,7 @@ export function SiteHeader() {
               <Link
                 href={authenticated && role ? ROLE_HOME[role] : "/auth/signin"}
                 role="menuitem"
-                className="flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-sarh-teal transition-colors hover:bg-sarh-teal/10"
+                className="flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-sarh-tealInk transition-colors hover:bg-sarh-teal/10 dark:text-sarh-teal"
               >
                 {authenticated ? (
                   <>
@@ -463,7 +472,7 @@ export function SiteHeader() {
         className={cn(
           "whitespace-nowrap rounded-lg px-2 py-2 text-sm font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-tealInk",
           active
-            ? "bg-sarh-teal/10 text-sarh-teal"
+            ? "bg-sarh-teal/10 text-sarh-tealInk dark:bg-sarh-teal/15 dark:text-sarh-teal"
             : "text-sarh-navy hover:text-sarh-teal dark:text-slate-200"
         )}
       >
@@ -481,10 +490,32 @@ export function SiteHeader() {
      * tint, so page content scrolling underneath never ghosts through it.
      */
     <header className="sticky top-0 z-50 border-b border-sarh-borderLight bg-white/90 backdrop-blur-md dark:border-sarh-borderDark dark:bg-sarh-bgDark/90">
-      {/* Keyboard users land here first and can jump past the navigation. */}
+      {/*
+       * Keyboard users land here first and can jump past the navigation.
+       *
+       * `sr-only` keeps it out of sight until it takes focus; the fill is
+       * `tealInk` (#00776E) rather than `teal` because white on #00A99D is
+       * only 2.9:1 — the visible state of a skip link is exactly the wrong
+       * place for 2.9:1. The global `:focus-visible` ring in globals.css
+       * outlines it; no focus-only classes are needed here anymore.
+       *
+       * The click handler hands focus to `#site-main` explicitly: Chromium
+       * sets the sequential-focus start point on fragment navigation but
+       * leaves DOM focus on the link, which makes the next Tab unreliable.
+       * `#site-main` has `tabIndex={-1}` (see `(public)/layout.tsx`) so this
+       * focus call is legal and the following Tab continues inside the
+       * content in every browser.
+       */}
       <a
         href="#site-main"
-        className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-sarh-teal focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+        onClick={(event) => {
+          const target = document.getElementById("site-main");
+          if (!target) return;
+          event.preventDefault();
+          target.focus({ preventScroll: true });
+          target.scrollIntoView({ block: "start" });
+        }}
+        className="sarh-skip-link"
       >
         {t("skipToContent")}
       </a>

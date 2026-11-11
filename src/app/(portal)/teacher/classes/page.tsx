@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getServerSession } from "next-auth";
 import { ArrowLeft, BookOpen, ClipboardList, Users } from "lucide-react";
 
 import { Meter, PageHeader, Panel, StatCard } from "@/components/portal/primitives";
 import { StatusPill, attendancePill } from "@/components/portal/status-pill";
-import { authOptions } from "@/lib/auth";
+import { TeacherScopeGate } from "@/components/portal/teacher-scope-gate";
 import {
   loadClassRoster,
   loadTeacherOverview,
   loadTeacherWorkload,
 } from "@/lib/db/teacher";
+import { loadTeacherPageScope } from "@/lib/teacher-page";
 
 export const metadata: Metadata = {
   title: "الفصول الدراسية",
@@ -25,26 +25,32 @@ export const metadata: Metadata = {
  * class rendered inline so a teacher can act without another hop. Attendance
  * marking itself lives in `/teacher/attendance`.
  */
-export default async function TeacherClassesPage() {
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
+export default async function TeacherClassesPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  const { state } = await loadTeacherPageScope(searchParams);
 
-  const [overview, workload] = userId
-    ? await Promise.all([
-        loadTeacherOverview(userId),
-        loadTeacherWorkload(userId),
-      ])
-    : [null, { total: 0, graded: 0, pending: 0 }];
-  const classes = overview?.classes ?? [];
+  if (state.kind !== "scope") {
+    return <TeacherScopeGate state={state} path="/teacher/classes" />;
+  }
+
+  const scope = state.scope;
+  const [overview, workload] = await Promise.all([
+    loadTeacherOverview(scope),
+    loadTeacherWorkload(scope),
+  ]);
+  const classes = overview.classes;
   const totalStudents = classes.reduce((sum, klass) => sum + klass.students, 0);
 
   // The first class's roster is rendered inline so the teacher can act
-  // without another hop — scoped by the loader to this teacher's own class.
+  // without another hop. `classes` is already filtered to this scope, and the
+  // roster loader re-checks the class against the same institution.
   const focusClass = classes[0];
-  const focusRoster =
-    userId && focusClass
-      ? ((await loadClassRoster(userId, focusClass.id))?.students ?? [])
-      : [];
+  const focusRoster = focusClass
+    ? ((await loadClassRoster(scope, focusClass.id))?.students ?? [])
+    : [];
 
   return (
     <div className="space-y-5">
@@ -56,7 +62,7 @@ export default async function TeacherClassesPage() {
         actions={
           <Link
             href="/teacher/attendance"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-sarh-teal px-4 py-2.5 text-xs font-bold text-white shadow-teal-glow"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-sarh-tealInk px-4 py-2.5 text-xs font-bold text-white shadow-teal-glow"
           >
             تسجيل الحضور
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
@@ -104,7 +110,7 @@ export default async function TeacherClassesPage() {
                   <p className="text-sm font-bold text-sarh-navy dark:text-white">
                     {klass.name}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                  <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400">
                     {klass.subject} — {klass.room}
                   </p>
                 </div>
@@ -124,7 +130,7 @@ export default async function TeacherClassesPage() {
                 />
               </div>
 
-              <p className="mt-3 text-[11px] text-slate-400">
+              <p className="mt-3 text-[11px] text-sarh-inkMute dark:text-slate-400">
                 الحصة القادمة: {klass.nextLesson} · {klass.weeklyLessons} حصص
                 أسبوعياً
               </p>
@@ -156,13 +162,13 @@ export default async function TeacherClassesPage() {
                   <p className="text-sm font-bold text-sarh-navy dark:text-white">
                     {student.name}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                  <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400">
                     {student.notes === "—" ? "لا ملاحظات" : student.notes}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span
-                    className="font-mono text-xs font-bold tabular-nums text-slate-500 dark:text-slate-400"
+                    className="font-mono text-xs font-bold tabular-nums text-sarh-inkMute dark:text-slate-400"
                     dir="ltr"
                   >
                     {student.score}%

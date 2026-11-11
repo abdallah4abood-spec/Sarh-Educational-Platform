@@ -21,7 +21,7 @@ export function NewsletterSection() {
   return (
     <section
       id="newsletter"
-      aria-labelledby="learn-newsletter-title"
+      aria-labelledby="newsletter-title"
       className="sarh-section-tight scroll-mt-24 px-6"
     >
       <Reveal className="mx-auto max-w-6xl">
@@ -35,16 +35,16 @@ export function NewsletterSection() {
             <div className="flex flex-col items-start gap-4">
               <span className="sarh-badge gap-1.5 bg-white/80 text-sarh-tealInk ring-1 ring-inset ring-sarh-teal/30 dark:bg-sarh-cardDark dark:text-sarh-teal">
                 <Mail className="h-3.5 w-3.5" aria-hidden="true" />
-                {t("learn_footerLinkNewsletter")}
+                {t("newsletterEyebrow")}
               </span>
               <h2
-                id="learn-newsletter-title"
+                id="newsletter-title"
                 className="sarh-heading text-sarh-navy dark:text-white"
               >
-                {t("learn_newsTitle")}
+                {t("newsletterTitle")}
               </h2>
               <p className="sarh-lead max-w-xl text-sarh-inkMute dark:text-slate-300">
-                {t("learn_newsLead")}
+                {t("newsletterLead")}
               </p>
             </div>
 

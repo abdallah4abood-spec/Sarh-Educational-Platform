@@ -89,7 +89,7 @@ export function SettingsForm() {
         {status === "saved" ? (
           <p
             role="status"
-            className="flex items-center gap-2 rounded-lg bg-sarh-teal/10 px-4 py-3 text-sm font-medium text-sarh-teal"
+            className="flex items-center gap-2 rounded-lg bg-sarh-teal/10 px-4 py-3 text-sm font-medium text-sarh-tealInk dark:text-sarh-teal"
           >
             <BadgeCheck className="h-4 w-4" aria-hidden="true" />
             {t("settingSaved")}
@@ -112,7 +112,7 @@ export function SettingsForm() {
             return (
               <div key={field}>
                 <label htmlFor={field} className={labelClass}>
-                  <Icon className="h-4 w-4 text-sarh-teal" aria-hidden="true" />
+                  <Icon className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />
                   {t(labelKey)}
                 </label>
                 <input

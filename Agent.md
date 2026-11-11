@@ -248,6 +248,39 @@ Financial Hub & OCR Reconciler (/admin/finance): Side-by-side view comparing upl
 7. Execution Roadmap & Phase-by-Phase Instructions
 Execute all tasks sequentially following this phase structure:
 
+### 7.0 Current Phase Status — authoritative (2026-11-10)
+
+The phase outlines below are the original build plan and remain unchanged; this
+table is the single status record. Update it here rather than creating a second
+roadmap file.
+
+| Track | Status | Evidence and limits |
+|---|---|---|
+| Phase 0 — Prisma Baseline | **COMPLETED** | Schema and generated client are the baseline for every later phase. Two migrations now exist (`20251108131000_init`, `20251108133000_staff_invitations_audit`) and `npx prisma migrate status` reports the database up to date (checked 2026-11-10) |
+| D5 — Teacher Membership & Data Isolation | **CLOSED** | `docs/testing/d5-final-report.md`: 382/382 automated tests, manual checks 3/4/4B/5 PASSED, check 2 PASSED with limits, check 1 PARTIAL. The documented limitations (no `Set-Cookie` capture for the `mverify-teacher` login itself, check 2 driven by an HTTP client rather than a UI click, untested `lookup-failed` path, local-only benchmark) do **not** open any data path outside an active membership or the granted institution |
+| Phase 4.4 — Staff Invitations & AuditLog | **CLOSED — VERIFIED WITH LIMITATIONS** (production email **BLOCKED**, external) | Functional and security scope closed on 2026-11-10 (`docs/testing/phase-4.4-manual-qa.md` §11, evidence `dev-artifacts/qa44-closure-2026-11-10.json`): 15/15 invitation tests inside a 382/382 suite, 25/25 manual checks (lifecycle, resend rotation, revoke, expiry, role matrix, isolation, audit), both mail branches verified up to the provider (`emailSent:false` with the link handed back; `201`, `emailSent:true`, no token copy — `dev-artifacts/qa44-email-check.json`). `acceptPath` hardening verified on **both** the anonymous `307` and the authenticated `200` (`Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex`, `Cache-Control: no-store`). P2028 closed: all four transactions use `INVITATION_TX_OPTIONS = { timeout: 15_000, maxWait: 10_000 }`, no Prisma error in the closure run. Accepted risk: the token appears in request/access logs (single-use, address-bound, 7-day, stored hashed). **Limit:** production mail to real invitees is blocked outside the code — `sarh.ps` still answers `NXDOMAIN`, so no sending domain is delegated, `EMAIL_FROM` stays `onboarding@resend.dev`, and inbox arrival is unconfirmed |
+| D6 — SUPER_ADMIN Staff Interface | **CLOSED — MANUAL QA PASSED** | Automated coverage in `tests/staff-invitations.test.ts`; manual run in `docs/testing/phase-4.4-manual-qa.md`: page + API, role fixed server-side (body `role` ignored), 404 for another centre's invitation id, non-admin `403`, and a demoted SUPER_ADMIN with a live JWT gets `403` from the API (page answers `200` with a streamed meta-refresh redirect and no data). Re-checked at closure on 2026-11-10 with the current tree (build, types, lint, migrations green; DB unchanged: 1 ACCEPTED invitation, 2 audit rows) |
+| Legacy Courses Cleanup & Public Experience Audit | **CLOSED — VERIFIED WITH LIMITATIONS** | `docs/testing/legacy-courses-public-experience-audit.md`: deleted the four orphaned course components (`courses`, `hero`, `stats`, `testimonials`) and the fabricated `learn-catalog` (1 451 lines across the six deleted files), split the 15 still-live strings out of the `/learn` dictionary into `newsletter-dictionary.ts` (no `learn_*` key remains), removed the dead `introVideoUrl` config, rewrote the “not a course store” homepage lead, renamed the legacy newsletter ids, and removed the `/parent/settings` sidebar entry that 404'd. A follow-up SEO task added `src/app/sitemap.ts`, `src/app/robots.ts` and `src/lib/seo/site-origin.ts`: `/sitemap.xml` serves 12 absolute URLs (10 public pages + 2 `VERIFIED` institutions) and `/robots.txt` disallows the portals/auth/invitations without blocking `/teachers-academy`; both read `SITE_URL` at runtime and a production build pointed at loopback emits an empty sitemap instead of localhost. Public listing now enforces the copy's promise — directory, `/center/[id]` and sitemap share `trustStatus: VERIFIED`, so the QA fixture `mverify-inst` and all `PENDING`/`UNVERIFIED`/`REJECTED` rows answer `404` publicly (documented in §12, row not modified). Verified on the production build: 382/382 tests, `tsc` clean, lint 0 errors, build 59/59 (+2 dynamic metadata routes), migrations up to date; `/learn` and `/courses` `308` → `/explore/centers`, portal guards `307`, `X-Robots-Tag: noindex` + `Referrer-Policy: no-referrer` still on `/invitations/accept`, AR/EN and 390/1440 with no overflow. **Limits:** production must set `SITE_URL` to the actually published origin (`sarh.ps` DNS unproven — the `https://sarh.ps` sitemap run was a local config test); the parent-settings screen is unwritten (entry removed); the Resend domain blocker and token-in-access-logs risk are unchanged; the homepage 199 ₪ institution plan needs an owner decision |
+
+**Manual QA status:** D5, Phase 4.4 and D6 have all been exercised by hand
+(2026-11-08/09), and Phase 4.4 + D6 were re-verified at closure on 2026-11-10.
+D6 and the functional scope of Phase 4.4 are **closed**. What remains is not code:
+production mail needs a delegated domain with verified Resend records (external
+hosting/DNS work, tracked as a blocker, not a defect), and the owner should confirm
+the one provider-accepted message in their inbox. That blocker does **not** hold the
+next phase.
+
+**Last phase closed:** `Sarh — Legacy Courses Cleanup & Public Experience Audit`
+(2026-11-10, verified with limitations — see the row above and
+`docs/testing/legacy-courses-public-experience-audit.md`), including its
+Sitemap/Robots follow-up in §12 of that report. No further phase is scheduled; the
+next one starts from this record.
+
+**Product framing (unchanged):** Sarh is a platform for managing and discovering
+institutions and their educational services (enrolment, daily logs, AI teacher
+tools, commission handling). It is **not** a Udemy-style course marketplace.
+Legacy “course” surfaces are to be audited and cleaned, not extended.
+
 Phase 1: Environment Initialization & PWA Infrastructure
 Initialize Next.js App Router inside Sarh_project.
 

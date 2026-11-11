@@ -24,6 +24,7 @@ import {
   categoriesFor,
   type CategoryIcon,
   type DirectoryKind,
+  type DirectoryListing,
 } from "@/lib/data/directory";
 import { useLanguage } from "@/lib/i18n/language-provider";
 import { cn } from "@/lib/utils";
@@ -50,19 +51,35 @@ const ICONS: Record<CategoryIcon, LucideIcon> = {
  * that doubles as a filter, the trust-building "why Sarh" widget, and the
  * newsletter capture. It is the first column on `lg` and collapses under the
  * grid on small screens so the results are never pushed below the fold.
+ *
+ * Counts are derived from the listings actually on the page. The taxonomy used
+ * to carry fixed platform-wide figures (124, 98, 67…), which read as a promise
+ * the results could not keep — the directory then showed three cards. A
+ * category with no listing is hidden rather than offered with a misleading
+ * count, and "all" carries the real total.
  */
 export function DirectorySidebar({
   kind,
+  listings,
   selectedCategory,
   onCategory,
 }: {
   kind: DirectoryKind;
+  listings: DirectoryListing[];
   selectedCategory: string;
   onCategory: (id: string) => void;
 }) {
   const { t } = useLanguage();
   const meta = KIND_META[kind];
-  const categories = categoriesFor(kind);
+
+  const counts = new Map<string, number>();
+  for (const listing of listings) {
+    counts.set(listing.category, (counts.get(listing.category) ?? 0) + 1);
+  }
+
+  const categories = categoriesFor(kind)
+    .filter((category) => (counts.get(category.id) ?? 0) > 0)
+    .map((category) => ({ ...category, count: counts.get(category.id) ?? 0 }));
 
   return (
     <div className="flex flex-col gap-5">
@@ -94,6 +111,9 @@ export function DirectorySidebar({
                   aria-hidden="true"
                 />
                 {t("dir_allCategories")}
+              </span>
+              <span className="shrink-0 text-xs font-bold text-sarh-inkMute dark:text-slate-400">
+                <bdi>({listings.length})</bdi>
               </span>
             </button>
           </li>

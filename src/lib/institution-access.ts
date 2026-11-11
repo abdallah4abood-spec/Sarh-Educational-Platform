@@ -24,9 +24,12 @@ import { prisma } from "@/lib/prisma";
  *
  * Everyone else gets no institution-administration token:
  *
- *   SECRETARY    No institution-administration access in this phase. A
- *                limited secretary workspace is a separate product decision.
- *   TEACHER      Works in `/teacher`; membership is not an admin credential.
+ *   SECRETARY    No institution-administration access in this phase — and
+ *                deliberately no student-intake rights either. A limited
+ *                secretary workspace (including intake) is a separate product
+ *                decision that must widen this list, never the global role.
+ *   TEACHER      Works in `/teacher`; membership is not an admin credential,
+ *                and teaching does not grant student creation.
  *   SUPERVISOR   Works through `/supervisor`; membership is not an admin grant.
  *   STAFF        Safe default for unclassified memberships; no authority.
  *   ON_LEAVE / INACTIVE rows are excluded even when their role is
@@ -45,26 +48,80 @@ export type InstitutionAccessLevel = "OWNER" | "CENTER_ADMIN";
 export type InstitutionCapability =
   | "institution.read"
   | "staff.read"
+  /**
+   * Offer a staff seat (create/resend an invitation).
+   *
+   * The role that may be offered is narrowed separately by
+   * `INVITABLE_ROLES` in `src/lib/staff-invitations.ts`: a CENTER_ADMIN holds
+   * this capability but may still only invite TEACHER and SECRETARY.
+   */
+  | "staff.invite"
+  /** Withdraw a pending invitation. */
+  | "staff.manage"
   | "roster.read"
   | "profile.read"
   | "ai_studio.use"
-  | "commissions.read";
+  | "commissions.read"
+  /** Read the centre's own students and their enrollments. */
+  | "students.read"
+  /** Create a student and their enrollment inside the centre. */
+  | "students.write"
+  /** See which guardians are linked to the centre's students. */
+  | "guardians.read"
+  /**
+   * Invite a guardian (issue a join code) for a student of this centre.
+   *
+   * Deliberately narrow: it says who may *offer* access, never who may approve
+   * a link. Approval lives in its own capability so widening code issuance
+   * later (a secretary workspace, say) can never widen approval by accident.
+   */
+  | "guardians.manage"
+  /**
+   * Decide (approve or reject) a pending guardianship request.
+   *
+   * The grant of access, as opposed to the offer. Owner and CENTER_ADMIN only;
+   * every decision is tenant-scoped on the server and audited.
+   */
+  | "guardians.approve";
 
 const OWNER_CAPABILITIES: readonly InstitutionCapability[] = [
   "institution.read",
   "staff.read",
+  "staff.invite",
+  "staff.manage",
   "roster.read",
   "profile.read",
   "ai_studio.use",
   "commissions.read",
+  "students.read",
+  "students.write",
+  "guardians.read",
+  "guardians.manage",
+  "guardians.approve",
 ];
 
+/**
+ * A centre director runs intake as an operational task, so student management
+ * is granted here — but not the money. `commissions.read` stays owner-only,
+ * and none of these capabilities implies it.
+ */
 const CENTER_ADMIN_CAPABILITIES: readonly InstitutionCapability[] = [
   "institution.read",
   "staff.read",
+  // A director may build their own team, but never appoint another director:
+  // that limit lives in the invitation role matrix, not in this flag.
+  "staff.invite",
+  "staff.manage",
   "roster.read",
   "profile.read",
   "ai_studio.use",
+  "students.read",
+  "students.write",
+  // A centre director may invite a guardian even though the money stays
+  // owner-only: linking is an operational act, not a financial one.
+  "guardians.read",
+  "guardians.manage",
+  "guardians.approve",
 ];
 
 const CAPABILITIES_BY_LEVEL: Record<

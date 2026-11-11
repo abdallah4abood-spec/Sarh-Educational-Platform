@@ -322,7 +322,7 @@ export function AttendanceTracker({
                     className={cn(
                       "flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold ring-1 ring-inset transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-gold",
                       composerOpen
-                        ? "bg-sarh-gold text-white ring-sarh-gold shadow-md"
+                        ? "bg-sarh-goldInk text-white ring-sarh-gold shadow-md"
                         : "bg-sarh-gold/10 text-[#C9741F] ring-sarh-gold/40 hover:bg-sarh-gold/20 dark:text-sarh-gold"
                     )}
                   >

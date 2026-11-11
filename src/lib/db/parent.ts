@@ -1,3 +1,10 @@
+import {
+  grantedInstitutionIds,
+  grantsForStudent,
+  isLinkedStudent,
+  type GuardianAccess,
+  type GuardianGrantScope,
+} from "@/lib/guardian-access";
 import { prisma } from "@/lib/prisma";
 import {
   dayKey,
@@ -14,39 +21,46 @@ import type {
 } from "@/lib/data/portal";
 
 /**
- * Parent-portal reads.
+ * Parent-portal reads — phase 4.3.
  *
- * Every function here is a Server-Component query: it takes the authenticated
- * `session.user.id` and returns the same TypeScript shapes the UI was already
- * written against, so swapping the source from a bundled fixture to PostgreSQL
- * never touched a single JSX expression. Nothing in this file is importable
- * from a Client Component — the data has to arrive as props, which is what
- * keeps the Prisma client out of the browser bundle.
+ * Scoping rule: every institutional row is read by an approved
+ * `(studentId, institutionId)` grant. A child with an APPROVED family link but
+ * no grant still appears as an identity card ("not enrolled"); no log, grade,
+ * announcement or contact from any institution is read for that child.
  *
- * Scoping rule: a parent only ever sees rows reachable from their own
- * `Student` rows. `parentId` is taken from the session and never from a query
- * string, so a crafted `?childId=` cannot cross accounts.
+ * `Student.parentId` and `StudentGuardian.status` are never authorisation
+ * sources here.
  */
 
 /* ------------------------------------------------------------------ */
 /* Children                                                            */
 /* ------------------------------------------------------------------ */
 
+function allowedInstitutions(access: GuardianAccess): Set<string> {
+  return new Set(grantedInstitutionIds(access));
+}
+
 /**
  * The signed-in parent's children, with the institution and class they are
  * enrolled in.
  *
- * A child can hold more than one enrollment (a kindergarten plus a summer
- * centre); the feed shows the *most recent* one because that is the
- * institution currently producing their daily log, which is what the tier chip
- * and the log queries are keyed on.
+ * Only enrollments at institutions where the guardian holds a grant are
+ * eligible. When a child has grants at more than one institution, the most
+ * recent ACTIVE enrollment supplies the card label; the feed itself still
+ * merges only the granted institutions' logs.
  */
-export async function loadFeedChildren(parentId: string): Promise<FeedChild[]> {
+export async function loadFeedChildren(
+  access: GuardianAccess
+): Promise<FeedChild[]> {
+  if (access.linkedStudentIds.length === 0) return [];
+
+  const allowed = allowedInstitutions(access);
   const students = await prisma.student.findMany({
-    where: { parentId },
+    where: { id: { in: [...access.linkedStudentIds] } },
     orderBy: { fullName: "asc" },
     include: {
       enrollments: {
+        where: allowed.size ? { institutionId: { in: [...allowed] } } : undefined,
         orderBy: { createdAt: "desc" },
         include: {
           institution: { select: { id: true, name: true, type: true } },
@@ -57,21 +71,29 @@ export async function loadFeedChildren(parentId: string): Promise<FeedChild[]> {
   });
 
   return students.map((student) => {
-    const enrollment = student.enrollments[0];
-    const tier: AgeTier = enrollment?.institution.type === "KINDERGARTEN"
-      ? "KINDERGARTEN"
-      : "EDUCATIONAL_CENTER";
+    const grantedForChild = new Set(grantedInstitutionIds(access, student.id));
+    const eligible = student.enrollments
+      .filter((enrollment) => grantedForChild.has(enrollment.institutionId))
+      .sort((a, b) => {
+        if (a.enrollmentStatus !== b.enrollmentStatus) {
+          return a.enrollmentStatus === "ACTIVE" ? -1 : 1;
+        }
+        return b.createdAt.getTime() - a.createdAt.getTime();
+      });
+    const enrollment = eligible[0];
+    const tier: AgeTier =
+      enrollment?.institution.type === "KINDERGARTEN"
+        ? "KINDERGARTEN"
+        : "EDUCATIONAL_CENTER";
 
     return {
       id: student.id,
       name: student.fullName,
       tier,
       institutionId: enrollment?.institution.id ?? "",
-      institutionName: enrollment?.institution.name ?? "غير مسجّل",
-      // The class's own grade label is more precise than the enrollment's
-      // free-text copy when a child has been re-seated mid-term.
+      institutionName: enrollment?.institution.name ?? "غير مسجل",
       gradeLevel:
-        enrollment?.class?.gradeLevel ?? enrollment?.gradeLevel ?? "غير محدد",
+        enrollment?.class?.gradeLevel ?? enrollment?.gradeLevel ?? "غير مسجل",
     };
   });
 }
@@ -82,10 +104,23 @@ export async function loadFeedChildren(parentId: string): Promise<FeedChild[]> {
 
 type LogRow = Awaited<ReturnType<typeof queryLogs>>[number];
 
-function queryLogs(studentIds: string[], from: Date, to: Date) {
+function queryLogs(
+  scopes: readonly GuardianGrantScope[],
+  from: Date,
+  to: Date
+) {
+  if (scopes.length === 0) {
+    return prisma.dailyLog.findMany({
+      where: { id: "__no_grant__" },
+      include: { institution: { select: { id: true, name: true } } },
+    });
+  }
   return prisma.dailyLog.findMany({
     where: {
-      studentId: { in: studentIds },
+      OR: scopes.map((scope) => ({
+        studentId: scope.studentId,
+        institutionId: scope.institutionId,
+      })),
       date: { gte: from, lte: to },
     },
     include: { institution: { select: { id: true, name: true } } },
@@ -130,9 +165,6 @@ function toFeedDayLog(log: LogRow): FeedDayLog {
     date: dayKey(log.date),
     attendance: log.attendance,
     dayPlan: log.dayPlan,
-    // The stored programme is the programme; "activities" is the kindergarten
-    // vocabulary for the same timeline, so it mirrors dayPlan rather than
-    // inventing a second list the database does not have.
     activities: log.dayPlan,
     photos: log.activityPhotos,
     pickupPerson: log.pickupPerson
@@ -146,40 +178,26 @@ function toFeedDayLog(log: LogRow): FeedDayLog {
 
 /**
  * Every daily log for one child inside a date window, keyed by `YYYY-MM-DD`.
- *
- * Returns a map rather than an array because the feed navigates by date: the
- * week strip asks "is there a log for this day?" on every render, and a map
- * turns that into an O(1) lookup instead of a scan. Weekends simply have no
- * key, which is exactly how the UI already renders a rest day.
- *
- * The child is verified to belong to `parentId` first — a missing or foreign
- * child yields an empty map, never someone else's log.
+ * A child with no grant in an institution never reads that institution's logs.
  */
 export async function loadChildLogs(
-  parentId: string,
+  access: GuardianAccess,
   childId: string,
   windowDays = 21
 ): Promise<Map<string, FeedDayLog>> {
-  const owns = await prisma.student.findFirst({
-    where: { id: childId, parentId },
-    select: { id: true },
-  });
-  if (!owns) return new Map();
+  if (!isLinkedStudent(access, childId)) return new Map();
+  const scopes = grantsForStudent(access, childId);
+  if (scopes.length === 0) return new Map();
 
   const to = new Date();
   to.setHours(23, 59, 59, 999);
   const from = new Date(to.getTime() - windowDays * 24 * 60 * 60 * 1000);
 
-  const logs = await queryLogs([childId], from, to);
+  const logs = await queryLogs(scopes, from, to);
   return new Map(logs.map((log) => [dayKey(log.date), toFeedDayLog(log)]));
 }
 
-/**
- * Whether a log exists for a child on a given day.
- *
- * Used by the week strip, which must not claim a rest day when the log row is
- * simply missing (a data gap) rather than genuinely absent (a weekend).
- */
+/** Whether a log exists for a child on a given day. */
 export function isLoggedDay(
   logs: Map<string, FeedDayLog>,
   date: Date
@@ -193,36 +211,38 @@ export function isLoggedDay(
 
 export interface ChildCard {
   child: FeedChild;
-  /** Per-subject term rows for this child. */
   performance: SubjectPerformance[];
-  /** Share of school days attended over the last 28 days (0–1). */
   attendanceRate: number;
-  /** Daily logs recorded in the same window. */
   logsCount: number;
 }
 
-/**
- * One card per child for `/parent/children`: enrollment identity, subject
- * rows and the attendance share computed from real logs — the same rows the
- * feed renders, aggregated rather than duplicated.
- */
+/** One card per child for `/parent/children`, scoped to approved grants. */
 export async function loadChildrenOverview(
-  parentId: string
+  access: GuardianAccess
 ): Promise<ChildCard[]> {
-  const children = await loadFeedChildren(parentId);
-  const childIds = children.map((child) => child.id);
-  if (childIds.length === 0) return [];
+  const children = await loadFeedChildren(access);
+  const childIds = new Set(children.map((child) => child.id));
+  const scopes = access.grants.filter((scope) => childIds.has(scope.studentId));
+  if (children.length === 0) return [];
 
   const since = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000);
+  const where = scopes.length
+    ? {
+        OR: scopes.map((scope) => ({
+          studentId: scope.studentId,
+          institutionId: scope.institutionId,
+        })),
+      }
+    : { id: "__no_grant__" };
 
   const [performance, logs] = await Promise.all([
     prisma.subjectPerformance.findMany({
-      where: { studentId: { in: childIds } },
+      where,
       orderBy: { subject: "asc" },
     }),
     prisma.dailyLog.groupBy({
       by: ["studentId", "attendance"],
-      where: { studentId: { in: childIds }, date: { gte: since } },
+      where: { ...where, date: { gte: since } },
       _count: { _all: true },
     }),
   ]);
@@ -234,14 +254,21 @@ export async function loadChildrenOverview(
       .filter((row) => row.attendance)
       .reduce((sum, row) => sum + row._count._all, 0);
 
+    const bySubject = new Map<string, number[]>();
+    for (const row of performance) {
+      if (row.studentId !== child.id) continue;
+      bySubject.set(row.subject, [
+        ...(bySubject.get(row.subject) ?? []),
+        row.score,
+      ]);
+    }
+
     return {
       child,
-      performance: performance
-        .filter((row) => row.studentId === child.id)
-        .map((row) => ({
-          subject: row.subject,
-          percent: Math.round((row.score / 100) * 100),
-        })),
+      performance: [...bySubject.entries()].map(([subject, scores]) => ({
+        subject,
+        percent: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
+      })),
       attendanceRate: total === 0 ? 0 : Math.round((present / total) * 100) / 100,
       logsCount: total,
     };
@@ -254,11 +281,8 @@ export async function loadChildrenOverview(
 
 export interface ParentDashboard {
   children: FeedChild[];
-  /** Programme for the primary child today (empty on a rest day). */
   todayDayPlan: string[];
-  /** Open homework items across today's logs. */
   pendingHomework: number;
-  /** Distinct institutions the children are enrolled in. */
   institutionCount: number;
   announcements: ParentAnnouncement[];
   messages: {
@@ -279,7 +303,6 @@ const ANNOUNCEMENT_KIND = {
   MEETING: "meeting",
 } as const;
 
-/** HH:MM for today, otherwise the date — the tile is a glance, not a log. */
 function relativeStamp(date: Date): string {
   const now = new Date();
   const sameDay = date.toDateString() === now.toDateString();
@@ -294,10 +317,14 @@ function relativeStamp(date: Date): string {
 }
 
 export async function loadParentDashboard(
-  parentId: string
+  access: GuardianAccess
 ): Promise<ParentDashboard> {
-  const children = await loadFeedChildren(parentId);
-  const childIds = children.map((child) => child.id);
+  const children = await loadFeedChildren(access);
+  const childIds = new Set(children.map((child) => child.id));
+  const scopes = access.grants.filter((scope) => childIds.has(scope.studentId));
+  const institutionIds = [
+    ...new Set(scopes.map((scope) => scope.institutionId)),
+  ];
 
   const today = new Date();
   const startOfToday = new Date(today);
@@ -305,39 +332,45 @@ export async function loadParentDashboard(
   const endOfToday = new Date(today);
   endOfToday.setHours(23, 59, 59, 999);
 
-  const institutionIds = [
-    ...new Set(children.map((child) => child.institutionId).filter(Boolean)),
-  ];
-
   const [todayLogs, performance, announcements, messages] = await Promise.all([
-    childIds.length ? queryLogs(childIds, startOfToday, endOfToday) : [],
-    childIds.length
+    queryLogs(scopes, startOfToday, endOfToday),
+    scopes.length
       ? prisma.subjectPerformance.findMany({
-          where: { studentId: { in: childIds } },
+          where: {
+            OR: scopes.map((scope) => ({
+              studentId: scope.studentId,
+              institutionId: scope.institutionId,
+            })),
+          },
           orderBy: { subject: "asc" },
         })
       : [],
-    // A parent sees platform-wide notices plus notices from their own centres.
+    // No grants => platform notices only. `{}` inside OR would match every row.
     prisma.announcement.findMany({
-      where: {
-        OR: [
-          { institutionId: null },
-          institutionIds.length ? { institutionId: { in: institutionIds } } : {},
-        ],
-      },
+      where: institutionIds.length
+        ? {
+            OR: [
+              { institutionId: null },
+              { institutionId: { in: institutionIds } },
+            ],
+          }
+        : { institutionId: null },
       include: { institution: { select: { name: true } } },
       orderBy: { publishedAt: "desc" },
       take: 4,
     }),
     prisma.message.findMany({
-      where: { toUserId: parentId },
+      where: { toUserId: access.userId },
       include: { fromUser: { select: { fullName: true } } },
       orderBy: [{ readAt: "asc" }, { createdAt: "desc" }],
       take: 5,
     }),
   ]);
 
-  const primaryChild = children[0];
+  // Prefer a child the family can actually read: the first linked child may
+  // have no grant yet, and their card is identity-only.
+  const primaryChild =
+    children.find((child) => child.institutionId) ?? children[0];
   const primaryLog = todayLogs.find((log) => log.studentId === primaryChild?.id);
 
   const pendingHomework = todayLogs.reduce(
@@ -347,8 +380,6 @@ export async function loadParentDashboard(
     0
   );
 
-  // The ring is the average of each subject's latest score across the family's
-  // children — a single honest figure rather than a stored constant.
   const bySubject = new Map<string, number[]>();
   for (const row of performance) {
     bySubject.set(row.subject, [

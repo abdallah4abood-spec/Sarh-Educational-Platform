@@ -21,6 +21,18 @@ export async function generateMetadata({
 }: CenterPageProps): Promise<Metadata> {
   const center = await findCenter(decodeURIComponent(params.id));
 
+  /*
+   * A miss deliberately returns metadata instead of throwing `notFound()`.
+   *
+   * `notFound()` thrown from `generateMetadata` is resolved by Next's root
+   * error path, which renders the framework's default English "404: This page
+   * could not be found." screen and skips the layout — not the localized
+   * `(public)/not-found.tsx`. The page below throws instead, and because the
+   * `(public)` segment no longer ships a `loading.tsx` (it moved down to
+   * `/explore`, the only place that needs a skeleton), nothing has been
+   * flushed yet, so the response is still a real HTTP 404 with the Arabic
+   * not-found screen inside the normal header and footer.
+   */
   if (!center) {
     return {
       title: "مركز غير موجود",
@@ -59,7 +71,7 @@ export default async function CenterProfilePage({ params }: CenterPageProps) {
       <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6">
         <Link
           href={isKindergarten ? "/explore/kindergartens" : "/explore/centers"}
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition-colors hover:text-sarh-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal dark:text-slate-400"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-sarh-inkMute transition-colors hover:text-sarh-tealInk focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal dark:text-slate-400 dark:hover:text-sarh-teal"
         >
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
           العودة إلى الدليل
@@ -87,28 +99,28 @@ export default async function CenterProfilePage({ params }: CenterPageProps) {
           <div className="absolute inset-x-0 bottom-0">
             <div className="mx-auto flex max-w-6xl items-end gap-4 px-4 pb-6 sm:px-6">
               {/* Center logo overlay */}
-              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-sarh-teal text-2xl font-bold text-white shadow-teal-glow ring-4 ring-white/30 md:h-20 md:w-20 md:text-3xl">
+              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-sarh-tealInk text-2xl font-bold text-white shadow-teal-glow ring-4 ring-white/30 md:h-20 md:w-20 md:text-3xl">
                 {center.name.trim().charAt(0)}
               </span>
 
               <div className="min-w-0 text-white">
                 <div className="mb-2 flex flex-wrap items-center gap-2">
                   {center.verified ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-sarh-teal px-2.5 py-1 text-[11px] font-bold text-white shadow-teal-glow">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-sarh-tealInk px-2.5 py-1 text-[11px] font-bold text-white shadow-teal-glow">
                       <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
                       موثّق
                     </span>
                   ) : null}
-                  <span className="inline-flex items-center gap-1 rounded-full bg-black/45 px-2.5 py-1 text-[11px] font-semibold backdrop-blur-sm">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold backdrop-blur-sm">
                     <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
                     {center.zone}
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-black/45 px-2.5 py-1 text-[11px] font-semibold backdrop-blur-sm">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-semibold backdrop-blur-sm">
                     {isKindergarten
                       ? "روضة (5–7 سنوات)"
                       : "مركز تحضير (8–18 سنة)"}
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-sarh-gold px-2.5 py-1 text-[11px] font-bold text-white">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-sarh-goldInk px-2.5 py-1 text-[11px] font-bold text-white">
                     <Star
                       className="h-3.5 w-3.5 fill-white"
                       aria-hidden="true"
@@ -117,7 +129,7 @@ export default async function CenterProfilePage({ params }: CenterPageProps) {
                   </span>
                 </div>
 
-                <h1 className="truncate text-2xl font-bold md:text-4xl">
+                <h1 className="truncate text-2xl font-bold leading-[1.3] md:text-4xl md:leading-[1.28]">
                   {center.name}
                 </h1>
                 <p className="mt-1 flex items-center gap-1.5 text-sm text-white/85">

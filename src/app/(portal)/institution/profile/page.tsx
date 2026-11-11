@@ -90,7 +90,7 @@ export default async function InstitutionProfilePage({
         actions={
           <Link
             href="/explore/centers"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-sarh-teal px-4 py-2.5 text-xs font-bold text-white shadow-teal-glow"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-sarh-tealInk px-4 py-2.5 text-xs font-bold text-white shadow-teal-glow"
           >
             <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
             عرض الدليل العام
@@ -153,7 +153,7 @@ export default async function InstitutionProfilePage({
               )}
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+            <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-sarh-inkMute dark:text-slate-400">
               <span className="inline-flex items-center gap-1.5">
                 <Star className="h-3.5 w-3.5 fill-sarh-gold text-sarh-gold" aria-hidden="true" />
                 <span dir="ltr">
@@ -162,11 +162,11 @@ export default async function InstitutionProfilePage({
                 </span>
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5 text-sarh-teal" aria-hidden="true" />
+                <MapPin className="h-3.5 w-3.5 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />
                 {profile.zone}
               </span>
               <span className="inline-flex items-center gap-1.5" dir="ltr">
-                <Phone className="h-3.5 w-3.5 text-sarh-teal" aria-hidden="true" />
+                <Phone className="h-3.5 w-3.5 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />
                 {profile.phone}
               </span>
             </div>
@@ -186,7 +186,7 @@ export default async function InstitutionProfilePage({
             )}
           </div>
 
-          <p className="mt-4 text-xs leading-6 text-slate-500 dark:text-slate-400">
+          <p className="mt-4 text-xs leading-6 text-sarh-inkMute dark:text-slate-400">
             يظهر الملف في <strong>المراكز التعليمية</strong> بدليل صَرْح، وتُحدَّث
             بياناته من هذه الصفحة فقط — كي لا يقرأ ولي الأمر رقماً قديماً.
           </p>
@@ -206,8 +206,8 @@ export default async function InstitutionProfilePage({
                 <span
                   className={
                     item.done
-                      ? "mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-sarh-teal text-white"
-                      : "mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-sarh-gold text-white"
+                      ? "mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-sarh-tealInk text-white"
+                      : "mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-sarh-goldInk text-white"
                   }
                 >
                   {item.done ? (
@@ -220,7 +220,7 @@ export default async function InstitutionProfilePage({
                   <span className="block text-xs font-bold text-sarh-navy dark:text-slate-200">
                     {item.label}
                   </span>
-                  <span className="mt-0.5 block text-[11px] leading-6 text-slate-500 dark:text-slate-400">
+                  <span className="mt-0.5 block text-[11px] leading-6 text-sarh-inkMute dark:text-slate-400">
                     {item.hint}
                   </span>
                 </span>
@@ -236,7 +236,7 @@ export default async function InstitutionProfilePage({
           {missing.length > 0 ? (
             <Link
               href="/contact"
-              className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-teal hover:underline"
+              className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal hover:underline"
             >
               تواصل مع فريق صَرْح لإكمال البنود الناقصة
               <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />

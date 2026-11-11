@@ -257,7 +257,7 @@ export default function SigninForm() {
 
           <Link
             href="/auth/forgot-password"
-            className="text-sm font-semibold text-sarh-teal underline underline-offset-2 hover:text-sarh-teal/90"
+            className="text-sm font-semibold text-sarh-tealInk underline underline-offset-2 hover:text-sarh-tealPressed dark:text-sarh-teal dark:hover:text-sarh-teal/90"
           >
             {t("forgotPassword")}
           </Link>
@@ -285,14 +285,14 @@ export default function SigninForm() {
           {t("noAccountYet")}{" "}
           <Link
             href="/auth/signup"
-            className="font-semibold text-sarh-teal underline underline-offset-2 hover:text-sarh-teal/90"
+            className="font-semibold text-sarh-tealInk underline underline-offset-2 hover:text-sarh-tealPressed dark:text-sarh-teal dark:hover:text-sarh-teal/90"
           >
             {t("signUp")}
           </Link>
         </p>
       </form>
 
-      <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
+      <p className="mt-6 text-center text-xs text-sarh-inkMute dark:text-slate-400">
         {t("platformTagline")}
       </p>
     </AuthSplit>

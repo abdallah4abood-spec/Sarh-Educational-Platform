@@ -201,14 +201,14 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
         <button
           type="button"
           onClick={() => setDrawerOpen(false)}
-          className="grid h-8 w-8 place-items-center rounded-lg text-slate-500 transition-colors hover:bg-muted lg:hidden"
+          className="grid h-8 w-8 place-items-center rounded-lg text-sarh-inkMute dark:text-slate-400 transition-colors hover:bg-muted lg:hidden"
           aria-label={t("portalCloseMenu")}
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
       </Link>
 
-      <p className="px-2 text-[11px] font-bold text-slate-400 dark:text-slate-500">
+      <p className="px-2 text-[11px] font-bold text-sarh-inkMute dark:text-slate-400">
         {portal.caption}
       </p>
 
@@ -226,14 +226,14 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
                   className={cn(
                     "flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors",
                     active
-                      ? "bg-sarh-teal/12 text-sarh-teal ring-1 ring-inset ring-sarh-teal/25"
+                      ? "bg-sarh-teal/12 text-sarh-tealInk dark:text-sarh-teal ring-1 ring-inset ring-sarh-teal/25"
                       : "text-sarh-navy hover:bg-muted hover:text-sarh-teal dark:text-slate-300"
                   )}
                 >
                   <Icon
                     className={cn(
                       "h-4 w-4 shrink-0",
-                      active ? "text-sarh-teal" : "text-slate-400"
+                      active ? "text-sarh-tealInk dark:text-sarh-teal" : "text-sarh-inkMute dark:text-slate-400"
                     )}
                     aria-hidden="true"
                   />
@@ -253,7 +253,7 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
         </p>
         <Link
           href={support.href}
-          className="mt-2.5 inline-flex items-center gap-1 text-[11px] font-bold text-sarh-teal hover:underline"
+          className="mt-2.5 inline-flex items-center gap-1 text-[11px] font-bold text-sarh-tealInk dark:text-sarh-teal hover:underline"
         >
           {support.cta}
           <ExternalLink className="h-3 w-3" aria-hidden="true" />
@@ -264,7 +264,7 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
       <div className="space-y-1 border-t border-sarh-borderLight pt-3 dark:border-sarh-borderDark">
         <Link
           href="/"
-          className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-500 transition-colors hover:bg-muted hover:text-sarh-teal dark:text-slate-400"
+          className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-sarh-inkMute dark:text-slate-400 transition-colors hover:bg-muted hover:text-sarh-teal"
         >
           <ExternalLink className="h-4 w-4" aria-hidden="true" />
           {t("portalViewSite")}
@@ -277,7 +277,7 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
           <LogOut className="h-4 w-4" aria-hidden="true" />
           {t("logout")}
         </button>
-        <p className="px-3 pb-1 text-[10px] text-slate-400 dark:text-slate-500">
+        <p className="px-3 pb-1 text-[10px] text-sarh-inkMute dark:text-slate-400">
           {t("portalLogoutHint")}
         </p>
       </div>
@@ -307,7 +307,7 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
           className="relative min-w-0 flex-1 sm:max-w-xl"
         >
           <Search
-            className="pointer-events-none absolute inset-y-0 start-3 my-auto h-4 w-4 text-sarh-teal"
+            className="pointer-events-none absolute inset-y-0 start-3 my-auto h-4 w-4 text-sarh-tealInk dark:text-sarh-teal"
             aria-hidden="true"
           />
           <input
@@ -332,11 +332,11 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
               aria-haspopup="menu"
               aria-expanded={notifOpen}
               aria-label={`${t("portalNotifications")} — ${unread} ${t("portalNotificationsCount")}`}
-              className="relative grid h-9 w-9 place-items-center rounded-lg text-slate-500 transition-colors hover:bg-muted hover:text-sarh-teal dark:text-slate-400"
+              className="relative grid h-9 w-9 place-items-center rounded-lg text-sarh-inkMute dark:text-slate-400 transition-colors hover:bg-muted hover:text-sarh-teal"
             >
               <Bell className="h-4 w-4" aria-hidden="true" />
               {unread > 0 ? (
-                <span className="absolute -end-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-sarh-gold px-1 font-mono text-[10px] font-bold text-white">
+                <span className="absolute -end-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-sarh-goldInk px-1 font-mono text-[10px] font-bold text-white">
                   {unread}
                 </span>
               ) : null}
@@ -366,11 +366,11 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
                             <span className="text-xs font-bold text-sarh-navy dark:text-slate-100">
                               {item.title}
                             </span>
-                            <span className="shrink-0 font-mono text-[10px] text-slate-400">
+                            <span className="shrink-0 font-mono text-[10px] text-sarh-inkMute dark:text-slate-400">
                               {item.at}
                             </span>
                           </span>
-                          <span className="mt-0.5 block text-[11px] leading-5 text-slate-500 dark:text-slate-400">
+                          <span className="mt-0.5 block text-[11px] leading-5 text-sarh-inkMute dark:text-slate-400">
                             {item.body}
                           </span>
                         </Link>
@@ -385,7 +385,7 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
           <Link
             href={`${portal.prefix}/settings`}
             aria-label={t("portalSettings")}
-            className="hidden h-9 w-9 place-items-center rounded-lg text-slate-500 transition-colors hover:bg-muted hover:text-sarh-teal sm:grid dark:text-slate-400"
+            className="hidden h-9 w-9 place-items-center rounded-lg text-sarh-inkMute dark:text-slate-400 transition-colors hover:bg-muted hover:text-sarh-teal sm:grid"
           >
             <Settings className="h-4 w-4" aria-hidden="true" />
           </Link>
@@ -393,7 +393,7 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
           <Link
             href="/contact"
             aria-label={t("portalHelp")}
-            className="hidden h-9 w-9 place-items-center rounded-lg text-slate-500 transition-colors hover:bg-muted hover:text-sarh-teal sm:grid dark:text-slate-400"
+            className="hidden h-9 w-9 place-items-center rounded-lg text-sarh-inkMute dark:text-slate-400 transition-colors hover:bg-muted hover:text-sarh-teal sm:grid"
           >
             <HelpCircle className="h-4 w-4" aria-hidden="true" />
           </Link>
@@ -408,16 +408,26 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
               }}
               aria-haspopup="menu"
               aria-expanded={menuOpen}
+              /*
+               * The name is the one label whose width the user controls
+               * (an institution such as "مركز النور للتحضير والتوجيهي" is
+               * already 164px at `text-xs`), so it still truncates at a hard
+               * cap — but 14rem instead of the old 9rem, which cut it after
+               * three words, and `title` so the full name is available on
+               * hover. The role line below stays untruncated, so the visitor
+               * always reads *who* the account is even when the name clips.
+               */
+              title={displayName}
               className="flex h-10 items-center gap-2 rounded-full py-1 pe-2 ps-1 text-sarh-navy transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal dark:text-slate-100"
             >
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-sarh-teal text-sm font-bold text-white">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-sarh-tealInk text-sm font-bold text-white">
                 {initials}
               </span>
               <span className="hidden text-start lg:block">
-                <span className="block max-w-[9rem] truncate text-xs font-bold">
+                <span className="block max-w-[14rem] truncate text-xs font-bold">
                   {displayName}
                 </span>
-                <span className="block text-[10px] text-slate-400">
+                <span className="block text-[10px] text-sarh-inkMute dark:text-slate-400">
                   {ROLE_LABEL[activeRole]}
                 </span>
               </span>
@@ -444,10 +454,10 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
                     <p className="truncate text-sm font-bold text-sarh-navy dark:text-white">
                       {displayName}
                     </p>
-                    <p dir="ltr" className="truncate text-xs text-slate-500 dark:text-slate-400">
+                    <p dir="ltr" className="truncate text-xs text-sarh-inkMute dark:text-slate-400">
                       {displayEmail}
                     </p>
-                    <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-sarh-teal/10 px-2.5 py-1 text-[11px] font-semibold text-sarh-teal ring-1 ring-inset ring-sarh-teal/30">
+                    <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-sarh-teal/10 px-2.5 py-1 text-[11px] font-semibold text-sarh-tealInk dark:text-sarh-teal ring-1 ring-inset ring-sarh-teal/30">
                       <ShieldCheck className="h-3 w-3" aria-hidden="true" />
                       {ROLE_LABEL[activeRole]}
                     </span>
@@ -456,7 +466,7 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
                   {/* Role switcher — only for accounts with more than one tier */}
                   {switchable.length > 1 ? (
                     <div className="border-b border-sarh-borderLight p-2 dark:border-sarh-borderDark">
-                      <p className="flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                      <p className="flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-bold text-sarh-inkMute dark:text-slate-400">
                         <Repeat2 className="h-3.5 w-3.5 text-sarh-gold" aria-hidden="true" />
                         {t("portalSwitchRole")}
                       </p>
@@ -482,7 +492,7 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
                                   <span className="text-xs font-bold text-sarh-navy dark:text-slate-100">
                                     {option.label}
                                   </span>
-                                  <span className="text-[10px] font-semibold text-sarh-teal">
+                                  <span className="text-[10px] font-semibold text-sarh-tealInk dark:text-sarh-teal">
                                     {current
                                       ? t("portalCurrentRole")
                                       : switching === option.role
@@ -490,7 +500,7 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
                                         : ROLE_LABEL[option.role]}
                                   </span>
                                 </span>
-                                <span className="mt-0.5 block text-[10px] leading-4 text-slate-500 dark:text-slate-400">
+                                <span className="mt-0.5 block text-[10px] leading-4 text-sarh-inkMute dark:text-slate-400">
                                   {option.purpose}
                                 </span>
                               </button>
@@ -498,7 +508,7 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
                           );
                         })}
                       </ul>
-                      <p className="px-2 pb-1 text-[10px] leading-4 text-slate-400 dark:text-slate-500">
+                      <p className="px-2 pb-1 text-[10px] leading-4 text-sarh-inkMute dark:text-slate-400">
                         {t("portalSwitchHint")}
                       </p>
                     </div>
@@ -556,7 +566,7 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
             height={34}
             className="h-8 w-auto"
           />
-          <p className="max-w-xs text-xs leading-6 text-slate-500 dark:text-slate-400">
+          <p className="max-w-xs text-xs leading-6 text-sarh-inkMute dark:text-slate-400">
             {t("portalFooterTagline")}
           </p>
         </div>
@@ -570,7 +580,12 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="text-xs text-slate-500 transition-colors hover:text-sarh-teal dark:text-slate-400"
+                  /*
+                   * `min-h-6` gives every quick link a 24px tap target. At
+                   * `text-xs` the line box was 16px tall, under the WCAG 2.2
+                   * minimum, and the 4px row gap was not enough to excuse it.
+                   */
+                  className="inline-flex min-h-6 items-center text-xs text-sarh-inkMute transition-colors hover:text-sarh-teal dark:text-slate-400"
                 >
                   {link.label}
                 </Link>
@@ -579,7 +594,7 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
           </ul>
         </nav>
 
-        <p className="text-[11px] text-slate-400 dark:text-slate-500">
+        <p className="text-[11px] text-sarh-inkMute dark:text-slate-400">
           © 2026 صَرْح — منصة التعليم والخدمات الأسرية
         </p>
       </div>
@@ -588,6 +603,37 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
 
   return (
     <div className="flex min-h-screen bg-sarh-bgLight dark:bg-sarh-bgDark">
+      {/*
+       * Skip link for every portal (institution, parent, teacher,
+       * supervisor, admin). The portals render a 268px navigation rail first
+       * in the DOM, so keyboard users would otherwise Tab through the whole
+       * rail on every page; this jumps straight to `#portal-main`. Hidden
+       * with `sr-only` until focused — same pattern and colours as the
+       * public header's link, with the global `:focus-visible` ring from
+       * globals.css supplying the visible outline.
+       */}
+      <a
+        href="#portal-main"
+        onClick={(event) => {
+          /*
+           * Chromium does not reliably move DOM focus to a fragment target
+           * (it only sets the sequential-focus start point), so activation
+           * with Enter/Space would leave focus sitting on this link. Take
+           * focus explicitly: `#portal-main` has `tabIndex={-1}`, so this is
+           * a legal programmatic focus and the next Tab continues from
+           * inside the content — in every browser, not just Firefox.
+           */
+          const target = document.getElementById("portal-main");
+          if (!target) return;
+          event.preventDefault();
+          target.focus({ preventScroll: true });
+          target.scrollIntoView({ block: "start" });
+        }}
+        className="sarh-skip-link"
+      >
+        {t("skipToContent")}
+      </a>
+
       {/* Static sidebar (>= lg). First in DOM → the right edge in RTL. */}
       <aside className="sticky top-0 hidden h-screen w-[268px] shrink-0 border-s border-sarh-borderLight lg:block dark:border-sarh-borderDark">
         {sidebar}
@@ -621,8 +667,13 @@ export function PortalChrome({ portalId, user, children }: PortalChromeProps) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         {topbar}
-        {/* `id` is the skip-link/anchor target used by the portals. */}
-        <main id="portal-main" className="min-w-0 flex-1 px-4 py-6 sm:px-6">
+        {/*
+         * `id` is the skip-link/anchor target used by the portals;
+         * `tabIndex={-1}` lets the skip link hand real focus here (see the
+         * link at the top of this component), and `outline-none` suppresses
+         * the UA ring on a programmatically-focused region.
+         */}
+        <main id="portal-main" tabIndex={-1} className="min-w-0 flex-1 px-4 py-6 outline-none sm:px-6">
           {children}
         </main>
         {footer}

@@ -263,3 +263,49 @@ export async function sendVerificationEmail(input: {
     ),
   });
 }
+
+/**
+ * Staff invitation (phase 4.4).
+ *
+ * The link carries the one-time token; nothing else in the message reveals it,
+ * and the sender is told nothing about the token either. `subject` names the
+ * centre so an invitee can tell a real invitation from a lookalike.
+ *
+ * Returns the same `SendEmailResult` as every other sender: an unconfigured or
+ * failing provider is reported as `{ sent: false }`, which is what stops the API
+ * from telling the inviter that a message went out when it did not.
+ */
+export async function sendStaffInvitationEmail(input: {
+  to: string;
+  institutionName: string;
+  roleLabel: string;
+  acceptUrl: string;
+  expiresAt: Date;
+}): Promise<SendEmailResult> {
+  const { to, institutionName, roleLabel, acceptUrl } = input;
+  const expiry = input.expiresAt.toISOString().slice(0, 10);
+  const center = escapeHtml(institutionName);
+  const role = escapeHtml(roleLabel);
+
+  return sendEmail({
+    to,
+    subject: `دعوة للانضمام إلى طاقم ${institutionName} في صَرْح`,
+    text: [
+      `تمت دعوتك للانضمام إلى طاقم "${institutionName}" بصفة ${roleLabel}.`,
+      "لقبول الدعوة افتح الرابط التالي:",
+      acceptUrl,
+      "",
+      `تنتهي صلاحية الدعوة في ${expiry}. إن لم تكن تتوقع هذه الدعوة تجاهل الرسالة.`,
+      "",
+      `— ${siteConfig.name} · ${siteConfig.supportEmail}`,
+    ].join("\n"),
+    html: layout(
+      "دعوة للانضمام إلى طاقم المركز",
+      `<p style="margin:0;">تمت دعوتك للانضمام إلى طاقم <strong>${center}</strong> بصفة <strong>${role}</strong>.</p>
+       <p style="margin:8px 0 0;">بانتظار قبولك للدعوة. اضغط الزر التالي بعد تسجيل الدخول بالحساب نفسه الذي وصلته هذه الرسالة:</p>
+       ${button(acceptUrl, "قبول الدعوة")}
+       <p style="margin:0;color:#64748D;font-size:12px;">تنتهي صلاحية الدعوة في ${expiry}. القبول يتطلب حساباً مؤكد البريد بهذا العنوان.</p>`,
+      `${siteConfig.name} · ${siteConfig.location} · ${siteConfig.supportEmail}`
+    ),
+  });
+}

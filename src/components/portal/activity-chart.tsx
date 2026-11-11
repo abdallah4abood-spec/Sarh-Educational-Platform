@@ -120,7 +120,7 @@ export function ActivityChart({ points, className, label }: ActivityChartProps) 
 
         {/* Axis scale — rendered on the inline-end of the RTL row (the left). */}
         <div
-          className="flex flex-col justify-between py-3 text-[10px] font-semibold tabular-nums text-slate-400 dark:text-slate-500"
+          className="flex flex-col justify-between py-3 text-[10px] font-semibold tabular-nums text-sarh-inkMute dark:text-slate-400"
           dir="ltr"
           aria-hidden="true"
         >
@@ -130,7 +130,7 @@ export function ActivityChart({ points, className, label }: ActivityChartProps) 
         </div>
       </div>
 
-      <figcaption className="mt-1 flex justify-between text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+      <figcaption className="mt-1 flex justify-between text-[10px] font-semibold text-sarh-inkMute dark:text-slate-400">
         {points.map((point) => (
           <span key={point.day}>{point.day}</span>
         ))}

@@ -21,13 +21,13 @@ export function FaqContent() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 pb-20 pt-12 sm:px-6">
       <header className="mb-8 text-center">
-        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-sarh-teal/10 text-sarh-teal mx-auto">
+        <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-sarh-teal/10 text-sarh-tealInk dark:text-sarh-teal">
           <HelpCircle className="h-6 w-6" aria-hidden="true" />
         </span>
-        <h1 className="mt-3 text-3xl font-bold text-sarh-navy dark:text-white md:text-4xl">
+        <h1 className="sarh-display-sm mt-3 text-sarh-navy dark:text-white">
           {t("faqTitle")}
         </h1>
-        <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-slate-500 dark:text-slate-400">
+        <p className="sarh-lead mx-auto mt-2 max-w-xl text-sarh-inkMute dark:text-slate-400">
           {t("faqLead")}
         </p>
       </header>
@@ -43,9 +43,9 @@ export function FaqContent() {
             open={index === 0}
             className="sarh-card group overflow-hidden p-0 [&_summary::-webkit-details-marker]:hidden"
           >
-            <summary className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4 text-start text-sm font-bold text-sarh-navy transition-colors hover:text-sarh-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal dark:text-white sm:text-base">
+            <summary className="flex cursor-pointer items-center justify-between gap-4 px-5 py-4 text-start text-sm font-bold text-sarh-navy transition-colors hover:text-sarh-tealInk focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-tealInk dark:text-white dark:hover:text-sarh-teal sm:text-base">
               <span className="flex items-center gap-3">
-                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-sarh-gold/15 text-xs font-bold text-sarh-gold">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-sarh-gold/15 text-xs font-bold text-sarh-goldInk dark:text-sarh-gold">
                   {index + 1}
                 </span>
                 {t(questionKey)}

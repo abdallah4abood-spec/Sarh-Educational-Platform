@@ -15,8 +15,8 @@ import { cn } from "@/lib/utils";
 export type PillTone = "teal" | "gold" | "rose" | "slate" | "navy" | "violet";
 
 const TONE: Record<PillTone, string> = {
-  teal: "bg-sarh-teal/10 text-sarh-tealDeep ring-sarh-teal/25 dark:text-sarh-teal",
-  gold: "bg-sarh-gold/15 text-[#B4641A] ring-sarh-gold/40 dark:text-sarh-gold",
+  teal: "bg-sarh-teal/10 text-sarh-tealInk dark:text-sarh-teal ring-sarh-teal/25",
+  gold: "bg-sarh-gold/15 text-sarh-goldInk ring-sarh-gold/40 dark:text-sarh-gold",
   rose: "bg-rose-500/10 text-rose-600 ring-rose-400/30 dark:text-rose-400",
   slate:
     "bg-sarh-muted text-slate-600 ring-sarh-borderLight dark:bg-white/10 dark:text-slate-300 dark:ring-white/10",
@@ -111,6 +111,20 @@ export function staffPill(status: string): PillSpec {
       return { label: "في إجازة", tone: "gold" };
     default:
       return { label: "بانتظار القبول", tone: "slate" };
+  }
+}
+
+/** Guardianship link lifecycle (StudentGuardian.status). */
+export function guardianLinkPill(status: string): PillSpec {
+  switch (status) {
+    case "APPROVED":
+      return { label: "معتمد", tone: "teal" };
+    case "REJECTED":
+      return { label: "مرفوض", tone: "rose" };
+    case "REVOKED":
+      return { label: "مسحوب", tone: "slate" };
+    default:
+      return { label: "بانتظار موافقة المركز", tone: "gold" };
   }
 }
 

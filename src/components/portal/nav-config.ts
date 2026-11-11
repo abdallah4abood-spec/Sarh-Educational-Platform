@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarDays,
   ClipboardList,
+  GraduationCap,
   LayoutDashboard,
   Settings,
   ShieldCheck,
@@ -48,7 +49,8 @@ export const PORTAL_NAV: Record<PortalId, PortalNavItem[]> = {
     { href: "/parent/feed", label: "متابعة اليوم", icon: Baby },
     { href: "/parent/children", label: "أبنائي", icon: Users },
     { href: "/parent/assistant", label: "المساعد الذكي", icon: Sparkles },
-    { href: "/parent/settings", label: "الإعدادات", icon: Settings },
+    // No `/parent/settings` route exists yet. The entry used to sit here and
+    // 404 on click, so it is omitted until the screen is actually built.
   ],
   teacher: [
     { href: "/teacher", label: "لوحة المعلم", icon: LayoutDashboard },
@@ -67,6 +69,12 @@ export const PORTAL_NAV: Record<PortalId, PortalNavItem[]> = {
   ],
   institution: [
     { href: "/institution", label: "لوحة المؤسسة", icon: LayoutDashboard },
+    {
+      href: "/institution/students",
+      label: "الطلاب والتسجيلات",
+      icon: GraduationCap,
+    },
+    { href: "/institution/guardians", label: "أولياء الأمور", icon: UserCheck },
     { href: "/institution/staff", label: "الطاقم التعليمي", icon: Users },
     { href: "/institution/enrollments", label: "التسجيلات والعمولات", icon: Wallet },
     {
@@ -132,7 +140,7 @@ export const PORTAL_NOTIFICATIONS: Record<PortalId, PortalNotification[]> = {
       title: "تم اعتماد إيصال الدفع",
       body: "أصبح الدفع مرصوداً في حساب المدرسة.",
       at: "أمس",
-      href: "/parent/settings",
+      href: "/parent",
     },
   ],
   teacher: [

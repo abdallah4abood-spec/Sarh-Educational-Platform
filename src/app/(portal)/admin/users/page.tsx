@@ -43,7 +43,7 @@ export default async function AdminUsersPage() {
       cell: (row) => (
         <div className="min-w-44">
           <p className="font-semibold text-sarh-navy dark:text-white">{row.name}</p>
-          <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400" dir="ltr">
+          <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400" dir="ltr">
             {row.email}
           </p>
         </div>
@@ -74,7 +74,7 @@ export default async function AdminUsersPage() {
             {row.phone}
           </span>
         ) : (
-          <span className="text-xs text-slate-400">—</span>
+          <span className="text-xs text-sarh-inkMute dark:text-slate-400">—</span>
         ),
     },
     {
@@ -155,7 +155,7 @@ export default async function AdminUsersPage() {
                 {ROLE_LABEL[row.tier as keyof typeof ROLE_LABEL] ?? row.tier}
               </span>
               <span
-                className="font-mono text-xs font-bold tabular-nums text-sarh-teal"
+                className="font-mono text-xs font-bold tabular-nums text-sarh-tealInk dark:text-sarh-teal"
                 dir="ltr"
               >
                 {nf.format(row.count)}
@@ -175,7 +175,7 @@ export default async function AdminUsersPage() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Panel title="صلاحيات متعددة" icon={ShieldCheck}>
-          <p className="text-xs leading-6 text-slate-500 dark:text-slate-400">
+          <p className="text-xs leading-6 text-sarh-inkMute dark:text-slate-400">
             الحسابات التي تملك أكثر من فئة واحدة تستطيع التبديل بين بواباتها من
             الشريط العلوي دون تسجيل خروج — ولا يُسمح بالتبديل إلى فئة لا يملكها
             الحساب فعلاً، فالمفتاح يُقرأ من قاعدة البيانات لا من المتصفح.
@@ -183,13 +183,13 @@ export default async function AdminUsersPage() {
         </Panel>
 
         <Panel title="تفعيل الحسابات" icon={UserX}>
-          <p className="text-xs leading-6 text-slate-500 dark:text-slate-400">
+          <p className="text-xs leading-6 text-sarh-inkMute dark:text-slate-400">
             الحساب غير المفعّل لا يستطيع دخول أي بوابة: الوسيط (middleware) يعيده
             إلى صفحة الدخول مع إشعار إعادة إرسال رابط التأكيد.
           </p>
           <Link
             href="/admin/institutions"
-            className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-teal hover:underline"
+            className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal hover:underline"
           >
             مراجعة المؤسسات
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />

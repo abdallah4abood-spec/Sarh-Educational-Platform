@@ -16,7 +16,16 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-sarh-bgLight dark:bg-sarh-bgDark">
       <SiteHeader />
-      <main id="site-main" className="flex-1">
+      {/*
+       * `tabIndex={-1}` makes the skip link actually *move* focus here
+       * instead of only scrolling: activating `#site-main` puts the
+       * sequential-focus starting point inside the content, so the next Tab
+       * continues from the article rather than back at the top of the
+       * header. `outline-none` suppresses the UA ring browsers may draw on a
+       * programmatically-focused region (the global `:focus-visible` rule
+       * already excludes `tabindex="-1"` targets).
+       */}
+      <main id="site-main" tabIndex={-1} className="flex-1 outline-none">
         {children}
       </main>
       <SiteFooter />

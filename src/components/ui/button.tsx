@@ -22,9 +22,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary:
-    "bg-sarh-teal text-white hover:brightness-110 shadow-teal-glow focus-visible:ring-sarh-teal",
+    "bg-sarh-tealInk text-white hover:brightness-110 shadow-teal-glow focus-visible:ring-sarh-teal",
   accent:
-    "bg-sarh-gold text-white hover:brightness-110 shadow-gold-glow focus-visible:ring-sarh-gold",
+    "bg-sarh-goldInk text-white hover:brightness-110 shadow-gold-glow focus-visible:ring-sarh-gold",
   outline:
     "border border-sarh-borderLight bg-transparent text-sarh-navy hover:border-sarh-teal hover:text-sarh-teal dark:border-sarh-borderDark dark:text-slate-100 dark:hover:text-sarh-teal",
   google:

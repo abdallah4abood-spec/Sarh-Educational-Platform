@@ -42,13 +42,13 @@ export default function PortalError({
         <h1 className="text-lg font-bold text-sarh-navy dark:text-white">
           تعذّر تحميل هذه الصفحة
         </h1>
-        <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
+        <p className="text-sm leading-7 text-sarh-inkMute dark:text-slate-400">
           حدث خطأ أثناء جلب البيانات من قاعدة البيانات. قد تكون المشكلة مؤقتة —
           حاول مرة أخرى، وإن استمرت فتواصل مع الدعم.
         </p>
 
         {error.digest ? (
-          <p className="font-mono text-[11px] text-slate-400" dir="ltr">
+          <p className="font-mono text-[11px] text-sarh-inkMute dark:text-slate-400" dir="ltr">
             {error.digest}
           </p>
         ) : null}

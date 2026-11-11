@@ -31,7 +31,6 @@ import { HomeHero } from "@/components/hero/home-hero";
 import { ContactBand } from "@/components/sections/contact-band";
 import { FeaturesSection } from "@/components/sections/features-section";
 import { NewsletterSection } from "@/components/sections/newsletter-section";
-import { TestimonialsSection } from "@/components/sections/testimonials-section";
 import { useLanguage } from "@/lib/i18n/language-provider";
 import type { DictionaryKey } from "@/lib/i18n/dictionary";
 import { ROLE_HOME, TEACHING_STAFF_ROLES } from "@/lib/roles";
@@ -192,7 +191,7 @@ export function HomeContent() {
             <span className="grid h-12 w-12 place-items-center rounded-2xl bg-sarh-gold/20 text-sarh-goldInk dark:text-sarh-gold">
               <HeartHandshake className="h-6 w-6" aria-hidden="true" />
             </span>
-            <h3 className="text-xl font-bold text-sarh-navy dark:text-white">
+            <h3 className="sarh-subheading text-sarh-navy dark:text-white">
               {t("home_parentCardTitle")}
             </h3>
             <p className="text-sm leading-8 text-slate-600 dark:text-slate-300">
@@ -231,7 +230,7 @@ export function HomeContent() {
             <span className="grid h-12 w-12 place-items-center rounded-2xl bg-sarh-teal/20 text-sarh-tealInk dark:text-sarh-teal">
               <Building2 className="h-6 w-6" aria-hidden="true" />
             </span>
-            <h3 className="text-xl font-bold text-sarh-navy dark:text-white">
+            <h3 className="sarh-subheading text-sarh-navy dark:text-white">
               {t("home_instCardTitle")}
             </h3>
             <p className="text-sm leading-8 text-slate-600 dark:text-slate-300">
@@ -324,7 +323,7 @@ export function HomeContent() {
               <CategoryIcon className="h-7 w-7" aria-hidden="true" />
             </span>
             <div className="min-w-0 flex-1">
-              <h3 className="text-lg font-bold text-sarh-navy dark:text-white">
+              <h3 className="sarh-subheading text-sarh-navy dark:text-white">
                 {t(category.labelKey)}
               </h3>
               <p className="mt-1 sarh-body text-slate-600 dark:text-slate-300">
@@ -339,7 +338,7 @@ export function HomeContent() {
                 {t("home_ctaExplore")}
                 <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               </Link>
-              <p className="text-xs text-slate-400 dark:text-slate-500">
+              <p className="text-xs text-sarh-inkMute dark:text-slate-400">
                 {t("home_categoriesHint")}
               </p>
             </div>
@@ -369,7 +368,7 @@ export function HomeContent() {
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-sarh-teal/10 text-sarh-tealInk dark:text-sarh-teal">
                 <Icon className="h-5 w-5" aria-hidden="true" />
               </span>
-              <h3 className="text-base font-bold text-sarh-navy dark:text-white">
+              <h3 className="sarh-subheading text-sarh-navy dark:text-white">
                 {t(titleKey)}
               </h3>
               <p className="sarh-body text-slate-600 dark:text-slate-300">
@@ -434,7 +433,7 @@ export function HomeContent() {
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-sarh-gold/15 text-sarh-goldInk dark:text-sarh-gold">
                 <activeTabContent.icon className="h-5 w-5" aria-hidden="true" />
               </span>
-              <h3 className="text-lg font-bold text-sarh-navy dark:text-white">
+              <h3 className="sarh-subheading text-sarh-navy dark:text-white">
                 {t(activeTabContent.titleKey)}
               </h3>
               <p className="text-sm leading-8 text-slate-600 dark:text-slate-300">
@@ -454,7 +453,7 @@ export function HomeContent() {
                         className={
                           index === 2
                             ? "sarh-badge bg-sarh-gold/15 text-sarh-goldInk dark:text-sarh-gold"
-                            : "sarh-badge bg-sarh-teal/15 text-sarh-tealInk dark:text-sarh-teal"
+                            : "sarh-badge bg-sarh-teal/15 text-sarh-tealInk dark:bg-sarh-teal/20 dark:text-teal-300"
                         }
                       >
                         {index === 2 ? t("home_mockOfflineNote") : t("home_mockSynced")}
@@ -515,7 +514,7 @@ export function HomeContent() {
               <span className="absolute end-5 top-5 text-4xl font-bold text-sarh-navy/10 dark:text-white/10">
                 {index + 1}
               </span>
-              <h3 className="text-base font-bold text-sarh-navy dark:text-white">
+              <h3 className="sarh-subheading text-sarh-navy dark:text-white">
                 {t(titleKey)}
               </h3>
               <p className="sarh-body text-slate-600 dark:text-slate-300">
@@ -545,7 +544,7 @@ export function HomeContent() {
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
                 <Rocket className="h-5 w-5" aria-hidden="true" />
               </span>
-              <h3 className="mt-4 text-lg font-bold text-sarh-navy dark:text-white">
+              <h3 className="sarh-subheading mt-4 text-sarh-navy dark:text-white">
                 {t("home_parentValueTitle")}
               </h3>
               <ul className="mt-4 space-y-3">
@@ -572,7 +571,7 @@ export function HomeContent() {
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-sarh-navy/10 text-sarh-navy dark:bg-white/10 dark:text-white">
                 <Lock className="h-5 w-5" aria-hidden="true" />
               </span>
-              <h3 className="mt-4 text-lg font-bold text-sarh-navy dark:text-white">
+              <h3 className="sarh-subheading mt-4 text-sarh-navy dark:text-white">
                 {t("home_privacyTitle")}
               </h3>
               <ul className="mt-4 space-y-3">
@@ -621,7 +620,7 @@ export function HomeContent() {
           {/* Free tier */}
           <article className="sarh-card flex flex-col gap-5 p-7">
             <div>
-              <h3 className="text-lg font-bold text-sarh-navy dark:text-white">
+              <h3 className="sarh-subheading text-sarh-navy dark:text-white">
                 {t("home_planFreeName")}
               </h3>
               <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -632,7 +631,9 @@ export function HomeContent() {
               <span className="text-4xl font-bold text-sarh-navy dark:text-white">
                 {t("home_planFreePrice")}
               </span>
-              <span className="text-sm text-slate-400">{t("home_planFreePeriod")}</span>
+              <span className="text-sm text-sarh-inkMute dark:text-slate-400">
+                {t("home_planFreePeriod")}
+              </span>
             </p>
             <ul className="space-y-3">
               {(
@@ -665,7 +666,7 @@ export function HomeContent() {
             />
             <div className="relative flex flex-col gap-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-lg font-bold text-sarh-navy dark:text-white">
+                <h3 className="sarh-subheading text-sarh-navy dark:text-white">
                   {t("home_planProName")}
                 </h3>
                 <span className="sarh-badge bg-sarh-gold/15 text-sarh-goldInk ring-1 ring-inset ring-sarh-gold/35 dark:text-sarh-gold">
@@ -758,12 +759,16 @@ export function HomeContent() {
         </div>
       </section>
 
-      {/* ============================================================ */}
-      {/* 9b. STUDENT STORIES                                          */}
-      {/* ============================================================ */}
-      <div id="testimonials" className="scroll-mt-24">
-        <TestimonialsSection />
-      </div>
+      {/*
+       * The learner-testimonial wall that used to sit here is gone on purpose.
+       *
+       * Those cards were course reviews ("finished the web track", "the
+       * certificate got me promoted") for a catalogue this platform does not
+       * sell, with stock portraits standing in for named people — endorsement
+       * content the product cannot substantiate. The homepage now ends on the
+       * FAQ and the contact band, which keeps the page short and says only what
+       * Sarh actually does: help families find, compare and follow a center.
+       */}
 
       {/* ============================================================ */}
       {/* 9c. CONTACT BAND — the `/contact` target of the navbar       */}

@@ -86,6 +86,10 @@ async function createUser(
 }
 
 before(async () => {
+  // Reusing two seeded institutions is intentional: the suite exercises the
+  // real tenant topology instead of an idealised one, and the seed is the only
+  // source of it. This is the single reviewed shared-data read in the suite.
+  // isolation-guard: allow shared-seed-read — seeded institutions are shared baseline data
   const institutions = await prisma.institution.findMany({
     orderBy: { createdAt: "asc" },
     take: 2,

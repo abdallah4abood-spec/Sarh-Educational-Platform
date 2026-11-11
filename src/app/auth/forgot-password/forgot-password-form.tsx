@@ -80,7 +80,7 @@ export default function ForgotPasswordForm() {
   const backToSignin = (
     <Link
       href="/auth/signin"
-      className="inline-flex items-center gap-2 text-sm font-semibold text-sarh-teal underline underline-offset-2 hover:text-sarh-teal/90"
+      className="inline-flex items-center gap-2 text-sm font-semibold text-sarh-tealInk underline underline-offset-2 hover:text-sarh-tealPressed dark:text-sarh-teal dark:hover:text-sarh-teal/90"
     >
       <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
       {t("forgotPasswordBack")}
@@ -122,7 +122,7 @@ export default function ForgotPasswordForm() {
                 setDelivery(null);
                 reset();
               }}
-              className="text-sm font-medium text-slate-500 underline underline-offset-2 hover:text-sarh-teal dark:text-slate-400"
+              className="text-sm font-medium text-sarh-inkMute underline underline-offset-2 hover:text-sarh-tealInk dark:text-slate-400 dark:hover:text-sarh-teal"
             >
               {t("requestNewLink")}
             </button>
@@ -179,7 +179,7 @@ export default function ForgotPasswordForm() {
         <div className="flex justify-center">{backToSignin}</div>
       </form>
 
-      <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
+      <p className="mt-6 text-center text-xs text-sarh-inkMute dark:text-slate-400">
         {t("platformTagline")}
       </p>
     </AuthSplit>

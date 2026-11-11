@@ -224,7 +224,7 @@ export default async function InstitutionOverviewPage({
                       <p className="truncate text-sm font-bold text-sarh-navy dark:text-white">
                         {row.studentName}
                       </p>
-                      <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                      <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400">
                         {row.gradeLevel} — {row.centerName}
                       </p>
                     </div>
@@ -257,7 +257,7 @@ export default async function InstitutionOverviewPage({
             moreHref="/institution/profile"
           >
             <div className="mb-4 flex items-center justify-between gap-3">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-sarh-gold">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-sarh-goldInk dark:text-sarh-gold">
                 <Star className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
                 <span dir="ltr">
                   {header?.rating ?? 0}
@@ -277,8 +277,8 @@ export default async function InstitutionOverviewPage({
                   <span
                     className={
                       item.done
-                        ? "mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-sarh-teal text-white"
-                        : "mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-sarh-gold text-white"
+                        ? "mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-sarh-tealInk text-white"
+                        : "mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-sarh-goldInk text-white"
                     }
                   >
                     {item.done ? (
@@ -291,7 +291,7 @@ export default async function InstitutionOverviewPage({
                     <span className="block text-xs font-bold text-sarh-navy dark:text-slate-200">
                       {item.label}
                     </span>
-                    <span className="mt-0.5 block text-[11px] leading-5 text-slate-500 dark:text-slate-400">
+                    <span className="mt-0.5 block text-[11px] leading-5 text-sarh-inkMute dark:text-slate-400">
                       {item.hint}
                     </span>
                   </span>
@@ -322,7 +322,7 @@ export default async function InstitutionOverviewPage({
                 accent="gold"
               />
             </div>
-            <p className="mt-4 text-xs leading-6 text-slate-500 dark:text-slate-400">
+            <p className="mt-4 text-xs leading-6 text-sarh-inkMute dark:text-slate-400">
               نسبة الإشغال تُحسب من المقاعد المحجوزة عبر المنصة مقابل الطاقة
               الاستيعابية المُعلنة في ملف الدليل.
             </p>
@@ -339,14 +339,14 @@ export default async function InstitutionOverviewPage({
             moreHref="/institution/ai-studio"
             moreLabel="فتح الاستوديو"
           >
-            <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
+            <p className="text-sm leading-7 text-sarh-inkMute dark:text-slate-400">
               {canViewCommissions
                 ? "استخدم أدوات صَرْح الذكية لتحضير الحصص، تسجيل الحضور بضغطة واحدة، ومراجعة عمولات التسجيلات قبل اعتمادها."
                 : "استخدم أدوات صَرْح الذكية لتحضير الحصص وتسجيل الحضور بضغطة واحدة."}
             </p>
             <Link
               href="/institution/ai-studio"
-              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-teal hover:underline"
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal hover:underline"
             >
               ابدأ الآن
               <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />

@@ -247,7 +247,7 @@ export function EnrollmentModal({
                   className={cn(
                     "grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold transition-colors",
                     index <= step
-                      ? "bg-sarh-teal text-white shadow-teal-glow"
+                      ? "bg-sarh-tealInk text-white shadow-teal-glow"
                       : "bg-slate-500/10 text-slate-400 ring-1 ring-inset ring-slate-500/25"
                   )}
                   aria-current={index === step ? "step" : undefined}
@@ -258,7 +258,7 @@ export function EnrollmentModal({
                   className={cn(
                     "hidden text-xs font-semibold sm:block",
                     index === step
-                      ? "text-sarh-teal"
+                      ? "text-sarh-tealInk dark:text-sarh-teal"
                       : "text-slate-400"
                   )}
                 >
@@ -296,11 +296,11 @@ export function EnrollmentModal({
                   <input
                     type="radio"
                     value="existing"
-                    className="h-4 w-4 accent-[#00A99D]"
+                    className="h-4 w-4 accent-[#00776E]"
                     {...register("childMode")}
                   />
                   <span className="flex items-center gap-2 text-sm font-semibold text-sarh-navy dark:text-slate-100">
-                    <UserRound className="h-4 w-4 text-sarh-teal" aria-hidden="true" />
+                    <UserRound className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />
                     {t("selectChild")}
                   </span>
                 </label>
@@ -320,7 +320,7 @@ export function EnrollmentModal({
                         <input
                           type="radio"
                           value={child.id}
-                          className="h-4 w-4 accent-[#00A99D]"
+                          className="h-4 w-4 accent-[#00776E]"
                           {...register("studentId")}
                         />
                         <span className="font-semibold">{child.name}</span>
@@ -484,10 +484,10 @@ export function EnrollmentModal({
                       <input
                         type="radio"
                         value={value}
-                        className="h-4 w-4 accent-[#00A99D]"
+                        className="h-4 w-4 accent-[#00776E]"
                         {...register("paymentMethod")}
                       />
-                      <Icon className="h-4 w-4 text-sarh-teal" aria-hidden="true" />
+                      <Icon className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />
                       <span className="text-sm font-semibold text-sarh-navy dark:text-slate-100">
                         {label}
                       </span>

@@ -162,7 +162,7 @@ export function ParentAssistant() {
         aria-controls="parent-assistant-panel"
         className={cn(
           "fixed bottom-4 end-4 z-50 inline-flex items-center gap-2 rounded-full",
-          "bg-sarh-teal px-4 py-3 text-sm font-bold text-white shadow-teal-glow",
+          "bg-sarh-tealInk px-4 py-3 text-sm font-bold text-white shadow-teal-glow",
           "transition-transform hover:scale-[1.03] focus:outline-none",
           "focus-visible:ring-2 focus-visible:ring-sarh-teal focus-visible:ring-offset-2",
           "motion-reduce:transition-none"
@@ -191,14 +191,14 @@ export function ParentAssistant() {
             {/* Header */}
             <header className="flex items-start justify-between gap-3 border-b border-sarh-borderLight p-4 dark:border-sarh-borderDark">
               <div className="flex items-start gap-2.5">
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-sarh-teal/15 text-sarh-teal">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-sarh-teal/15 text-sarh-tealInk dark:text-sarh-teal">
                   <Bot className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div>
                   <p className="text-sm font-bold text-sarh-navy dark:text-white">
                     {copy.title}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-sarh-inkMute dark:text-slate-400">
                     {copy.subtitle}
                   </p>
                 </div>
@@ -207,7 +207,7 @@ export function ParentAssistant() {
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label={copy.close}
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-slate-500 transition-colors hover:bg-sarh-teal/10 hover:text-sarh-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-sarh-inkMute dark:text-slate-400 transition-colors hover:bg-sarh-teal/10 hover:text-sarh-teal focus:outline-none focus-visible:ring-2 focus-visible:ring-sarh-teal"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -238,7 +238,7 @@ export function ParentAssistant() {
                       "grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-bold",
                       message.role === "user"
                         ? "bg-sarh-navy/10 text-sarh-navy dark:bg-white/10 dark:text-white"
-                        : "bg-sarh-teal/15 text-sarh-teal"
+                        : "bg-sarh-teal/15 text-sarh-tealInk dark:text-sarh-teal"
                     )}
                   >
                     {message.role === "user" ? (
@@ -264,7 +264,7 @@ export function ParentAssistant() {
               ))}
 
               {pending ? (
-                <p className="flex items-center gap-2 text-xs font-semibold text-sarh-teal">
+                <p className="flex items-center gap-2 text-xs font-semibold text-sarh-tealInk dark:text-sarh-teal">
                   <span
                     aria-hidden="true"
                     className="h-2 w-2 animate-pulse rounded-full bg-sarh-teal motion-reduce:animate-none"

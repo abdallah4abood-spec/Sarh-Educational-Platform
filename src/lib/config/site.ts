@@ -84,13 +84,8 @@ export interface SiteConfig {
   /** FastAPI AI microservice (Phase 3). */
   fastApiUrl: string;
   /**
-   * Optional intro video for the /learn hero. Empty string → the video modal
-   * shows a localized notice instead of a broken player.
-   */
-  introVideoUrl: string;
-  /**
    * Optional public social profiles. An empty string means "not configured",
-   * and the /learn footer omits that icon instead of rendering a dead link.
+   * and the footer omits that icon instead of rendering a dead link.
    */
   socialInstagram: string;
   socialFacebook: string;
@@ -127,9 +122,6 @@ export const siteConfig: SiteConfig = {
   },
   get fastApiUrl() {
     return process.env.NEXT_PUBLIC_FASTAPI_URL || "http://localhost:8000";
-  },
-  get introVideoUrl() {
-    return process.env.NEXT_PUBLIC_INTRO_VIDEO_URL || "";
   },
   get socialInstagram() {
     return process.env.NEXT_PUBLIC_SOCIAL_INSTAGRAM || "";

@@ -3,7 +3,10 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import {
+  createParentStudent,
+  ParentStudentForbiddenError,
+} from "@/lib/db/parent-students";
 
 /**
  * POST /api/parent/students — register a child on the signed-in parent's
@@ -12,7 +15,14 @@ import { prisma } from "@/lib/prisma";
  * `parentId` is taken from the session and never from the request body, so a
  * crafted payload cannot attach a student to someone else's family.
  * `middleware.ts` guards `/api/parent/**` for the PARENT / SUPER_ADMIN tiers;
- * the handler re-checks the session as defence in depth.
+ * the service re-checks the **live** account (PARENT tier + verified email)
+ * as defence in depth.
+ *
+ * The child is created together with an APPROVED, primary `StudentGuardian`
+ * link for the same account, in one transaction. Parent-portal reads
+ * authorise against that table only, so without it the child would be
+ * invisible — this keeps the existing path working end to end without adding
+ * any new linking UI.
  */
 const childSchema = z.object({
   fullName: z.string().trim().min(2, "الاسم قصير جداً").max(120),
@@ -25,8 +35,7 @@ const childSchema = z.object({
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  const roles = session?.user?.roles ?? [];
-  if (!session?.user || !roles.includes("PARENT")) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
@@ -38,19 +47,21 @@ export async function POST(request: Request) {
     );
   }
 
-  const fallbackBirth = new Date();
-  fallbackBirth.setFullYear(fallbackBirth.getFullYear() - 8);
-
-  const student = await prisma.student.create({
-    data: {
+  try {
+    const student = await createParentStudent(session.user.id, {
       fullName: parsed.data.fullName,
-      parentId: session.user.id,
       dateOfBirth: parsed.data.dateOfBirth
         ? new Date(`${parsed.data.dateOfBirth}T00:00:00`)
-        : fallbackBirth,
-    },
-    select: { id: true, fullName: true },
-  });
+        : null,
+    });
 
-  return NextResponse.json({ ok: true, student }, { status: 201 });
+    // Only after the transaction committed.
+    return NextResponse.json({ ok: true, student }, { status: 201 });
+  } catch (error) {
+    if (error instanceof ParentStudentForbiddenError) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+    console.error("[parent/students] create failed:", error);
+    return NextResponse.json({ error: "save_failed" }, { status: 500 });
+  }
 }

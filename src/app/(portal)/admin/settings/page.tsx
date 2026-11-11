@@ -25,7 +25,7 @@ export default async function AdminSettingsPage() {
       <nav className="mb-4">
         <Link
           href="/admin/finance"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-sarh-teal transition-colors hover:underline"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal transition-colors hover:underline"
         >
           <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
           المركز المالي
@@ -33,19 +33,19 @@ export default async function AdminSettingsPage() {
       </nav>
 
       <header className="mb-6">
-        <p className="flex items-center gap-1.5 text-xs font-bold text-sarh-teal">
+        <p className="flex items-center gap-1.5 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal">
           <span>صَرْح</span>
-          <span className="text-slate-400">/</span>
-          <span className="text-slate-500 dark:text-slate-400">الإدارة</span>
-          <span className="text-slate-400">/</span>
-          <span className="text-slate-500 dark:text-slate-400">الإعدادات</span>
+          <span className="text-sarh-inkMute dark:text-slate-400">/</span>
+          <span className="text-sarh-inkMute dark:text-slate-400">الإدارة</span>
+          <span className="text-sarh-inkMute dark:text-slate-400">/</span>
+          <span className="text-sarh-inkMute dark:text-slate-400">الإعدادات</span>
         </p>
         <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-sarh-navy dark:text-white">
               إعدادات المنصة والتواصل
             </h1>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-1 text-sm text-sarh-inkMute dark:text-slate-400">
               هذه القيم تظهر في تذييل الموقع وفي صفحة «تواصل معنا» مباشرة بعد
               الحفظ.
             </p>

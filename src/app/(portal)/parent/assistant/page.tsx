@@ -3,9 +3,11 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { ArrowLeft, BookOpen, Lightbulb, Sparkles } from "lucide-react";
 
+import { GuardianAccessNotice } from "@/components/parent/guardian-access-notice";
 import { PageHeader, Panel } from "@/components/portal/primitives";
 import { authOptions } from "@/lib/auth";
 import { loadParentDashboard } from "@/lib/db/parent";
+import { resolveGuardianAccess } from "@/lib/guardian-access";
 
 import { AssistantChat } from "./assistant-chat";
 
@@ -24,9 +26,9 @@ export const metadata: Metadata = {
  */
 export default async function ParentAssistantPage() {
   const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
-  const data = userId
-    ? await loadParentDashboard(userId)
+  const access = await resolveGuardianAccess(session?.user?.id);
+  const data = access.ok
+    ? await loadParentDashboard(access.access)
     : {
         children: [],
         todayDayPlan: [],
@@ -52,13 +54,15 @@ export default async function ParentAssistantPage() {
         actions={
           <Link
             href="/parent/feed"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-sarh-teal hover:underline"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal hover:underline"
           >
             يومية الطفل
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         }
       />
+
+      {!access.ok ? <GuardianAccessNotice reason={access.reason} /> : null}
 
       <div className="grid gap-5 xl:grid-cols-[1.6fr_1fr]">
         <AssistantChat childName={childName} />
@@ -74,13 +78,13 @@ export default async function ParentAssistantPage() {
                 <p className="text-sm font-bold text-sarh-navy dark:text-white">
                   {weakest.subject}
                 </p>
-                <p className="mt-1 text-xs leading-6 text-slate-500 dark:text-slate-400">
+                <p className="mt-1 text-xs leading-6 text-sarh-inkMute dark:text-slate-400">
                   أدنى نسبة إنجاز بين المواد ({weakest.percent}%). اطلب من المساعد
                   خطة مراجعة قصيرة لهذه المادة، ثم تابع التقدّم في يومية الطفل.
                 </p>
               </>
             ) : (
-              <p className="text-sm text-slate-500">لا بيانات أداء بعد.</p>
+              <p className="text-sm text-sarh-inkMute dark:text-slate-400">لا بيانات أداء بعد.</p>
             )}
 
             <ul className="mt-4 space-y-2">
@@ -89,7 +93,7 @@ export default async function ParentAssistantPage() {
                   key={row.subject}
                   className="flex items-center justify-between gap-3 text-xs"
                 >
-                  <span className="text-slate-500 dark:text-slate-400">
+                  <span className="text-sarh-inkMute dark:text-slate-400">
                     {row.subject}
                   </span>
                   <span
@@ -104,7 +108,7 @@ export default async function ParentAssistantPage() {
           </Panel>
 
           <Panel title="كيف تستفيد أكثر؟" icon={Lightbulb}>
-            <ul className="space-y-3 text-xs leading-6 text-slate-500 dark:text-slate-400">
+            <ul className="space-y-3 text-xs leading-6 text-sarh-inkMute dark:text-slate-400">
               <li>
                 اسأل عن <strong>مفهوم واحد</strong> في كل مرة لتحصل على شرح أعمق.
               </li>

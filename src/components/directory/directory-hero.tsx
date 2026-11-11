@@ -72,7 +72,7 @@ export function DirectoryHero({
          * reader (and LCP) sees.
          */}
         <div className="flex flex-col items-start gap-4">
-          <span className="sarh-badge bg-sarh-teal/12 px-3 py-1 text-xs font-bold text-sarh-tealInk ring-1 ring-inset ring-sarh-teal/30">
+          <span className="sarh-badge bg-sarh-teal/12 px-3 py-1 text-xs font-bold text-sarh-tealInk ring-1 ring-inset ring-sarh-teal/30 dark:text-sarh-teal">
             <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
             {t(meta.badgeKey)}
           </span>

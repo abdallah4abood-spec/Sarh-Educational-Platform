@@ -4,7 +4,8 @@
  * `dictionaries` is composed from three pieces so each file stays readable:
  *   - `arChrome` / `enChrome` (this file) — navigation, auth, portal pages;
  *   - `homeAr` / `homeEn` (./home-dictionary) — the marketing homepage;
- *   - `learnAr` / `learnEn` (./learn-dictionary) — the /learn e-learning landing page.
+ *   - `newsletterAr` / `newsletterEn` (./newsletter-dictionary) — the newsletter
+ *     band and the footer accreditation note.
  *   - `academyAr` / `academyEn` (./academy-dictionary) — the /teachers-academy landing page.
  *   - `directoryAr` / `directoryEn` (./directory-dictionary) — the /explore/centers
  *     and /explore/kindergartens directories.
@@ -15,7 +16,7 @@
 import { academyAr, academyEn } from "@/lib/i18n/academy-dictionary";
 import { directoryAr, directoryEn } from "@/lib/i18n/directory-dictionary";
 import { homeAr, homeEn } from "@/lib/i18n/home-dictionary";
-import { learnAr, learnEn } from "@/lib/i18n/learn-dictionary";
+import { newsletterAr, newsletterEn } from "@/lib/i18n/newsletter-dictionary";
 
 export type Language = "ar" | "en";
 
@@ -39,6 +40,13 @@ const arChrome = {
   nav_portals: "بوابات الدخول",
   navLabel: "التنقل الرئيسي",
   skipToContent: "تخطَّ إلى المحتوى",
+
+  // ---- 404 ----
+  notFoundTitle: "هذه الصفحة غير موجودة",
+  notFoundLead:
+    "الرابط الذي فتحته غير صحيح أو أن الصفحة لم تعد متاحة. جرّب دليل المراكز، أو عد إلى الصفحة الرئيسية.",
+  notFoundHome: "الصفحة الرئيسية",
+  notFoundExplore: "تصفّح المراكز",
   login: "تسجيل الدخول",
   logout: "تسجيل الخروج",
   invalidCredentials: "البريد الإلكتروني أو رقم الجوال أو كلمة المرور غير صحيحة",
@@ -422,7 +430,7 @@ const arChrome = {
 const ar = {
   ...arChrome,
   ...homeAr,
-  ...learnAr,
+  ...newsletterAr,
   ...academyAr,
   ...directoryAr,
 } as const;
@@ -448,6 +456,13 @@ const enChrome: Record<keyof typeof arChrome, string> = {
   nav_portals: "Portals",
   navLabel: "Main navigation",
   skipToContent: "Skip to content",
+
+  // ---- 404 ----
+  notFoundTitle: "This page does not exist",
+  notFoundLead:
+    "The link you opened is incorrect, or the page is no longer available. Try the center directory, or go back to the home page.",
+  notFoundHome: "Home page",
+  notFoundExplore: "Browse centers",
   login: "Sign in",
   logout: "Sign out",
   invalidCredentials: "Invalid email, phone number or password",
@@ -817,7 +832,7 @@ const enChrome: Record<keyof typeof arChrome, string> = {
 const en: Record<DictionaryKey, string> = {
   ...enChrome,
   ...homeEn,
-  ...learnEn,
+  ...newsletterEn,
   ...academyEn,
   ...directoryEn,
 };

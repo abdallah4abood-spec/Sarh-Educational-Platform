@@ -16,10 +16,12 @@ import {
   UserPlus,
 } from "lucide-react";
 
+import { GuardianAccessNotice } from "@/components/parent/guardian-access-notice";
 import { Meter, PageHeader, Panel, StatCard } from "@/components/portal/primitives";
 import { StatusPill } from "@/components/portal/status-pill";
 import { authOptions } from "@/lib/auth";
 import { loadParentDashboard } from "@/lib/db/parent";
+import { resolveGuardianAccess } from "@/lib/guardian-access";
 
 export const metadata: Metadata = {
   title: "بوابة الأهالي",
@@ -96,13 +98,13 @@ export default async function ParentOverviewPage() {
 
   /*
    * Every figure below is read from PostgreSQL for the signed-in parent.
-   * `middleware.ts` already guarantees a session on this route, but the id is
-   * re-checked here because the loaders scope their queries by it — an absent
-   * id would otherwise silently widen the query to every family.
+   * `middleware.ts` only sees the JWT; this call re-checks the live account
+   * (PARENT tier + verified email) and returns the APPROVED guardian links,
+   * so a stale token or a revoked link reads nothing.
    */
-  const userId = session?.user?.id;
-  const data = userId
-    ? await loadParentDashboard(userId)
+  const access = await resolveGuardianAccess(session?.user?.id);
+  const data = access.ok
+    ? await loadParentDashboard(access.access)
     : {
         children: [],
         todayDayPlan: [],
@@ -116,7 +118,8 @@ export default async function ParentOverviewPage() {
       };
 
   const children = data.children;
-  const primaryChild = children[0];
+  const primaryChild =
+    children.find((child) => child.institutionId) ?? children[0];
   const dayPlan = data.todayDayPlan;
   const institutionCount = data.institutionCount;
   const unread = data.messages.filter((message) => message.unread);
@@ -130,6 +133,8 @@ export default async function ParentOverviewPage() {
         lead={`مرحباً ${firstName} 👋 نحن هنا لمساعدتك في متابعة رحلة طفلك بكل سهولة وراحة.`}
         icon={LayoutDashboard}
       />
+
+      {!access.ok ? <GuardianAccessNotice reason={access.reason} /> : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
@@ -180,7 +185,9 @@ export default async function ParentOverviewPage() {
               {children.map((child) => (
                 <li key={child.id}>
                   <Link
-                    href="/parent/feed"
+                    href={
+                      child.institutionId ? "/parent/feed" : "/parent/children"
+                    }
                     className="flex h-full items-center gap-3 rounded-xl border border-sarh-borderLight p-4 transition-colors hover:border-sarh-teal/50 hover:bg-sarh-teal/5 dark:border-sarh-borderDark"
                   >
                     <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-sarh-teal/10 text-sm font-bold text-sarh-tealDeep dark:text-sarh-teal">
@@ -190,14 +197,26 @@ export default async function ParentOverviewPage() {
                       <span className="block text-sm font-bold text-sarh-navy dark:text-white">
                         {child.name}
                       </span>
-                      <span className="mt-0.5 block text-[11px] text-slate-500 dark:text-slate-400">
-                        {child.gradeLevel} — {child.institutionName}
+                      <span className="mt-0.5 block text-[11px] text-sarh-inkMute dark:text-slate-400">
+                        {child.institutionId
+                          ? `${child.gradeLevel} — ${child.institutionName}`
+                          : "غير مسجل في مؤسسة"}
                       </span>
                       <span className="mt-1.5 block">
                         <StatusPill
-                          tone={child.tier === "KINDERGARTEN" ? "gold" : "teal"}
+                          tone={
+                            !child.institutionId
+                              ? "slate"
+                              : child.tier === "KINDERGARTEN"
+                                ? "gold"
+                                : "teal"
+                          }
                         >
-                          {child.tier === "KINDERGARTEN" ? "روضة" : "مركز تعليمي"}
+                          {!child.institutionId
+                            ? "بلا مؤسسة"
+                            : child.tier === "KINDERGARTEN"
+                              ? "روضة"
+                              : "مركز تعليمي"}
                         </StatusPill>
                       </span>
                     </span>
@@ -212,7 +231,7 @@ export default async function ParentOverviewPage() {
 
             <Link
               href="/parent/children"
-              className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-sarh-teal/10 px-4 py-3 text-xs font-bold text-sarh-tealDeep transition-colors hover:bg-sarh-teal/20 dark:text-sarh-teal"
+              className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-sarh-teal/10 px-4 py-3 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal transition-colors hover:bg-sarh-teal/20"
             >
               <UserPlus className="h-4 w-4" aria-hidden="true" />
               إضافة طالب آخر
@@ -239,13 +258,13 @@ export default async function ParentOverviewPage() {
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-sarh-inkMute dark:text-slate-400">
                 لا يوجد برنامج مسجّل لهذا اليوم — يوم راحة.
               </p>
             )}
             <Link
               href="/parent/feed"
-              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-teal hover:underline"
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal hover:underline"
             >
               عرض اليومية الكاملة
               <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
@@ -283,7 +302,7 @@ export default async function ParentOverviewPage() {
                     key={announcement.id}
                     className="flex items-start gap-3 rounded-xl border border-sarh-borderLight p-3 dark:border-sarh-borderDark"
                   >
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sarh-gold/15 text-[#B4641A] dark:text-sarh-gold">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sarh-gold/15 text-sarh-goldInk dark:text-sarh-gold">
                       <Icon className="h-4 w-4" aria-hidden="true" />
                     </span>
                     <span className="min-w-0">
@@ -295,10 +314,10 @@ export default async function ParentOverviewPage() {
                           {ANNOUNCEMENT_LABEL[announcement.kind]}
                         </StatusPill>
                       </span>
-                      <span className="mt-1 block text-[11px] leading-6 text-slate-500 dark:text-slate-400">
+                      <span className="mt-1 block text-[11px] leading-6 text-sarh-inkMute dark:text-slate-400">
                         {announcement.body}
                       </span>
-                      <span className="mt-1 flex items-center gap-3 text-[10px] text-slate-400">
+                      <span className="mt-1 flex items-center gap-3 text-[10px] text-sarh-inkMute dark:text-slate-400">
                         <span className="inline-flex items-center gap-1">
                           <MapPin className="h-3 w-3" aria-hidden="true" />
                           {announcement.center}
@@ -321,7 +340,7 @@ export default async function ParentOverviewPage() {
                 >
                   <span className="flex min-w-0 items-center gap-2">
                     {message.unread ? (
-                      <Mail className="h-3.5 w-3.5 shrink-0 text-sarh-teal" aria-hidden="true" />
+                      <Mail className="h-3.5 w-3.5 shrink-0 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />
                     ) : (
                       <MailOpen
                         className="h-3.5 w-3.5 shrink-0 text-slate-300"
@@ -332,12 +351,12 @@ export default async function ParentOverviewPage() {
                       <span className="block truncate text-xs font-bold text-sarh-navy dark:text-slate-200">
                         {message.subject}
                       </span>
-                      <span className="block text-[11px] text-slate-400">
+                      <span className="block text-[11px] text-sarh-inkMute dark:text-slate-400">
                         {message.from}
                       </span>
                     </span>
                   </span>
-                  <span className="shrink-0 text-[11px] text-slate-400" dir="auto">
+                  <span className="shrink-0 text-[11px] text-sarh-inkMute dark:text-slate-400" dir="auto">
                     {message.at}
                   </span>
                 </li>
@@ -352,13 +371,13 @@ export default async function ParentOverviewPage() {
             moreHref="/parent/assistant"
             moreLabel="ابدأ الآن"
           >
-            <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
+            <p className="text-sm leading-7 text-sarh-inkMute dark:text-slate-400">
               اطرح أي سؤال على مساعد صَرْح الذكي، وسيساعد طفلك على المراجعة والفهم
               بشكل أفضل — بشرح مبسّط وأمثلة من المنهج.
             </p>
             <Link
               href="/parent/assistant"
-              className="mt-3 inline-flex items-center gap-2 rounded-xl bg-sarh-teal px-4 py-2.5 text-xs font-bold text-white shadow-teal-glow"
+              className="mt-3 inline-flex items-center gap-2 rounded-xl bg-sarh-tealInk px-4 py-2.5 text-xs font-bold text-white shadow-teal-glow"
             >
               <Sparkles className="h-4 w-4" aria-hidden="true" />
               ابدأ الآن

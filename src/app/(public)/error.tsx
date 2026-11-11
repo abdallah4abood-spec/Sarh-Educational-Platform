@@ -26,7 +26,7 @@ export default function PublicError({
   return (
     <div className="mx-auto grid min-h-[60vh] max-w-lg place-items-center px-4 py-16">
       <div className="sarh-card w-full space-y-4 p-8 text-center">
-        <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-sarh-gold/15 text-[#B4641A] dark:text-sarh-gold">
+        <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-sarh-gold/15 text-sarh-goldInk dark:text-sarh-gold">
           <AlertTriangle className="h-7 w-7" aria-hidden="true" />
         </span>
 

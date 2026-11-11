@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getServerSession } from "next-auth";
 import { ArrowLeft, CalendarDays, Clock, MapPin } from "lucide-react";
 
 import { Meter, PageHeader, Panel } from "@/components/portal/primitives";
 import { StatusPill } from "@/components/portal/status-pill";
-import { authOptions } from "@/lib/auth";
+import { TeacherScopeGate } from "@/components/portal/teacher-scope-gate";
 import { loadTeacherOverview } from "@/lib/db/teacher";
+import { loadTeacherPageScope } from "@/lib/teacher-page";
 
 export const metadata: Metadata = {
   title: "جدولي اليومي",
@@ -29,12 +29,20 @@ const SLOT_STATUS: Record<
  * Focused workspace: the full slot detail, the room, and the weekly load per
  * class — the planning view a teacher opens before the day starts.
  */
-export default async function TeacherSchedulePage() {
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
-  const overview = userId ? await loadTeacherOverview(userId) : null;
-  const classes = overview?.classes ?? [];
-  const today = overview?.today ?? [];
+export default async function TeacherSchedulePage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  const { state } = await loadTeacherPageScope(searchParams);
+
+  if (state.kind !== "scope") {
+    return <TeacherScopeGate state={state} path="/teacher/schedule" />;
+  }
+
+  const overview = await loadTeacherOverview(state.scope);
+  const classes = overview.classes;
+  const today = overview.today;
 
   // `Math.max` of an empty list is -Infinity, which would poison every meter;
   // the floor of 1 keeps the bars at zero instead.
@@ -50,7 +58,7 @@ export default async function TeacherSchedulePage() {
         actions={
           <Link
             href="/teacher/classes"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-sarh-teal hover:underline"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal hover:underline"
           >
             الفصول الدراسية
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
@@ -81,7 +89,7 @@ export default async function TeacherSchedulePage() {
                   <span
                     className={
                       slot.kind === "activity"
-                        ? "rounded-full bg-sarh-gold/15 px-2.5 py-1 text-[11px] font-bold text-[#B4641A] dark:text-sarh-gold"
+                        ? "rounded-full bg-sarh-gold/15 px-2.5 py-1 text-[11px] font-bold text-sarh-goldInk dark:text-sarh-gold"
                         : "rounded-full bg-sarh-teal/10 px-2.5 py-1 text-[11px] font-bold text-sarh-tealDeep dark:text-sarh-teal"
                     }
                   >
@@ -93,7 +101,7 @@ export default async function TeacherSchedulePage() {
                   <p className="text-sm font-bold text-sarh-navy dark:text-white">
                     {slot.subject}
                   </p>
-                  <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                  <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-sarh-inkMute dark:text-slate-400">
                     <MapPin className="h-3 w-3" aria-hidden="true" />
                     {slot.className} — {slot.room} · {slot.gradeLevel}
                   </p>
@@ -120,7 +128,7 @@ export default async function TeacherSchedulePage() {
               <p className="text-sm font-bold text-sarh-navy dark:text-white">
                 {klass.name}
               </p>
-              <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+              <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400">
                 {klass.subject} — {klass.room}
               </p>
               <div className="mt-3">
@@ -131,7 +139,7 @@ export default async function TeacherSchedulePage() {
                   accent="teal"
                 />
               </div>
-              <p className="mt-2 text-[11px] text-slate-400">
+              <p className="mt-2 text-[11px] text-sarh-inkMute dark:text-slate-400">
                 الحصة القادمة: {klass.nextLesson}
               </p>
             </li>

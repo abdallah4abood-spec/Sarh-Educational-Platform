@@ -143,13 +143,13 @@ export function ContactContent() {
   return (
     <div className="mx-auto w-full max-w-5xl px-4 pb-20 pt-12 sm:px-6">
       <header className="mb-10">
-        <span className="sarh-badge bg-sarh-teal/10 text-sarh-teal ring-1 ring-inset ring-sarh-teal/30">
+        <span className="sarh-badge bg-sarh-teal/10 text-sarh-tealInk ring-1 ring-inset ring-sarh-teal/30 dark:text-sarh-teal">
           {t("brand")}
         </span>
-        <h1 className="mt-3 text-3xl font-bold text-sarh-navy dark:text-white md:text-4xl">
+        <h1 className="sarh-display-sm mt-3 text-sarh-navy dark:text-white">
           {t("contactTitle")}
         </h1>
-        <p className="mt-3 max-w-3xl text-sm leading-8 text-slate-600 dark:text-slate-300 md:text-base">
+        <p className="sarh-lead mt-3 max-w-3xl text-sarh-inkMute dark:text-slate-300">
           {t("contactLead")}
         </p>
       </header>
@@ -161,14 +161,14 @@ export function ContactContent() {
           noValidate
           className="sarh-card space-y-5 p-6 lg:col-span-3"
         >
-          <h2 className="text-lg font-bold text-sarh-navy dark:text-white">
+          <h2 className="sarh-subheading text-sarh-navy dark:text-white">
             {t("contactFormTitle")}
           </h2>
 
           {status === "sent" ? (
             <p
               role="status"
-              className="flex items-center gap-2 rounded-lg bg-sarh-teal/10 px-4 py-3 text-sm font-medium text-sarh-teal"
+              className="flex items-center gap-2 rounded-lg bg-sarh-teal/10 px-4 py-3 text-sm font-medium text-sarh-tealInk dark:text-sarh-teal"
             >
               <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
               {t("contactSuccess")}
@@ -273,17 +273,17 @@ export function ContactContent() {
         {/* --------------------------- Metadata --------------------------- */}
         <aside className="lg:col-span-2">
           <section className="sarh-card h-full p-6">
-            <h2 className="mb-4 text-lg font-bold text-sarh-navy dark:text-white">
+            <h2 className="sarh-subheading mb-4 text-sarh-navy dark:text-white">
               {t("contactInfoTitle")}
             </h2>
             <ul className="space-y-4">
               {infoRows.map(({ icon: Icon, label, value, href }) => (
                 <li key={label} className="flex items-start gap-3">
-                  <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-sarh-teal/10 text-sarh-teal">
+                  <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-sarh-teal/10 text-sarh-tealInk dark:text-sarh-teal">
                     <Icon className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    <span className="block text-xs font-semibold text-sarh-inkMute dark:text-slate-400">
                       {label}
                     </span>
                     {href ? (
@@ -295,7 +295,7 @@ export function ContactContent() {
                             ? "noopener noreferrer"
                             : undefined
                         }
-                        className="block break-all text-sm font-medium text-sarh-navy transition-colors hover:text-sarh-teal dark:text-slate-200"
+                        className="block break-all text-sm font-medium text-sarh-navy transition-colors hover:text-sarh-tealInk dark:text-slate-200 dark:hover:text-sarh-teal"
                       >
                         {value}
                       </a>
@@ -309,7 +309,7 @@ export function ContactContent() {
               ))}
             </ul>
 
-            <p className="mt-6 flex items-start gap-2 rounded-lg bg-sarh-gold/10 px-3 py-3 text-xs font-medium leading-6 text-[#C9741F] dark:text-sarh-gold">
+            <p className="mt-6 flex items-start gap-2 rounded-lg bg-sarh-gold/10 px-3 py-3 text-xs font-medium leading-6 text-sarh-goldInk dark:text-sarh-gold">
               <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               {t("platformTagline")}
             </p>

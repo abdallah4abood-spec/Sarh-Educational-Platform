@@ -27,7 +27,7 @@ const ACCENT_RING: Record<StatAccent, string> = {
 };
 
 const ACCENT_CHIP: Record<StatAccent, string> = {
-  teal: "bg-sarh-teal/10 ring-sarh-teal/25 text-sarh-teal",
+  teal: "bg-sarh-teal/10 ring-sarh-teal/25 text-sarh-tealInk dark:text-sarh-teal",
   gold: "bg-sarh-gold/15 ring-sarh-gold/40 text-sarh-gold",
   navy: "bg-sarh-navy/10 ring-sarh-navy/20 text-sarh-navy dark:bg-white/10 dark:ring-white/15 dark:text-white",
   rose: "bg-rose-500/10 ring-rose-400/30 text-rose-500",
@@ -76,7 +76,7 @@ export function StatCard({
           <Icon className="h-5 w-5" aria-hidden="true" />
         </span>
         {href ? (
-          <span className="flex items-center gap-1 text-[11px] font-bold text-sarh-teal opacity-0 transition-opacity group-hover:opacity-100">
+          <span className="flex items-center gap-1 text-[11px] font-bold text-sarh-tealInk dark:text-sarh-teal opacity-0 transition-opacity group-hover:opacity-100">
             {cta ?? "التفاصيل"}
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
           </span>
@@ -92,11 +92,11 @@ export function StatCard({
       >
         {value}
       </p>
-      <p className="mt-1 text-sm font-semibold text-slate-500 dark:text-slate-400">
+      <p className="mt-1 text-sm font-semibold text-sarh-inkMute dark:text-slate-400">
         {label}
       </p>
       {hint ? (
-        <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{hint}</p>
+        <p className="mt-1 text-xs text-sarh-inkMute dark:text-slate-400">{hint}</p>
       ) : null}
     </>
   );
@@ -141,12 +141,12 @@ export function PageHeader({
     <header className="mb-6">
       {breadcrumb && breadcrumb.length > 0 ? (
         <nav aria-label="مسار التنقل" className="mb-1.5">
-          <p className="flex flex-wrap items-center gap-1.5 text-xs font-bold text-sarh-teal">
+          <p className="flex flex-wrap items-center gap-1.5 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal">
             <span>صَرْح</span>
             {breadcrumb.map((crumb) => (
               <span key={crumb} className="flex items-center gap-1.5">
-                <span className="text-slate-400">/</span>
-                <span className="text-slate-500 dark:text-slate-400">
+                <span className="text-sarh-inkMute dark:text-slate-400">/</span>
+                <span className="text-sarh-inkMute dark:text-slate-400">
                   {crumb}
                 </span>
               </span>
@@ -164,7 +164,7 @@ export function PageHeader({
             {title}
           </h1>
           {lead ? (
-            <p className="mt-1 max-w-2xl text-sm leading-7 text-slate-500 dark:text-slate-400">
+            <p className="mt-1 max-w-2xl text-sm leading-7 text-sarh-inkMute dark:text-slate-400">
               {lead}
             </p>
           ) : null}
@@ -206,14 +206,14 @@ export function Panel({
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-sarh-borderLight px-5 py-4 dark:border-sarh-borderDark">
         <div className="flex items-center gap-2">
           {Icon ? (
-            <Icon className="h-4 w-4 text-sarh-teal" aria-hidden="true" />
+            <Icon className="h-4 w-4 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />
           ) : null}
           <div>
             <h2 className="text-sm font-bold text-sarh-navy dark:text-white">
               {title}
             </h2>
             {description ? (
-              <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">
+              <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400">
                 {description}
               </p>
             ) : null}
@@ -225,7 +225,7 @@ export function Panel({
           {moreHref ? (
             <Link
               href={moreHref}
-              className="flex items-center gap-1 text-xs font-bold text-sarh-teal transition-colors hover:text-sarh-tealDeep"
+              className="flex items-center gap-1 text-xs font-bold text-sarh-tealInk dark:text-sarh-teal transition-colors hover:text-sarh-tealDeep"
             >
               {moreLabel}
               <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
@@ -266,7 +266,7 @@ export function Meter({
     <div>
       {label || valueLabel ? (
         <div className="mb-1 flex items-center justify-between gap-2 text-[11px] font-semibold">
-          <span className="text-slate-500 dark:text-slate-400">{label}</span>
+          <span className="text-sarh-inkMute dark:text-slate-400">{label}</span>
           <span className="font-mono tabular-nums text-sarh-navy dark:text-slate-200">
             {valueLabel ?? `${clamped}%`}
           </span>

@@ -6,10 +6,10 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 
 import { findUserByIdentifier } from "@/lib/identifier";
-import { userHasInstitutionPortalGrant } from "@/lib/institution-access";
 import { prisma } from "@/lib/prisma";
 import { isPhoneNumber, looksLikeEmail } from "@/lib/phone";
-import { PLATFORM_ADMIN_ROLE, ROLE_HOME, effectiveRoles } from "@/lib/roles";
+import { ROLE_HOME, effectiveRoles } from "@/lib/roles";
+import { loadLiveTiers } from "@/lib/session-tiers";
 
 export { ROLE_HOME };
 
@@ -45,29 +45,6 @@ const googleConfigured = Boolean(
 
 /** How long a remembered session lasts (matches `session.maxAge`). */
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
-
-/**
- * Merge the account's stored tiers with the institution portal key that its
- * live ownership / CENTER_ADMIN membership justifies.
- *
- * This is additive and idempotent: a stored `INSTITUTION_TEACHER` is never
- * removed or replaced, and the primary `role` is untouched. It does not grant
- * any tenant data — `resolveInstitutionAccess` still checks the database on
- * every institution page.
- */
-async function sessionTiers(
-  userId: string,
-  primary: Role,
-  stored: readonly Role[] | undefined
-): Promise<Role[]> {
-  const tiers = effectiveRoles(primary, stored);
-  if (tiers.includes("INSTITUTION_TEACHER")) return tiers;
-
-  if (await userHasInstitutionPortalGrant(userId)) {
-    tiers.push("INSTITUTION_TEACHER");
-  }
-  return tiers;
-}
 
 /**
  * The session cookie name NextAuth itself would derive: `__Secure-` prefixed
@@ -148,16 +125,23 @@ export const authOptions: NextAuthOptions = {
         // anything the client sent: this is what makes the sign-in flow
         // role-agnostic (no account-type picker) while still routing the
         // visitor to the portal their account actually owns.
+        //
+        // Live tiers (decision D5) are what the sign-in route routes on, so a
+        // membership-based tier is already present on the very first request.
+        // `callbacks.jwt` re-derives them again from the same source, which
+        // keeps the cookie correct after revocation.
+        const live = await loadLiveTiers(user.id);
+
         return {
           id: user.id,
           name: user.fullName,
           email: user.email,
-          role: user.role as Role,
-          roles: await sessionTiers(
-            user.id,
-            user.role as Role,
-            user.roles as Role[]
-          ),
+          role:
+            live.kind === "ok" ? live.tiers.role : (user.role as Role),
+          roles:
+            live.kind === "ok"
+              ? live.tiers.roles
+              : effectiveRoles(user.role as Role, user.roles as Role[]),
           emailVerified: user.emailVerified,
         };
       },
@@ -173,27 +157,18 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     /**
-     * Role switching without re-authentication.
+     * Tier maintenance and role switching without re-authentication.
      *
-     * The dashboard switcher calls `useSession().update({ activeRole })`; the
-     * `update` trigger lands here. Only a tier the account actually holds may
-     * become active — an attacker-supplied role is ignored — so the switcher
-     * can never escalate privileges, it only chooses between rights the
-     * database already granted.
+     * NextAuth calls this on every session read (no `trigger`) and on
+     * `useSession().update()` (`trigger: "update"`), so this is the one place
+     * the token's tier set is rebuilt — see `src/lib/session-tiers.ts` for the
+     * rules and the fail-closed behaviour (decision D5).
+     *
+     * The rebuild is driven by the account id only. Nothing the client sends
+     * can add a tier: `session.activeRole` merely selects among tiers the
+     * database already granted, and is ignored otherwise.
      */
     async jwt({ token, user, account, trigger, session }) {
-      if (trigger === "update") {
-        const requested = (session as { activeRole?: Role } | undefined)
-          ?.activeRole;
-        const owned = (token.roles as Role[] | undefined) ?? [];
-        if (requested && owned.includes(requested)) {
-          token.activeRole = requested;
-        } else if (requested === PLATFORM_ADMIN_ROLE && token.role === PLATFORM_ADMIN_ROLE) {
-          token.activeRole = PLATFORM_ADMIN_ROLE;
-        }
-        return token;
-      }
-
       if (user?.email) {
         if (account?.provider === "google") {
           // Mirror (or link) the Google identity into Prisma so the portal
@@ -232,7 +207,7 @@ export const authOptions: NextAuthOptions = {
 
           token.id = dbUser.id;
           token.role = dbUser.role;
-          token.roles = await sessionTiers(dbUser.id, dbUser.role, dbUser.roles);
+          token.roles = effectiveRoles(dbUser.role, dbUser.roles);
           token.activeRole = dbUser.role;
           token.emailVerified = Boolean(dbUser.emailVerified);
         } else {
@@ -251,6 +226,53 @@ export const authOptions: NextAuthOptions = {
           );
         }
       }
+
+      const userId = (token.id as string | undefined) ?? token.sub;
+
+      if (userId) {
+        const live = await loadLiveTiers(userId);
+
+        if (live.kind === "ok") {
+          // The database row wins over anything the cookie still claims. A
+          // revoked membership therefore stops contributing its tier on the
+          // next request; data access is denied immediately regardless (see
+          // `resolveTeacherScope`).
+          token.role = live.tiers.role;
+          token.roles = live.tiers.roles;
+        } else if (live.kind === "unknown-user") {
+          // The account is gone: it holds no tier, whatever the cookie says.
+          token.roles = [];
+        }
+        // `unavailable`: keep the existing claims and add nothing. A failed
+        // lookup is never evidence of authority, and every data loader
+        // re-checks the database on its own.
+      }
+
+      /*
+       * Tier selection. `token.roles` is now the live set whenever an account
+       * row was available, and the cookie's own claims otherwise (a token
+       * without an identity cannot be re-verified, and the portal gates still
+       * read `roles`). Either way, a requested tier is only honoured if it is
+       * already held — the client can never add one, it can only switch to a
+       * tier the database granted.
+       */
+      const tiers = (token.roles as Role[] | undefined) ?? [];
+
+      if (trigger === "update") {
+        const requested = (session as { activeRole?: Role } | undefined)
+          ?.activeRole;
+        if (requested && tiers.includes(requested)) {
+          token.activeRole = requested;
+        }
+      }
+
+      // Never leave the token pointing at a tier it no longer holds.
+      const primary = (token.role as Role | undefined) ?? "PARENT";
+      const active = token.activeRole as Role | undefined;
+      if (!active || !tiers.includes(active)) {
+        token.activeRole = tiers.includes(primary) ? primary : (tiers[0] ?? primary);
+      }
+
       return token;
     },
     async session({ session, token }) {

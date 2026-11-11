@@ -182,6 +182,21 @@ export interface ParentAnnouncement {
   kind: "holiday" | "schedule" | "meeting";
 }
 
+/**
+ * A guardianship request the signed-in guardian opened that the centre has not
+ * approved (or has rejected). Shown on `/parent/children` so a pending request
+ * is never silent.
+ */
+export interface GuardianRequestRow {
+  linkId: string;
+  studentName: string;
+  /** Name of the centre whose code opened the request, or "—". */
+  institutionName: string;
+  status: "PENDING" | "REJECTED" | "REVOKED";
+  /** ISO timestamp. */
+  requestedAt: string;
+}
+
 export interface SubjectPerformance {
   subject: string;
   /** Completion 0–100. */

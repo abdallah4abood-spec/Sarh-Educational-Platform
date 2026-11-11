@@ -107,7 +107,7 @@ export function AssistantChat({ childName }: { childName?: string }) {
           <p className="text-sm font-bold text-sarh-navy dark:text-white">
             مساعد صَرْح الذكي
           </p>
-          <p className="mt-0.5 text-[11px] text-slate-400">
+          <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400">
             {childName
               ? `يجيب على أسئلتك حول ${childName} والدروس المدرسية`
               : "يجيب على أسئلتك حول أبنائك والدروس المدرسية"}
@@ -118,7 +118,7 @@ export function AssistantChat({ childName }: { childName?: string }) {
       <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
         {messages.length === 0 ? (
           <div className="space-y-3">
-            <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
+            <p className="text-sm leading-7 text-sarh-inkMute dark:text-slate-400">
               اطرح أي سؤال تعليمي، وسيساعدك المساعد على شرح المفهوم لطفلك بأسلوب
               مبسّط — ولا يمكنه تعديل أي بيانات في حسابك.
             </p>
@@ -165,7 +165,7 @@ export function AssistantChat({ childName }: { childName?: string }) {
                 className={cn(
                   "max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-7",
                   message.role === "user"
-                    ? "bg-sarh-teal text-white"
+                    ? "bg-sarh-tealInk text-white"
                     : "bg-sarh-muted text-slate-700 dark:bg-white/5 dark:text-slate-200"
                 )}
               >
@@ -176,7 +176,7 @@ export function AssistantChat({ childName }: { childName?: string }) {
         </ul>
 
         {pending ? (
-          <p className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
+          <p className="flex items-center gap-2 text-xs font-bold text-sarh-inkMute dark:text-slate-400">
             <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
             المساعد يفكّر…
           </p>
@@ -198,7 +198,7 @@ export function AssistantChat({ childName }: { childName?: string }) {
                 <button
                   type="button"
                   onClick={() => void ask(suggestion)}
-                  className="rounded-full bg-sarh-teal/10 px-3 py-1.5 text-[11px] font-bold text-sarh-tealDeep transition-colors hover:bg-sarh-teal/20 dark:text-sarh-teal"
+                  className="rounded-full bg-sarh-teal/10 px-3 py-1.5 text-[11px] font-bold text-sarh-tealInk dark:text-sarh-teal transition-colors hover:bg-sarh-teal/20"
                 >
                   {suggestion}
                 </button>

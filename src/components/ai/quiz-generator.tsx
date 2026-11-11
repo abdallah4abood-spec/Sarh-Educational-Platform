@@ -538,7 +538,7 @@ export function QuizGeneratorStudio({ subjects }: { subjects: string[] }) {
                                   className={cn(
                                     "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold",
                                     correct
-                                      ? "bg-sarh-teal text-white"
+                                      ? "bg-sarh-tealInk text-white"
                                       : "bg-slate-200 text-slate-600 dark:bg-white/10 dark:text-slate-300"
                                   )}
                                   aria-hidden="true"

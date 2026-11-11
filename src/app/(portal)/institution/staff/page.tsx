@@ -5,14 +5,20 @@ import { GraduationCap, MailPlus, UserCheck, UserCog, Users } from "lucide-react
 
 import { PageHeader, Panel, StatCard } from "@/components/portal/primitives";
 import { StatusPill, staffPill } from "@/components/portal/status-pill";
+import { StaffInvitationManager } from "@/components/institution/staff-invitation-manager";
 import { DataTable, type Column } from "@/components/ui/data-table";
 import { authOptions } from "@/lib/auth";
 import type { StaffRow } from "@/lib/data/portal";
 import { loadInstitutionStaff } from "@/lib/db/institution";
 import {
+  institutionInvitationActor,
+  listStaffInvitations,
+} from "@/lib/db/staff-invitations";
+import {
   requestedInstitutionId,
   resolveInstitutionAccess,
 } from "@/lib/institution-access";
+import { STAFF_ROLE_LABEL, invitableRoles } from "@/lib/staff-invitations";
 
 export const metadata: Metadata = {
   title: "الطاقم التعليمي",
@@ -41,6 +47,19 @@ export default async function InstitutionStaffPage({
   if (requested && !access) notFound();
 
   const staff = access ? await loadInstitutionStaff(access) : [];
+  // Invitations are a separate table from memberships, so they are loaded
+  // separately and never mixed into the roster count above. The role list is
+  // computed from the verified access level: a CENTER_ADMIN simply does not
+  // receive "CENTER_ADMIN" as an option, and the server re-checks it anyway.
+  const invitations = access
+    ? await listStaffInvitations(institutionInvitationActor(access))
+    : [];
+  const roleOptions = access
+    ? invitableRoles(access.level).map((role) => ({
+        value: role,
+        label: STAFF_ROLE_LABEL[role],
+      }))
+    : [];
 
   const active = staff.filter((row) => row.status === "ACTIVE");
   const onLeave = staff.filter((row) => row.status === "ON_LEAVE");
@@ -126,6 +145,23 @@ export default async function InstitutionStaffPage({
         <DataTable columns={columns} rows={staff} rowKey={(row) => row.id} />
       </Panel>
 
+      {access ? (
+        <Panel
+          title="دعوات الانضمام"
+          description="دعوة عضو جديد إلى طاقم المركز — القبول ينشئ العضوية فقط بعد تحقق الخادم من البريد المؤكد"
+          icon={MailPlus}
+        >
+          <StaffInvitationManager
+            institutionId={access.institutionId}
+            createEndpoint="/api/institution/staff/invitations"
+            itemEndpoint="/api/institution/staff/invitations/{id}"
+            roles={roleOptions}
+            invitations={invitations}
+            description="الدور المختار يحدد بوابة العضو بعد القبول. مدير المركز يستطيع دعوة معلم أو سكرتارية؛ دعوة مدير آخر متاحة لمالك المركز فقط."
+          />
+        </Panel>
+      ) : null}
+
       {pendingInvites.length > 0 ? (
         <Panel
           title="دعوات بانتظار القبول"
@@ -142,7 +178,7 @@ export default async function InstitutionStaffPage({
                   <p className="text-sm font-bold text-sarh-navy dark:text-white">
                     {member.name}
                   </p>
-                  <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                  <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400">
                     {member.role} — {member.subjects}
                   </p>
                 </div>

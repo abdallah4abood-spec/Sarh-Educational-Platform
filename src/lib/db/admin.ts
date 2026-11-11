@@ -132,7 +132,12 @@ export async function loadAdminInstitutions(
     take,
     include: {
       owner: { select: { fullName: true } },
-      students: { select: { status: true, commissionFee: true } },
+      // `students` is the headcount column (records, withdrawn included) and
+      // stays as it is; the commission column is money and is restricted to
+      // platform referrals explicitly, not by relying on the intake fee being 0.
+      students: {
+        select: { status: true, commissionFee: true, source: true },
+      },
     },
   });
 
@@ -151,7 +156,11 @@ export async function loadAdminInstitutions(
           ? "SUSPENDED"
           : "PENDING",
     commission: row.students
-      .filter((enrollment) => enrollment.status === "VERIFIED")
+      .filter(
+        (enrollment) =>
+          enrollment.status === "VERIFIED" &&
+          enrollment.source === "PLATFORM_REFERRAL"
+      )
       .reduce((sum, enrollment) => sum + enrollment.commissionFee, 0),
   }));
 }

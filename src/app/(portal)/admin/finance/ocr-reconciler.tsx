@@ -89,7 +89,7 @@ function fmtMoney(amount: number | null, currency: string | null): string {
 function FieldRow({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-sarh-borderLight py-3 last:border-0 dark:border-sarh-borderDark">
-      <dt className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+      <dt className="text-sm font-semibold text-sarh-inkMute dark:text-slate-400">
         {label}
       </dt>
       <dd className="min-w-0 text-end">{children}</dd>
@@ -194,7 +194,7 @@ export function OCRReconciler({ receipts }: { receipts: PaymentReceipt[] }) {
         <p className="font-bold text-sarh-navy dark:text-white">
           لا توجد إيصالات بانتظار المطابقة حالياً.
         </p>
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+        <p className="mt-2 text-sm text-sarh-inkMute dark:text-slate-400">
           ستظهر هنا كل إيصالات الدفع الجديدة فور وصولها من المؤسسات.
         </p>
       </section>
@@ -303,10 +303,10 @@ export function OCRReconciler({ receipts }: { receipts: PaymentReceipt[] }) {
             id="ocr-heading"
             className="flex items-center gap-2 text-lg font-bold text-sarh-navy dark:text-white"
           >
-            <Database className="h-5 w-5 text-sarh-teal" aria-hidden="true" />
+            <Database className="h-5 w-5 text-sarh-tealInk dark:text-sarh-teal" aria-hidden="true" />
             مطابقة الإيصالات
           </h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-1 text-sm text-sarh-inkMute dark:text-slate-400">
             استخرج بيانات الدفع بالذكاء الاصطناعي، قارنها بقاعدة البيانات، ثم
             اعتمد أو ارفض — لا يُعتمد أي معاملة تلقائياً.
           </p>
@@ -365,7 +365,7 @@ export function OCRReconciler({ receipts }: { receipts: PaymentReceipt[] }) {
                   {receipt.payerName}
                 </span>
                 <span
-                  className="block font-mono text-xs tabular-nums text-slate-500 dark:text-slate-400"
+                  className="block font-mono text-xs tabular-nums text-sarh-inkMute dark:text-slate-400"
                   dir="ltr"
                 >
                   {formatSarh(receipt.amount, "en-US")} · {receipt.transactionId}
@@ -390,7 +390,7 @@ export function OCRReconciler({ receipts }: { receipts: PaymentReceipt[] }) {
               </p>
               <div className="flex items-center gap-1.5">
                 <span
-                  className="ms-1 font-mono text-xs tabular-nums text-slate-500 dark:text-slate-400"
+                  className="ms-1 font-mono text-xs tabular-nums text-sarh-inkMute dark:text-slate-400"
                   dir="ltr"
                   aria-live="polite"
                 >
@@ -460,7 +460,7 @@ export function OCRReconciler({ receipts }: { receipts: PaymentReceipt[] }) {
             </div>
 
             <p
-              className="mt-2 font-mono text-xs tabular-nums text-slate-500 dark:text-slate-400"
+              className="mt-2 font-mono text-xs tabular-nums text-sarh-inkMute dark:text-slate-400"
               dir="ltr"
             >
               {selected.id} · {selected.transactionId}

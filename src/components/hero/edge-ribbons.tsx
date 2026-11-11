@@ -10,10 +10,16 @@ interface Ribbon {
   className: string;
 }
 
+/*
+ * Solid fills, white type: every strip uses the *ink* variant of its hue.
+ * The base brand teal (#00A99D) and gold (#F2994A) are 2.9:1 and 2.2:1 against
+ * white and were unreadable as 11px labels; tealInk and goldInk keep the same
+ * identity at 5.4:1 and 5.2:1.
+ */
 const RIBBONS: Ribbon[] = [
-  { labelKey: "home_ribbonEducation", className: "bg-sarh-teal" },
+  { labelKey: "home_ribbonEducation", className: "bg-sarh-tealInk" },
   { labelKey: "home_ribbonFuture", className: "bg-sarh-navy" },
-  { labelKey: "home_ribbonChildren", className: "bg-sarh-orange" },
+  { labelKey: "home_ribbonChildren", className: "bg-sarh-goldInk" },
 ];
 
 /**

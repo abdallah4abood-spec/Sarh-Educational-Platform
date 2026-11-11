@@ -91,6 +91,28 @@ const nextConfig = {
     dirs: ["src"],
   },
   /**
+   * The invitation accept page is reached from an email link whose query
+   * string carries a raw invitation token. Two headers keep that token from
+   * escaping the page:
+   *
+   *  - `Referrer-Policy: no-referrer` — clicking any outbound link (or a
+   *    third-party subresource) must not forward `/invitations/accept?token=…`
+   *    as a Referer to another origin.
+   *  - `X-Robots-Tag: noindex` — crawlers must never index a one-time
+   *    acceptance link.
+   */
+  async headers() {
+    return [
+      {
+        source: "/invitations/accept",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Robots-Tag", value: "noindex" },
+        ],
+      },
+    ];
+  },
+  /**
    * The course catalogue is retired.
    *
    * `/learn` was a self-contained e-learning microsite, then briefly the

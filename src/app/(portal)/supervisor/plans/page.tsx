@@ -42,7 +42,7 @@ export default async function SupervisorPlansPage() {
       cell: (row) => (
         <div className="min-w-48">
           <p className="font-semibold text-sarh-navy dark:text-white">{row.title}</p>
-          <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400">
             {row.subject} — {row.gradeLevel}
           </p>
         </div>
@@ -54,7 +54,7 @@ export default async function SupervisorPlansPage() {
       cell: (row) => (
         <div>
           <p>{row.teacherName}</p>
-          <p className="mt-0.5 text-[11px] text-slate-400">{row.center}</p>
+          <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400">{row.center}</p>
         </div>
       ),
     },

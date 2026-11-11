@@ -44,7 +44,7 @@ export default async function AdminInstitutionsPage() {
       cell: (row) => (
         <div className="min-w-44">
           <p className="font-semibold text-sarh-navy dark:text-white">{row.name}</p>
-          <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-[11px] text-sarh-inkMute dark:text-slate-400">
             {row.type} — {row.zone}
           </p>
         </div>
@@ -101,7 +101,7 @@ export default async function AdminInstitutionsPage() {
         actions={
           <Link
             href="/admin/trust"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-sarh-teal px-4 py-2.5 text-xs font-bold text-white shadow-teal-glow"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-sarh-tealInk px-4 py-2.5 text-xs font-bold text-white shadow-teal-glow"
           >
             <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
             طلبات التوثيق ({pending.length})
@@ -170,7 +170,7 @@ export default async function AdminInstitutionsPage() {
                   </span>
                   <Link
                     href="/admin/trust"
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-sarh-teal hover:underline"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-sarh-tealInk dark:text-sarh-teal hover:underline"
                   >
                     مراجعة
                     <ArrowLeft className="h-3 w-3" aria-hidden="true" />
@@ -179,12 +179,12 @@ export default async function AdminInstitutionsPage() {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-slate-500">لا توجد مؤسسات معلّقة.</p>
+            <p className="text-sm text-sarh-inkMute dark:text-slate-400">لا توجد مؤسسات معلّقة.</p>
           )}
         </Panel>
 
         <Panel title="ملاحظة على النطاق" icon={Building2}>
-          <p className="text-xs leading-6 text-slate-500 dark:text-slate-400">
+          <p className="text-xs leading-6 text-sarh-inkMute dark:text-slate-400">
             هذه الشاشة للمشرف العام فقط. لا تستطيع إدارة أي مؤسسة الوصول إليها،
             ولا ترى إلا سجل مركزها وعمولاته في بوابة المؤسسة — وهو الفصل الصارم
             بين الطبقتين الرابعة والثالثة في مصفوفة الصلاحيات.

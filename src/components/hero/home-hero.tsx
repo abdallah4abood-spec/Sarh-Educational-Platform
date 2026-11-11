@@ -156,7 +156,13 @@ export function HomeHero() {
         <div className="flex flex-col items-start gap-5">
           <span
             data-hero="badge"
-            className="sarh-badge gap-1.5 bg-white/80 px-3 py-1.5 text-sarh-tealInk ring-1 ring-inset ring-sarh-teal/25 shadow-soft"
+            /*
+             * Solid white, not `bg-white/80`: over the dark page a translucent
+             * white resolved to ~#cdd4dd, which left the teal label at 3.4:1.
+             * The dark variant swaps to the card surface so the same label
+             * keeps its contrast instead of glowing a pale plate on the hero.
+             */
+            className="sarh-badge gap-1.5 bg-white px-3 py-1.5 text-sarh-tealInk ring-1 ring-inset ring-sarh-teal/25 shadow-soft dark:bg-sarh-cardDark dark:text-sarh-teal"
           >
             <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
             {t("home_heroBadge")}

@@ -54,7 +54,6 @@ export function SiteFooter() {
     { href: "/explore/centers", label: t("nav_centers") },
     { href: "/explore/kindergartens", label: t("nav_kindergartens") },
     { href: "/#why", label: t("nav_why") },
-    { href: "/#testimonials", label: t("nav_stories") },
     { href: "/about", label: t("nav_about") },
     { href: "/faq", label: t("nav_faq") },
     { href: "/contact", label: t("nav_contact") },
@@ -76,9 +75,16 @@ export function SiteFooter() {
   ].filter((social) => social.href.trim().length > 0);
 
   const columnClass =
-    "text-sm font-semibold uppercase tracking-wide text-sarh-navy dark:text-white";
+    // No uppercase/tracking: letter-spacing breaks Arabic's cursive joins.
+    "text-sm font-semibold text-sarh-navy dark:text-white";
+  /*
+   * `inline-flex min-h-6 items-center` lifts every footer link to a 24px tap
+   * target. As plain inline text the line box was 20px tall and the 8px list
+   * gap left neighbouring targets overlapping a 24px circle, which is the one
+   * WCAG 2.2 (2.5.8) check a footer link list tends to fail on mobile.
+   */
   const linkClass =
-    "text-sm text-slate-500 transition-colors hover:text-sarh-teal dark:text-slate-400";
+    "inline-flex min-h-6 items-center text-sm text-sarh-inkMute transition-colors hover:text-sarh-tealInk dark:text-slate-400 dark:hover:text-sarh-teal";
 
   /** Back to top: Lenis when it owns the scroll, the browser otherwise. */
   const scrollToTop = () => {
@@ -109,13 +115,13 @@ export function SiteFooter() {
                 {t("brand")}
               </p>
             </div>
-            <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
+            <p className="text-sm leading-7 text-sarh-inkMute dark:text-slate-400">
               {t("brandTagline")}
             </p>
           </div>
 
           <div className="flex flex-col gap-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-xs font-semibold text-sarh-inkMute dark:text-slate-400">
               {t("nav_contact")}
             </p>
             <div className="flex flex-wrap items-center gap-2">
@@ -180,9 +186,18 @@ export function SiteFooter() {
                 <li>
                   <Link
                     href={ROLE_HOME[role]}
-                    className="inline-flex items-center gap-2 text-sm font-medium text-sarh-teal transition-colors hover:underline"
+                    /*
+                     * `min-h-6` holds the 24px tap target the other footer
+                     * links get from `linkClass`; the dot is decoration, so it
+                     * is hidden from assistive tech rather than read back as
+                     * a stray "●" inside the role name.
+                     */
+                    className="inline-flex min-h-6 items-center gap-2 text-sm font-medium text-sarh-tealInk transition-colors hover:underline dark:text-sarh-teal"
                   >
-                    <span className="grid h-5 w-5 place-items-center rounded bg-sarh-teal/15 text-[10px] font-bold">
+                    <span
+                      aria-hidden="true"
+                      className="grid h-5 w-5 place-items-center rounded bg-sarh-teal/15 text-[10px] font-bold"
+                    >
                       ●
                     </span>
                     {ROLE_LABEL[role]}
@@ -196,7 +211,7 @@ export function SiteFooter() {
               </ul>
             ) : (
               <>
-                <p className="text-sm leading-7 text-slate-500 dark:text-slate-400">
+                <p className="text-sm leading-7 text-sarh-inkMute dark:text-slate-400">
                   {t("portalGuestHint")}
                 </p>
                 <ul className="space-y-2">
@@ -226,26 +241,35 @@ export function SiteFooter() {
           <div className="space-y-3">
             <h2 className={columnClass}>{t("nav_contact")}</h2>
             <ul className="space-y-2">
-              <li className="flex items-start gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <li className="flex items-start gap-2 text-sm text-sarh-inkMute dark:text-slate-400">
                 <MapPin
                   className="mt-0.5 h-4 w-4 shrink-0 text-sarh-gold"
                   aria-hidden="true"
                 />
                 {settings.siteLocation || t("contactLocationValue")}
               </li>
-              <li className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <li className="flex items-center gap-2 text-sm text-sarh-inkMute dark:text-slate-400">
                 <Phone className="h-4 w-4 shrink-0 text-sarh-gold" aria-hidden="true" />
                 {/* dir=ltr keeps the number readable inside an RTL line. */}
-                <a href={telHref(settings.supportPhone)} dir="ltr" className="hover:text-sarh-teal">
+                {/* `min-h-6` = the 24px tap target, like the rest of the footer. */}
+                <a
+                  href={telHref(settings.supportPhone)}
+                  dir="ltr"
+                  className="inline-flex min-h-6 items-center hover:text-sarh-teal"
+                >
                   {settings.supportPhone}
                 </a>
               </li>
               {emailHref ? (
-                <li className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                <li className="flex items-center gap-2 text-sm text-sarh-inkMute dark:text-slate-400">
                   <Mail className="h-4 w-4 shrink-0 text-sarh-gold" aria-hidden="true" />
-                  <a href={emailHref} dir="ltr" className="hover:text-sarh-teal">
-                    {settings.supportEmail}
-                  </a>
+                <a
+                  href={emailHref}
+                  dir="ltr"
+                  className="inline-flex min-h-6 items-center hover:text-sarh-teal"
+                >
+                  {settings.supportEmail}
+                </a>
                 </li>
               ) : null}
             </ul>
@@ -275,24 +299,24 @@ export function SiteFooter() {
 
         {/* ---- Accreditation ---- */}
         <div className="mt-10 flex flex-col gap-3 rounded-2xl border border-sarh-borderLight bg-sarh-teal/[0.05] p-5 dark:border-sarh-borderDark sm:flex-row sm:items-start">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sarh-teal/15 text-sarh-teal">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-sarh-teal/15 text-sarh-tealInk dark:text-sarh-teal">
             <ShieldCheck className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
             <p className="flex flex-wrap items-center gap-2 text-sm font-bold text-sarh-navy dark:text-white">
-              {t("learn_accreditationTitle")}
-              <span className="sarh-badge bg-sarh-teal/10 text-sarh-teal ring-1 ring-inset ring-sarh-teal/30">
-                {t("learn_footerLinkCertificates")}
+              {t("footerAccreditationTitle")}
+              <span className="sarh-badge bg-sarh-teal/10 text-sarh-tealInk ring-1 ring-inset ring-sarh-teal/30 dark:text-sarh-teal">
+                {t("footerVerifiedData")}
               </span>
             </p>
-            <p className="mt-1.5 text-sm leading-7 text-slate-500 dark:text-slate-400">
-              {t("learn_accreditationBody")}
+            <p className="mt-1.5 text-sm leading-7 text-sarh-inkMute dark:text-slate-400">
+              {t("footerAccreditationBody")}
             </p>
           </div>
         </div>
 
         {/* ---- Bottom bar ---- */}
-        <div className="mt-8 flex flex-col items-center gap-3 border-t border-sarh-borderLight pt-5 text-center text-xs text-slate-400 dark:border-sarh-borderDark dark:text-slate-500 sm:flex-row sm:justify-between sm:text-start">
+        <div className="mt-8 flex flex-col items-center gap-3 border-t border-sarh-borderLight pt-5 text-center text-xs text-sarh-inkMute dark:border-sarh-borderDark dark:text-slate-400 sm:flex-row sm:justify-between sm:text-start">
           <p>
             © {year} {t("brand")} — {t("brandTagline")}
           </p>
@@ -304,10 +328,10 @@ export function SiteFooter() {
             <button
               type="button"
               onClick={scrollToTop}
-              className="inline-flex items-center gap-1.5 font-semibold text-slate-500 transition-colors hover:text-sarh-teal dark:text-slate-400"
+              className="inline-flex min-h-6 items-center gap-1.5 font-semibold text-sarh-inkMute transition-colors hover:text-sarh-tealInk dark:text-slate-400 dark:hover:text-sarh-teal"
             >
               <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
-              {t("learn_backToTop")}
+              {t("footerBackToTop")}
             </button>
           </div>
         </div>

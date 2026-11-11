@@ -13,10 +13,13 @@ import type { Institution } from "@prisma/client";
 
 import {
   CENTER_FACILITIES,
+  COVERS,
   KG_FACILITIES,
   coverFor,
   type Center,
 } from "@/lib/data/centers";
+import type { DictionaryKey } from "@/lib/i18n/dictionary";
+import type { DirectoryKind, DirectoryListing } from "@/lib/data/directory";
 import { prisma } from "@/lib/prisma";
 
 type InstitutionRow = Institution & {
@@ -148,10 +151,135 @@ export async function getCenters(): Promise<Center[]> {
   return rows.map((row, index) => toCenter(row, index));
 }
 
-/** Single center for the profile page — `null` means "not found" (404). */
+/* ==================================================================== */
+/* Directory listings (the /explore cards)                              */
+/* ==================================================================== */
+
+/**
+ * Zone → governorate label.
+ *
+ * `Institution.zone` is free text typed by the institution ("غزة", "خان يونس"…),
+ * while the directory filter compares a `DictionaryKey`. This map is the only
+ * place that translation happens; an unknown zone falls back to the generic
+ * `city_other` label instead of silently being shown as "Gaza".
+ */
+const ZONE_LABEL_KEYS: Record<string, DictionaryKey> = {
+  "غزة": "city_gaza",
+  "مدينة غزة": "city_gaza",
+  "خان يونس": "city_khanYounis",
+  "دير البلح": "city_deirAlBalah",
+  "رفح": "city_rafah",
+  "جباليا": "city_jabalia",
+  "جباليا Camp": "city_jabalia",
+  "شمال غزة": "city_jabalia",
+  "بيت لاهيا": "city_jabalia",
+  "بيت حانون": "city_jabalia",
+};
+
+function cityKeyFor(zone: string): DictionaryKey {
+  return ZONE_LABEL_KEYS[zone.trim()] ?? "city_other";
+}
+
+/**
+ * Directory taxonomy per institution type.
+ *
+ * The schema stores one discriminator (`InstitutionType`), so the card badge
+ * and the sidebar category are derived from it rather than invented per row.
+ */
+const DIRECTORY_CATEGORY: Record<Institution["type"], string> = {
+  KINDERGARTEN: "private_kindergartens",
+  EDUCATIONAL_CENTER: "learning_centers",
+};
+
+const DIRECTORY_STAGES: Record<Institution["type"], DictionaryKey[]> = {
+  KINDERGARTEN: ["dir_stage_5_6"],
+  EDUCATIONAL_CENTER: ["dir_stage_general"],
+};
+
+/**
+ * Map an `Institution` row onto the card model.
+ *
+ * `id` is the row's primary key on purpose: the cards link to `/center/{id}`,
+ * and that route looks the profile up by the same key. The old bundled
+ * catalogue used invented `dir-center-*` slugs, so every "التفاصيل" click ended
+ * on a 404.
+ *
+ * `name.en` repeats the Arabic name because the schema stores one name only; an
+ * empty English slot would render blank labels after the language toggle.
+ */
+function toListing(
+  row: InstitutionRow,
+  kind: DirectoryKind,
+  index: number
+): DirectoryListing {
+  const isKindergarten = row.type === "KINDERGARTEN";
+  const programs = programsForType(row.id, row.type, isKindergarten ? 320 : 550);
+  const fees = programs.map((program) => program.fee);
+  const digits = (row.phone ?? "").replace(/\D+/g, "");
+
+  return {
+    id: row.id,
+    kind,
+    name: { ar: row.name, en: row.name },
+    category: DIRECTORY_CATEGORY[row.type],
+    cityKey: cityKeyFor(row.zone),
+    rating: row.rating,
+    // Real enrolment count — there is no review table yet, so nothing here is
+    // invented (see the card: the number is not labelled as reviews).
+    reviewsCount: row._count.students,
+    priceMin: Math.min(...fees),
+    priceMax: Math.max(...fees),
+    stageKeys: DIRECTORY_STAGES[row.type],
+    coverIndex: index % COVERS.length,
+    phone: row.phone ?? "",
+    whatsapp: digits,
+  };
+}
+
+/**
+ * The one rule for a public listing: the centre has passed manual verification.
+ *
+ * The product tells visitors “لا يظهر مركز في الدليل إلا بعد التحقق من بياناته”
+ * and “مراكز موثقة فقط”, and `PENDING` / `UNVERIFIED` / `REJECTED` rows are
+ * either still being reviewed or were turned down. They stay visible to their
+ * owner in `/institution/profile` and to admins in `/admin/trust`, never in the
+ * public directory, the public profile page or the sitemap.
+ */
+export const PUBLICLY_LISTED_INSTITUTION = { trustStatus: "VERIFIED" } as const;
+
+/**
+ * Cards for one directory route.
+ *
+ * Only institutions of the requested type are returned, and only real rows:
+ * the two directories are views of the same table the profile page reads, so a
+ * card can never point at an id that does not exist.
+ */
+export async function getDirectoryListings(
+  kind: DirectoryKind
+): Promise<DirectoryListing[]> {
+  const rows = await prisma.institution.findMany({
+    where: {
+      ...PUBLICLY_LISTED_INSTITUTION,
+      type: kind === "kindergartens" ? "KINDERGARTEN" : "EDUCATIONAL_CENTER",
+    },
+    orderBy: { rating: "desc" },
+    include: INCLUDE_COUNT,
+  });
+
+  return rows.map((row, index) => toListing(row, kind, index));
+}
+
+/**
+ * Single center for the public profile page — `null` means "not found" (404).
+ *
+ * Same eligibility rule as the directory: an unverified, pending or rejected
+ * institution must not be presented publicly as a real centre (the QA fixture
+ * `mverify-inst` is exactly such a row). Its owner still sees it in the
+ * institution portal, and admins see it in the trust queue.
+ */
 export async function getCenter(id: string): Promise<Center | null> {
-  const row = await prisma.institution.findUnique({
-    where: { id },
+  const row = await prisma.institution.findFirst({
+    where: { id, ...PUBLICLY_LISTED_INSTITUTION },
     include: INCLUDE_COUNT,
   });
 

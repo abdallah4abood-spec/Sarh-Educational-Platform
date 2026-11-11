@@ -24,8 +24,14 @@ export const homeAr = {
     "ابحث عن روضة أو مركز تحضير قريب منك، احجز مقعد طفلك بثقة، وتابع يومه بالصور والأنشطة والحضور لحظة بلحظة — حتى لو انقطعت الشبكة.",
   home_ctaExplore: "استكشف المراكز",
   home_ctaKindergartens: "استكشف الروضات",
-  home_trustBadge: "أكثر من ١٢٠ عائلة غزّية تتابع أطفالها عبر صَرْح",
-  home_trustBadgeSub: "تقييم ٤٫٩ من ٥ — مراكز موثوقة فقط",
+  /*
+   * The hero's proof line. It states what the platform actually is — a
+   * directory of real institutions with complete profiles — instead of an
+   * adoption figure and a star rating the product cannot substantiate (there is
+   * no review system yet, so any "4.9 / 5" would be invented).
+   */
+  home_trustBadge: "دليل المراكز والروضات في قطاع غزة",
+  home_trustBadgeSub: "ملف كل مركز: البرامج والأعمار والرسوم والموقع",
 
   /* Vertical ribbon badges pinned to the far edge of the hero composition. */
   home_ribbonEducation: "التعليم",
@@ -87,6 +93,26 @@ export const homeAr = {
   home_catComputerDesc: "أساسيات البرمجة والمهارات الرقمية بأدوات عملية.",
   home_catCamps: "مخيمات صيفية",
   home_catCampsDesc: "برامج ترفيهية وتعليمية في العطلة الصيفية.",
+
+  // ---------- 3b. Why Sarh (discovery-first, not a course catalogue) ----------
+  home_whyBadge: "لماذا صَرْح؟",
+  home_whyTitle: "من البحث عن مركز إلى متابعة اليوم",
+  home_whyLead:
+    "من أول بحث عن مركز حتى متابعة يوم طفلك: الدليل يوصلك بالمركز المناسب، وبوابة الأهل تُبقيك على اطلاع بعد التسجيل.",
+  home_why1Title: "ملف مركز كامل قبل الزيارة",
+  home_why1Body:
+    "البرامج والأعمار المقبولة والرسوم الشهرية والموقع ورقم التواصل في صفحة واحدة تفتحها من الدليل.",
+  home_why2Title: "تصفية حسب ما يهمّك",
+  home_why2Body:
+    "ابحث حسب المحافظة والمرحلة الدراسية ونطاق السعر، ثم رتّب النتائج بحسب التقييم لتقارن المراكز بسرعة.",
+  home_why3Title: "تواصل مباشر مع الإدارة",
+  home_why3Body:
+    "زر واحد يفتح وسيلة التواصل مع المركز، وطلب حجز المقعد يصل إلى إدارة المركز للتأكيد.",
+  home_why4Title: "متابعة يومية بعد التسجيل",
+  home_why4Body:
+    "الحضور والأنشطة وملاحظة المعلمة تصل إلى بوابة الأهل، وتُحفظ على الجهاز عند انقطاع الشبكة.",
+  home_whyNote:
+    "بيانات كل ملف يُدخلها المركز نفسه وتظهر في الدليل كما هي — ويمكنك التحقق منها عند التواصل.",
 
   // ---------- 4. Pain points & solutions ----------
   home_problemsTitle: "نحلّ أكبر ثلاث مشاكل تواجه الأهل",
@@ -188,8 +214,8 @@ export const homeEn: Record<keyof typeof homeAr, string> = {
     "Find a kindergarten or prep center near you, book your child's seat with confidence, and follow the day through photos, activities and live attendance — even when the connection drops.",
   home_ctaExplore: "Explore centers",
   home_ctaKindergartens: "Explore kindergartens",
-  home_trustBadge: "More than 120 Gaza families follow their children through SARH",
-  home_trustBadgeSub: "4.9 / 5 rating — verified centers only",
+  home_trustBadge: "A directory of centers and kindergartens across Gaza",
+  home_trustBadgeSub: "Every profile: programs, ages, fees and location",
 
   home_ribbonEducation: "Education",
   home_ribbonFuture: "A better future",
@@ -248,6 +274,26 @@ export const homeEn: Record<keyof typeof homeAr, string> = {
   home_catComputerDesc: "Programming basics and digital skills with hands-on tools.",
   home_catCamps: "Summer camps",
   home_catCampsDesc: "Recreational and learning programs during the summer break.",
+
+  // ---------- 3b. Why Sarh (discovery-first, not a course catalogue) ----------
+  home_whyBadge: "Why SARH?",
+  home_whyTitle: "From finding a center to following the day",
+  home_whyLead:
+    "From the first search to following your child's day: the directory connects you with the right center, and the parent portal keeps you informed after enrolment.",
+  home_why1Title: "A complete profile before you visit",
+  home_why1Body:
+    "Programs, accepted ages, monthly fees, location and a phone number on one page you open straight from the directory.",
+  home_why2Title: "Filter by what matters to you",
+  home_why2Body:
+    "Search by governorate, school stage and price range, then sort by rating to compare centers quickly.",
+  home_why3Title: "Talk to the center directly",
+  home_why3Body:
+    "One button opens the center's contact channel, and a seat request reaches the center's team for confirmation.",
+  home_why4Title: "Daily follow-up once enrolled",
+  home_why4Body:
+    "Attendance, activities and the teacher's note arrive in the parent portal, and are saved on the device when the network drops.",
+  home_whyNote:
+    "Each profile is entered by the center itself and shown in the directory as provided — you can confirm it when you get in touch.",
 
   // ---------- 4. Pain points & solutions ----------
   home_problemsTitle: "We solve the three problems families complain about most",

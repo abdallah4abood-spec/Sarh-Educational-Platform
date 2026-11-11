@@ -280,7 +280,7 @@ export default function SignupForm() {
         <div className="sarh-card space-y-4 p-7">
           <p
             role="status"
-            className="flex flex-wrap items-center gap-2 rounded-lg bg-sarh-teal/10 px-4 py-3 text-sm font-medium text-sarh-teal"
+            className="flex flex-wrap items-center gap-2 rounded-lg bg-sarh-teal/10 px-4 py-3 text-sm font-medium text-sarh-tealInk dark:text-sarh-teal"
           >
             <MailCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span>{t("verifyEmailSentTo")}</span>
@@ -311,7 +311,7 @@ export default function SignupForm() {
           </Link>
         </div>
 
-        <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
+        <p className="mt-6 text-center text-xs text-sarh-inkMute dark:text-slate-400">
           {t("signupFooterHint")}
         </p>
       </AuthSplit>
@@ -423,7 +423,7 @@ export default function SignupForm() {
               <Link
                 href="/terms"
                 target="_blank"
-                className="font-semibold text-sarh-teal underline underline-offset-2"
+                className="font-semibold text-sarh-tealInk underline underline-offset-2 dark:text-sarh-teal"
               >
                 {t("termsOfService")}
               </Link>{" "}
@@ -431,7 +431,7 @@ export default function SignupForm() {
               <Link
                 href="/privacy"
                 target="_blank"
-                className="font-semibold text-sarh-teal underline underline-offset-2"
+                className="font-semibold text-sarh-tealInk underline underline-offset-2 dark:text-sarh-teal"
               >
                 {t("privacyPolicy")}
               </Link>
@@ -467,14 +467,14 @@ export default function SignupForm() {
           {t("alreadyHaveAccount")}{" "}
           <Link
             href="/auth/signin"
-            className="font-semibold text-sarh-teal underline underline-offset-2 hover:text-sarh-teal/90"
+            className="font-semibold text-sarh-tealInk underline underline-offset-2 hover:text-sarh-tealPressed dark:text-sarh-teal dark:hover:text-sarh-teal/90"
           >
             {t("signIn")}
           </Link>
         </p>
       </form>
 
-      <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
+      <p className="mt-6 text-center text-xs text-sarh-inkMute dark:text-slate-400">
         {t("signupFooterHint")}
       </p>
     </AuthSplit>
